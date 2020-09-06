@@ -49,6 +49,8 @@ There is no actual camera, as the viewport remains always in origin. But functio
 - How-to-use guide
 - Examples of scenes, objects, components, and game state
 - Audio support
+- Render optimisations
+- Keep 1-bit images in memory with 1-bit colors instead of 8-bit colors
 - 9-sprite
 - Sprite alpha using dithering
 - Easier UI layout scheme using object's top-left corner as origin for child objects
@@ -58,3 +60,13 @@ There is no actual camera, as the viewport remains always in origin. But functio
 - Option to use floats instead of fixed-point numbers as the primary number type
 - Tool to compute bezier curve values ahead-of-time
 - Use user-defined resolution instead of a hard-coded one
+
+## Contributing
+
+All contributions, especially issues, comments, and pull request are warmly welcome. This repository is maintained as a side project, and as such, it is unfortunately not possible to guarantee frequent updates.
+
+If you manage to get the engine running on any platform, please send me a [tweet](https://twitter.com/jussienroos).
+
+## License
+
+This codebase is released under the MIT License.
