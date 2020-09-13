@@ -1,6 +1,7 @@
 #ifndef engine_h
 #define engine_h
 
+#include "game_main.h"
 #include "types.h"
 #include "image_storage.h"
 #include "image_render.h"
