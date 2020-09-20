@@ -7,7 +7,6 @@
 #include "test_scene.h"
 #include <stdlib.h>
 #include "engine_log.h"
-#include "number.h"
 #include "transforms.h"
 #include "platform_adapter.h"
 #include "types.h"
@@ -28,9 +27,7 @@ void game_init(void *first_scene)
     _ctx.target_buffer = &_screen;
     
     _scene_manager.current_scene = first_scene;
-    go_initialize(_scene_manager.current_scene, &_scene_manager);
-    
-    nb_calculate_constants();
+    go_initialize(_scene_manager.current_scene, &_scene_manager);    
 }
 
 void switch_scene()
