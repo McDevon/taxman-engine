@@ -1,8 +1,10 @@
 # Taxman Engine
 
-Taxman is a Game Engine designed originally for the [Playdate](https://play.date) console. However, it is not platform-dependent.
+Taxman is a 2D Game Engine designed originally for the [Playdate](https://play.date) console. However, it is not platform-dependent.
 
 The engine is written in C for high portability and speed in small-scale devices. No optimisation has been done, as the target device is not yet available for purchase.
+
+Taxman Engine implements a simple Entity-Component structure and scene management. The choice is based on a hunch that quick iterative prototyping and creating game jam games would be faster with EC than with ECS.
 
 Some features of the engine are based on the idea of having 1-bit screen, but adding support for more colors is entirely possible.
 
