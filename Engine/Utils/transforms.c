@@ -17,6 +17,14 @@ Vector2D vec_vec_subtract(Vector2D a, Vector2D b)
     };
 }
 
+Vector2D vec_scale(Vector2D v, Number n)
+{
+    return (Vector2D) {
+        nb_mul(v.x, n),
+        nb_mul(v.y, n)
+    };
+}
+
 Vector2D vec_f_scale(Vector2D v, Float f)
 {
     return (Vector2D) {

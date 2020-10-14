@@ -44,7 +44,7 @@ PhysicsBody *pbd_create()
     
     pho->w_type = &PhysicsBodyComponentType;
     pho->gravity_affects = True;
-    pho->collision_mask = 0xffff;
+    pho->collision_layer = 0;
     pho->collision_dir[dir_left] = False;
     pho->collision_dir[dir_right] = False;
     pho->collision_dir[dir_up] = False;

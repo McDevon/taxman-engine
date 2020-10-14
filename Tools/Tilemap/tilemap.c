@@ -10,7 +10,7 @@
 typedef struct TileBase {
     BASE_OBJECT;
     char *image_base_name;
-    uint32_t collision_mask;
+    uint8_t collision_layer;
     uint8_t collision_directions;
 } TileBase;
 
@@ -27,8 +27,8 @@ char *tile_base_describe(void *object)
     StringBuilder *sb = sb_create();
     sb_append_string(sb, "image base name: ");
     sb_append_string(sb, base->image_base_name);
-    sb_append_string(sb, ", mask: 0x");
-    sb_append_hex(sb, base->collision_mask);
+    sb_append_string(sb, ", layer: ");
+    sb_append_int(sb, (int)base->collision_layer);
     char *description = sb_get_string(sb);
     
     destroy(sb);
@@ -38,7 +38,7 @@ char *tile_base_describe(void *object)
 
 BaseType TileBaseType = { "TileBase", &tile_base_destroy, &tile_base_describe };
 
-TileBase *tile_base_create(const char *image_base_name, uint32_t collision_mask, uint8_t collision_directions)
+TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer, uint8_t collision_directions)
 {
     TileBase *base = platform_calloc(1, sizeof(TileBase));
     if (image_base_name) {
@@ -46,7 +46,7 @@ TileBase *tile_base_create(const char *image_base_name, uint32_t collision_mask,
     } else {
         base->image_base_name = NULL;
     }
-    base->collision_mask = collision_mask;
+    base->collision_layer = collision_layer;
     base->collision_directions = collision_directions;
     base->w_type = &TileBaseType;
     
@@ -64,8 +64,8 @@ char *tile_describe(void *object)
     StringBuilder *sb = sb_create();
     sb_append_string(sb, "image: ");
     sb_append_string(sb, describe(tile->w_image));
-    sb_append_string(sb, ", mask: 0x");
-    sb_append_hex(sb, tile->collision_mask);
+    sb_append_string(sb, ", layer: ");
+    sb_append_int(sb, (int)tile->collision_layer);
     char *description = sb_get_string(sb);
     
     destroy(sb);
@@ -76,7 +76,7 @@ char *tile_describe(void *object)
 BaseType TileType = { "Tile", &tile_destroy, &tile_describe };
 
 
-Tile *tile_create_with_type_char(const char *image_name, uint32_t collision_mask, uint8_t collision_directions, char type_char)
+Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer, uint8_t collision_directions, char type_char)
 {
     Image *image = NULL;
     if (image_name) {
@@ -88,7 +88,7 @@ Tile *tile_create_with_type_char(const char *image_name, uint32_t collision_mask
     
     Tile *tile = platform_calloc(1, sizeof(Tile));
     tile->w_type = &TileType;
-    tile->collision_mask = collision_mask;
+    tile->collision_layer = collision_layer;
     tile->collision_directions = collision_directions;
     tile->w_image = image;
     tile->type_char = type_char;
@@ -96,9 +96,9 @@ Tile *tile_create_with_type_char(const char *image_name, uint32_t collision_mask
     return tile;
 }
 
-Tile *tile_create(const char *image_name, uint32_t collision_mask, uint8_t collision_directions)
+Tile *tile_create(const char *image_name, uint8_t collision_layer, uint8_t collision_directions)
 {
-    return tile_create_with_type_char(image_name, collision_mask, collision_directions, '\0');
+    return tile_create_with_type_char(image_name, collision_layer, collision_directions, '\0');
 }
 
 void tilemap_render(GameObject *obj, RenderContext *ctx)
@@ -195,10 +195,7 @@ void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number
     if (token_count != 4
         || strlen(tokens[0]) != 1
         || tokens[0][0] == '#'
-        || strlen(tokens[2]) != 6
-        || strlen(tokens[3]) != 4
-        || tokens[2][0] != '0'
-        || tokens[2][1] != 'x')
+        || strlen(tokens[3]) != 4)
     {
         return;
     }
@@ -207,11 +204,7 @@ void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number
     
     char *image_base_name = strcmp(tokens[1], "$clear") == 0 ? NULL : tokens[1];
     
-    uint32_t collision_mask = 0;
-    collision_mask += hex_char_to_int(tokens[2][2]) * 0x1000;
-    collision_mask += hex_char_to_int(tokens[2][3]) * 0x0100;
-    collision_mask += hex_char_to_int(tokens[2][4]) * 0x0010;
-    collision_mask += hex_char_to_int(tokens[2][5]) * 0x0001;
+    uint8_t collision_layer = (uint8_t)atoi(tokens[2]);
     
     uint8_t collision_directions = 0;
     collision_directions += tokens[3][0] == '1' ? (1 << 0) : 0;
@@ -220,7 +213,7 @@ void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number
     collision_directions += tokens[3][3] == '1' ? (1 << 3) : 0;
 
     
-    TileBase *base = tile_base_create(image_base_name, collision_mask, collision_directions);
+    TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
     hashtable_put(tile_dictionary, tokens[0], base);
 }
 
@@ -289,7 +282,7 @@ void read_tilemap_line(const char *line, int32_t row_number, void *context)
                 if (base->image_base_name == NULL) {
                     tile = tile_create_with_type_char(NULL, 0, 0, t);
                 } else {
-                    tile = tile_create_with_type_char(base->image_base_name, base->collision_mask, base->collision_directions, t);
+                    tile = tile_create_with_type_char(base->image_base_name, base->collision_layer, base->collision_directions, t);
                     
                     if (tilemap->tile_size.width == 0 || tilemap->tile_size.height == 0) {
                         tilemap->tile_size = (Size2D){

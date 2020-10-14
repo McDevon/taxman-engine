@@ -1,12 +1,33 @@
 #include "physics_world.h"
 #include "physics_body.h"
 
+uint16_t *world_collision_masks(uint8_t row1[16],
+                                uint8_t row2[15],
+                                uint8_t row3[14],
+                                uint8_t row4[13],
+                                uint8_t row5[12],
+                                uint8_t row6[11],
+                                uint8_t row7[10],
+                                uint8_t row8[9],
+                                uint8_t row9[8],
+                                uint8_t row10[7],
+                                uint8_t row11[6],
+                                uint8_t row12[5],
+                                uint8_t row13[4],
+                                uint8_t row14[3],
+                                uint8_t row15[2],
+                                uint8_t row16[1])
+{
+    return NULL;
+}
+
 struct PhysicsWorld {
     GAME_OBJECT_COMPONENT;
     ArrayList *physics_components;
     ArrayList *sweep_list_x;
     TileMap *w_tilemap;
     void *w_callback_context;
+    uint16_t collision_masks[16];
     collision_callback_t *trigger_collision;
     Vector2D gravity;
 };
@@ -96,7 +117,7 @@ void world_test_object_collisions(PhysicsWorld *self)
                 break;
             }
             
-            if (body->collision_mask & other_body->collision_mask) {
+            if (self->collision_masks[body->collision_layer] & (1 << other_body->collision_layer)) {
                 Number top = parent->position.y + body->body_rect.origin.y;
                 Number bottom = parent->position.y + body->body_rect.origin.y + body->body_rect.size.height;
                 Number other_top = other_parent->position.y + other_body->body_rect.origin.y;
@@ -109,10 +130,10 @@ void world_test_object_collisions(PhysicsWorld *self)
     }
 }
 
-Number world_collision_distance(Tile *tile, PhysicsBody *body, Direction move_direction, Number tile_size, int32_t tile_row_index, Number current_position)
+Number world_collision_distance(PhysicsWorld *self, Tile *tile, PhysicsBody *body, Direction move_direction, Number tile_size, int32_t tile_row_index, Number current_position)
 {
     if (tile
-        && tile->collision_mask & body->collision_mask
+        && self->collision_masks[tile->collision_layer] & (1 << body->collision_layer)
         && tile->collision_directions & (1 << dir_opposite(move_direction)))
     {
         if (dir_positive(move_direction)) {
@@ -213,7 +234,7 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
 
                 for (int32_t x = x_start; x <= x_end; ++x) {
                     Tile *tile = tilemap_tile_at(self->w_tilemap, x, tile_y);
-                    Number collision_distance = world_collision_distance(tile, body, dir, tile_height, tile_y, current_position.y);
+                    Number collision_distance = world_collision_distance(self, tile, body, dir, tile_height, tile_y, current_position.y);
                     if (collision_distance >= nb_zero)
                     {
                         target_movement.y = collision_distance * dist_multiplier;
@@ -235,7 +256,7 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                 
                 for (int32_t y = y_start; y <= y_end; ++y) {
                     Tile *tile = tilemap_tile_at(self->w_tilemap, tile_x, y);
-                    Number collision_distance = world_collision_distance(tile, body, dir, tile_width, tile_x, current_position.x);
+                    Number collision_distance = world_collision_distance(self, tile, body, dir, tile_width, tile_x, current_position.x);
                     if (collision_distance >= nb_zero)
                     {
                         target_movement.x = collision_distance * dist_multiplier;
@@ -252,7 +273,7 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                 Number dist_multiplier = target_movement.y > nb_zero ? 1 : -1;
                 
                 Tile *tile = tilemap_tile_at(self->w_tilemap, tile_x, tile_y);
-                Number collision_distance = world_collision_distance(tile, body, dir, tile_height, tile_y, current_position.y);
+                Number collision_distance = world_collision_distance(self, tile, body, dir, tile_height, tile_y, current_position.y);
                 if (collision_distance >= nb_zero)
                 {
                     target_movement.y = collision_distance * dist_multiplier;
@@ -274,7 +295,7 @@ static GameObjectComponentType PhysicsWorldComponentType = {
     &world_fixed_update
 };
 
-PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger_collision)
+PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger_collision, uint16_t collision_masks[16])
 {
     PhysicsWorld *self = (PhysicsWorld *)comp_alloc(sizeof(PhysicsWorld));
     
@@ -284,6 +305,9 @@ PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger
     self->gravity = vec(nb_from_int(0), nb_from_int(18));
     self->trigger_collision = trigger_collision;
     self->w_callback_context = callback_context;
+    for (int i = 0; i < 16; ++i) {
+        self->collision_masks[i] = collision_masks[i];
+    }
     
     return self;
 }

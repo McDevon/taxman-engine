@@ -9,7 +9,7 @@ typedef struct PhysicsBody {
     Vector2D velocity;
     Vector2D control_movement;
     Rect2D body_rect;
-    uint32_t collision_mask;
+    uint8_t collision_layer;
     Bool collision_dir[4];
     Bool gravity_affects;
 } PhysicsBody;
