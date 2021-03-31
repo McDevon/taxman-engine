@@ -41,6 +41,14 @@ Vector2D vec_f_lerp(Vector2D a, Vector2D b, Float f)
     };
 }
 
+inline Vector2D vec_inverse(Vector2D v)
+{
+    return (Vector2D) {
+        -v.x,
+        -v.y
+    };
+}
+
 Vector2D af_vec_multiply(AffineTransform trf, Vector2D pos)
 {
     /*

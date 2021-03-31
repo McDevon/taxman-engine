@@ -10,6 +10,7 @@ Vector2D vec_vec_subtract(Vector2D, Vector2D);
 Vector2D vec_scale(Vector2D v, Number n);
 Vector2D vec_f_scale(Vector2D, Float);
 Vector2D vec_f_lerp(Vector2D, Vector2D, Float);
+Vector2D vec_inverse(Vector2D);
 
 Vector2D af_vec_multiply(AffineTransform, Vector2D);
 AffineTransform af_af_multiply(AffineTransform, AffineTransform);
