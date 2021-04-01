@@ -152,8 +152,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     
     AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->camera_matrix));
         
-    int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width - 1);
-    int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height - 1);
+    int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
+    int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
     const uint32_t source_origin_x = image->rect.origin.x;
     const uint32_t source_origin_y = image->rect.origin.y;
     
