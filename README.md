@@ -43,10 +43,11 @@ Current Features include
 - Collision detection using sweep-and-prune algorithm
 - Camera
 - Pseudorandom number generator
+- Profiler
 
 The engine uses fixed-point numbers for in-game calculations. This is due to the original game idea needing platform-indepent deterministic game replays using only player inputs. Option to use floats instead is on the works.
 
-There is no actual camera, as the viewport remains always in origin. But functionally there is equivalent camera node, which translates (transform, scale, and rotate supported) the node and child nodes, working as a camera is expected to work. This also allows easy HUD implementation as there is no need for multiple camera trickery.
+There is no actual camera, as the viewport remains always in origin. But functionally there is equivalent camera node, which translates (transform, scale, and rotate supported) the node and child nodes. This also allows easy HUD implementation as there is no need for multiple camera trickery.
 
 ## Rough Backlog
 
