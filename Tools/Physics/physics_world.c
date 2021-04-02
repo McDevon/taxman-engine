@@ -148,14 +148,26 @@ Number world_collision_distance(PhysicsWorld *self, Tile *tile, PhysicsBody *bod
 
 void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
 {
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Physics world");
+#endif
     PhysicsWorld *self = (PhysicsWorld *)comp;
     
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Object collision");
+#endif
     if (self->trigger_collision) {
         world_test_object_collisions(self);
     }
-
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+    
     size_t po_count = list_count(self->physics_components);
     for (size_t i = 0; i < po_count; ++i) {
+#ifdef ENABLE_PROFILER
+        profiler_start_segment("Object movement");
+#endif
         PhysicsBody *body = (PhysicsBody *)list_get(self->physics_components, i);
         GameObject *object = comp_get_parent(body);
         
@@ -173,7 +185,15 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
         body->collision_dir[dir_up] = False;
         body->collision_dir[dir_down] = False;
         
+#ifdef ENABLE_PROFILER
+        profiler_end_segment();
+#endif
+        
         if (self->w_tilemap) {
+#ifdef ENABLE_PROFILER
+            profiler_start_segment("Tilemap collision");
+#endif
+            
             Vector2D target_node_position = vec_vec_add(target_movement, object->position);
             Vector2D current_position = vec(object->position.x + body->body_rect.origin.x,
                                             object->position.y + body->body_rect.origin.y);
@@ -281,10 +301,16 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                     body->collision_dir[dir] = True;
                 }
             }
+#ifdef ENABLE_PROFILER
+            profiler_end_segment();
+#endif
         }
     
         object->position = vec_vec_add(target_movement, object->position);
     }
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
 }
 
 static GameObjectComponentType PhysicsWorldComponentType = {
