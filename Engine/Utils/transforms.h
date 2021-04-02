@@ -1,7 +1,6 @@
 #ifndef transforms_h
 #define transforms_h
 
-#include <stdio.h>
 #include "types.h"
 #include "number.h"
 

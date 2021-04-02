@@ -6,4 +6,10 @@ struct HashTable {
     HashTableEntry **entries;
 };
 
+struct HashTableEntry {
+    struct HashTableEntry *next;
+    char *key;
+    void *value;
+};
+
 #endif /* hash_table_private_h */

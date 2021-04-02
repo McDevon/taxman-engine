@@ -24,5 +24,6 @@
 #include "constants.h"
 #include "action_animator.h"
 #include "action_constructors.h"
+#include "profiler.h"
 
 #endif /* engine_h */

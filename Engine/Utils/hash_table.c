@@ -4,12 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct HashTableEntry {
-    struct HashTableEntry *next;
-    char *key;
-    void *value;
-};
-
 void hashtable_destroy(void *table);
 char *hashtable_describe(void *table);
 
