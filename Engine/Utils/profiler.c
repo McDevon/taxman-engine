@@ -7,12 +7,12 @@
 #include "engine_log.h"
 #include "platform_adapter.h"
 
-HashTable *profiler_hash_table;
-ArrayList *profiler_stack;
-platform_time_t profiler_start_time;
+struct ProfilerEntry;
 
 #define PE_CONTENTS \
     BASE_OBJECT; \
+    HashTable *subentries; \
+    struct ProfilerEntry *w_parent; \
     char *key; \
     platform_time_t start_time; \
     platform_time_t total_time
@@ -20,6 +20,9 @@ platform_time_t profiler_start_time;
 typedef struct ProfilerEntry {
     PE_CONTENTS;
 } ProfilerEntry;
+
+ProfilerEntry *profiler_root_entry;
+ProfilerEntry *w_profiler_top_entry;
 
 char *profiler_entry_describe(void *obj)
 {
@@ -29,7 +32,8 @@ char *profiler_entry_describe(void *obj)
 
 void profiler_entry_destroy(void *obj)
 {
-    //ProfilerEntry *entry = (ProfilerEntry*)obj;
+    ProfilerEntry *entry = (ProfilerEntry*)obj;
+    destroy(entry->subentries);
 }
 
 static BaseType ProfilerEntryType = { "ProfilerEntry", &profiler_entry_destroy, &profiler_entry_describe };
@@ -42,102 +46,130 @@ ProfilerEntry *profiler_entry_create()
     entry->total_time = 0;
     
     entry->w_type = &ProfilerEntryType;
+    entry->w_parent = NULL;
+    
+    entry->subentries = hashtable_create();
     
     return entry;
 }
 
 void profiler_init()
 {
-    profiler_hash_table = hashtable_create();
-    profiler_stack = list_create_with_weak_references();
-    profiler_start_time = platform_current_time();
+    profiler_root_entry = profiler_entry_create();
+    w_profiler_top_entry = profiler_root_entry;
+    profiler_root_entry->key = "Total";
+    
+    profiler_root_entry->start_time = platform_current_time();
 }
 
 void profiler_finish()
 {
-    destroy(profiler_hash_table);
-    destroy(profiler_stack);
-    profiler_start_time = 0;
+    destroy(profiler_root_entry);
+    profiler_root_entry = NULL;
 }
 
 void profiler_start_segment(const char *segment_name)
 {
-    if (!profiler_start_time) {
+    if (!profiler_root_entry) {
         return;
     }
-    ProfilerEntry *entry = hashtable_get(profiler_hash_table, segment_name);
+    ProfilerEntry *entry = hashtable_get(w_profiler_top_entry->subentries, segment_name);
     if (!entry) {
         entry = profiler_entry_create();
         entry->key = (char *)segment_name;
-        hashtable_put(profiler_hash_table, segment_name, entry);
+        hashtable_put(w_profiler_top_entry->subentries, segment_name, entry);
+        entry->w_parent = w_profiler_top_entry;
     }
     entry->start_time = platform_current_time();
-    list_add(profiler_stack, entry);
+    w_profiler_top_entry = entry;
 }
 
 void profiler_end_segment()
 {
-    if (!profiler_start_time) {
+    if (!profiler_root_entry) {
         return;
     }
-    ProfilerEntry *entry = list_drop_index(profiler_stack, list_count(profiler_stack) - 1);
-    entry->total_time += platform_current_time() - entry->start_time;
+    w_profiler_top_entry->total_time += platform_current_time() - w_profiler_top_entry->start_time;
+    w_profiler_top_entry = w_profiler_top_entry->w_parent;
 }
 
-char *profiler_get_data()
+void profiler_indent(StringBuilder *sb, int depth)
 {
-    if (list_count(profiler_stack)) {
-        LOG("#PROFILER error: stack not empty");
-        return NULL;
+    for (int i = 0; i < depth; ++i) {
+        sb_append_string(sb, "  ");
     }
-    
-    platform_time_t total_time = 0;
+}
+
+void profiler_add_entry_data(ProfilerEntry *entry, StringBuilder *sb, int depth)
+{
+    if (!hashtable_count(entry->subentries)) {
+        return;
+    }
+
+    platform_time_t measured_time = 0;
+    ArrayList *profiler_stack = list_create_with_weak_references();
     
     for (int i = 0; i < HASHSIZE; ++i) {
-        if (profiler_hash_table->entries[i] == NULL) {
+        if (entry->subentries->entries[i] == NULL) {
             continue;
         }
-        HashTableEntry *table_entry = profiler_hash_table->entries[i];
+        HashTableEntry *table_entry = entry->subentries->entries[i];
         while (table_entry) {
             ProfilerEntry *profiler_entry = (ProfilerEntry *)table_entry->value;
-            total_time += profiler_entry->total_time;
+            measured_time += profiler_entry->total_time;
             list_add(profiler_stack, profiler_entry);
             table_entry = table_entry->next;
         }
     }
     
-    platform_time_t profiler_end_time = platform_current_time();
-    platform_time_t profiling_time = profiler_end_time - profiler_start_time;
-
-    float total_seconds = platform_time_to_seconds(profiling_time);
-    float measured_seconds = platform_time_to_seconds(total_time);
-
-    StringBuilder *sb = sb_create();
-    sb_append_string(sb, "PROFILING RESULTS");
-    sb_append_line_break(sb);
+    float total_seconds = platform_time_to_seconds(entry->total_time);
+    float measured_seconds = platform_time_to_seconds(measured_time);
+    
+    profiler_indent(sb, depth);
     sb_append_string(sb, "Measured time makes up ");
     sb_append_float(sb, measured_seconds / total_seconds * 100, 2);
     sb_append_string(sb, "% of running time ( ");
-    sb_append_float(sb, total_seconds, 2);
+    sb_append_float(sb, measured_seconds, 4);
     sb_append_string(sb, "s / ");
-    sb_append_float(sb, measured_seconds, 2);
+    sb_append_float(sb, total_seconds, 4);
     sb_append_string(sb, "s )");
     sb_append_line_break(sb);
     
     size_t count = list_count(profiler_stack);
     for (size_t i = 0; i < count; ++i) {
-        ProfilerEntry *profiler_entry = (ProfilerEntry *)list_get(profiler_stack, i);
+        ProfilerEntry *subentry = (ProfilerEntry *)list_get(profiler_stack, i);
         
-        float entry_seconds = platform_time_to_seconds(profiler_entry->total_time);
+        float entry_seconds = platform_time_to_seconds(subentry->total_time);
         
-        sb_append_string(sb, profiler_entry->key);
+        profiler_indent(sb, depth);
+        sb_append_string(sb, subentry->key);
         sb_append_string(sb, ": ");
-        sb_append_float(sb, entry_seconds, 2);
+        sb_append_float(sb, entry_seconds, 4);
         sb_append_string(sb, "s ");
         sb_append_float(sb, entry_seconds / measured_seconds * 100, 2);
         sb_append_string(sb, "%");
         sb_append_line_break(sb);
+        
+        profiler_add_entry_data(subentry, sb, depth + 1);
     }
+    
+    destroy(profiler_stack);
+}
+
+char *profiler_get_data()
+{
+    if (w_profiler_top_entry->w_parent) {
+        LOG("#PROFILER error: stack not empty");
+        return NULL;
+    }
+    
+    w_profiler_top_entry->total_time += platform_current_time() - w_profiler_top_entry->start_time;
+
+    StringBuilder *sb = sb_create();
+    sb_append_string(sb, "PROFILING RESULTS");
+    sb_append_line_break(sb);
+    
+    profiler_add_entry_data(profiler_root_entry, sb, 0);
     
     char *output = sb_get_string(sb);
     destroy(sb);
@@ -147,7 +179,7 @@ char *profiler_get_data()
 
 void profiler_toggle()
 {
-    if (profiler_start_time) {
+    if (profiler_root_entry) {
         char *data = profiler_get_data();
         printf("%s", data);
         free(data);
