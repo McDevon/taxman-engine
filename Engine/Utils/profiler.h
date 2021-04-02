@@ -2,7 +2,7 @@
 #define profiler_h
 
 #define ENABLE_PROFILER
-//#undef ENABLE_PROFILER
+#undef ENABLE_PROFILER
 
 void profiler_init(void);
 void profiler_finish(void);
