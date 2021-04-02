@@ -51,6 +51,23 @@ int hashtable_put(HashTable *table, const char *key, void *value)
     return 0;
 }
 
+size_t hashtable_count(HashTable *table)
+{
+    size_t count = 0;
+    for (int i = 0; i < HASHSIZE; ++i) {
+        if (table->entries[i] == NULL) {
+            continue;
+        }
+        ++count;
+        HashTableEntry *table_entry = table->entries[i];
+        while (table_entry->next) {
+            ++count;
+            table_entry = table_entry->next;
+        }
+    }
+    return count;
+}
+
 void hashtable_entry_destroy(HashTableEntry *entry)
 {
     if (entry->next) {
