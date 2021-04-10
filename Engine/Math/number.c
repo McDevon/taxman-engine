@@ -1,12 +1,13 @@
 #include "number.h"
-#include "number_lut.h"
 #include "platform_adapter.h"
 #include <string.h>
 #include <stdlib.h>
 
-#define NUMBER_MAX INT_MAX
-#define NUMBER_MIN INT_MIN
+#ifdef NUMBER_TYPE_FIXED_POINT
 
+#include "number_lut.h"
+
+#define NUMBER_BITS 32
 #define DECIMAL_BITS 10
 
 #define DECIMAL_MASK 0x3ff
@@ -380,3 +381,137 @@ void nb_calculate_constants() {
     platform_free(s_pi_deg_to_rad);
     platform_free(s_pi_rad_to_deg);
 }
+
+#elif defined NUMBER_TYPE_FLOATING_POINT
+#include <float.h>
+#include <math.h>
+
+Number nb_max_value = FLT_MAX;
+Number nb_min_value = FLT_MIN;
+Number nb_zero = 0;
+Number nb_one = 1.f;
+Number nb_two = 2.f;
+Number nb_half = 0.5f;
+Number nb_precision = FLT_EPSILON;
+
+const Number nb_pi = (float)M_PI;
+const Number nb_pi_times_two = (float)(M_PI * 2);
+const Number nb_pi_over_two = (float)M_PI_2;
+const Number nb_pi_inv = (float)M_1_PI;
+const Number nb_pi_over_two_inv = (float)M_2_PI;
+
+inline int32_t nb_sign(Number value) {
+    return value < 0 ? -1 : value > 0 ? 1 : 0;
+}
+
+inline Number nb_to_radians(Number value) {
+    return value / 180.f * nb_pi;
+}
+
+inline Number nb_to_degrees(Number value) {
+    return value * 180.f / nb_pi;
+}
+
+inline Number nb_abs(Number value) {
+    return fabsf(value);
+}
+
+inline Number nb_floor(Number value) {
+    return floorf(value);
+}
+
+inline Number nb_ceil(Number value) {
+    return ceilf(value);
+}
+
+inline Number nb_round(Number value) {
+    return roundf(value);
+}
+
+inline Number nb_add(Number v1, Number v2) {
+    return v1 + v2;
+}
+
+inline Number nb_sub(Number v1, Number v2) {
+    return v1 - v2;
+}
+
+inline Number nb_mul(Number v1, Number v2) {
+    return v1 * v2;
+}
+
+inline Number nb_div(Number v1, Number v2) {
+    return v1 / v2;
+}
+
+inline Number nb_mod(Number v1, Number v2) {
+    return fmodf(v1, v2);
+}
+
+inline Number nb_negate(Number value) {
+    return -value;
+}
+
+Number nb_sqrt(Number value) {
+    return sqrtf(value);
+}
+
+Number nb_sin(Number value) {
+    return sinf(value);
+}
+
+Number nb_cos(Number value) {
+    return cosf(value);
+}
+
+Number nb_tan(Number value) {
+    return tanf(value);
+}
+
+Number nb_atan2(Number y, Number x) {
+    return atan2f(y, x);
+}
+
+Number nb_from_int(int32_t value) {
+    return (Number)value;
+}
+
+Number nb_from_long(int64_t value) {
+    return (Number)value;
+}
+
+Number nb_from_float(float value) {
+    return (Number)value;
+}
+
+Number nb_from_double(double value) {
+    return (Number)value;
+}
+
+Number nb_from_string(const char *value) {
+    return (Number)atof(value);
+}
+
+float nb_to_float(Number value) {
+    return (float)value;
+}
+
+double nb_to_double(Number value) {
+    return (double)value;
+}
+
+int nb_to_int(Number value) {
+    return (int)value;
+}
+
+char *nb_to_str(Number value, int precision) {
+    char res[20];
+    char format[6];
+    snprintf(format, 6, "%%.%df", precision);
+    snprintf(res, 20, format, value);
+    return platform_strdup(res);
+}
+
+void nb_calculate_constants() {}
+
+#endif

@@ -4,9 +4,18 @@
 #include <stdio.h>
 #include <limits.h>
 
-typedef int32_t Number;
+#define NUMBER_TYPE_FIXED_POINT
+//#undef NUMBER_TYPE_FIXED_POINT
 
-#define NUMBER_BITS 32
+#ifndef NUMBER_TYPE_FIXED_POINT
+#define NUMBER_TYPE_FLOATING_POINT
+#endif
+
+#ifdef NUMBER_TYPE_FIXED_POINT
+typedef int32_t Number;
+#elif defined NUMBER_TYPE_FLOATING_POINT
+typedef float Number;
+#endif
 
 extern Number nb_max_value;
 extern Number nb_min_value;
@@ -48,7 +57,6 @@ Number nb_from_long(int64_t value);
 Number nb_from_float(float value);
 Number nb_from_double(double value);
 Number nb_from_string(const char *value);
-Number nb_from_string_n(const char *value, const size_t length);
 
 float nb_to_float(Number value);
 double nb_to_double(Number value);

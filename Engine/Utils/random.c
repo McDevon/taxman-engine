@@ -60,5 +60,11 @@ Bool random_next_bool(Random *state)
 
 Number random_next_number(Random *state)
 {
+#ifdef NUMBER_TYPE_FIXED_POINT
     return random_next_uint64(state) & (nb_one * 100);
+#elif defined NUMBER_TYPE_FLOATING_POINT
+    return random_next_uint64(state) / UINT64_MAX * 100;
+#else
+    return 0;
+#endif
 }
