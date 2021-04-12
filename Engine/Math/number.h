@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <limits.h>
 
+// To use fixed point numbers in project, comment the undef line
 #define NUMBER_TYPE_FIXED_POINT
-//#undef NUMBER_TYPE_FIXED_POINT
+#undef NUMBER_TYPE_FIXED_POINT
 
 #ifndef NUMBER_TYPE_FIXED_POINT
 #define NUMBER_TYPE_FLOATING_POINT
