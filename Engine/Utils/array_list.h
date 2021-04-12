@@ -21,7 +21,7 @@ void * list_drop_item(ArrayList *list, void *value);
 void list_clear(ArrayList *list);
 
 size_t list_count(ArrayList *list);
-Bool list_contains(ArrayList *list, void *value);
+bool list_contains(ArrayList *list, void *value);
 
 void list_sort(ArrayList *list, list_compare_t *compare_fn);
 void list_sort_insertsort(ArrayList *list, list_compare_t *compare_fn);

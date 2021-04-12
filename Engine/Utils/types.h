@@ -2,13 +2,10 @@
 #define types_h
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include "number.h"
 
-typedef uint8_t Bool;
 typedef float Float;
-
-#define True 1
-#define False 0
 
 typedef struct Vector2D {
     Number x;

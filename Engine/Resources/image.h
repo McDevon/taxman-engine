@@ -31,8 +31,8 @@ void image_data_clear(ImageData *image);
 
 uint32_t image_data_channel_count(const ImageData *image);
 uint32_t image_channel_count(const Image *image);
-Bool image_data_has_alpha(const ImageData *image);
-Bool image_has_alpha(const Image *image);
+bool image_data_has_alpha(const ImageData *image);
+bool image_has_alpha(const Image *image);
 int32_t image_data_alpha_offset(const ImageData *image);
 int32_t image_alpha_offset(const Image *image);
 

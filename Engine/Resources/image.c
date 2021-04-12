@@ -63,8 +63,8 @@ ImageData *image_data_xor_texture(const Size2DInt size, const Vector2DInt offset
 {
     uint32_t channels = image_settings_channel_count(settings);
     ImageData *image_data = image_data_create(platform_calloc(size.width * size.height * channels, sizeof(uint8_t)), size, settings);
-    Bool colors = settings & image_settings_rgb;
-    Bool alpha = settings & image_settings_alpha;
+    bool colors = settings & image_settings_rgb;
+    bool alpha = settings & image_settings_alpha;
     for (int j = 0; j < size.height; j++) {
         for (int i = 0; i < size.width; i++) {
             long index = channels * (i + j * size.width);
@@ -92,12 +92,12 @@ uint32_t image_channel_count(const Image *image)
     return image_settings_channel_count(image->w_image_data->settings);
 }
 
-Bool image_data_has_alpha(const ImageData *image)
+bool image_data_has_alpha(const ImageData *image)
 {
     return image->settings & image_settings_alpha;
 }
 
-Bool image_has_alpha(const Image *image)
+bool image_has_alpha(const Image *image)
 {
     return image->w_image_data->settings & image_settings_alpha;
 }

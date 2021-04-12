@@ -53,9 +53,9 @@ uint64_t random_next_uint64(Random *state)
     return t + s;
 }
 
-Bool random_next_bool(Random *state)
+bool random_next_bool(Random *state)
 {
-    return random_next_uint64(state) & (1LU << 40) ? True : False;
+    return random_next_uint64(state) & (1LU << 40) ? true : false;
 }
 
 Number random_next_number(Random *state)

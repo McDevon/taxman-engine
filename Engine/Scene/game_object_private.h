@@ -7,8 +7,8 @@ struct go_private {
     struct GameObject *w_parent;
     struct SceneManager *w_scene_manager;
     int32_t z_order;
-    Bool z_order_dirty;
-    Bool start_called;
+    bool z_order_dirty;
+    bool start_called;
 };
 
 #endif /* game_object_private_h */

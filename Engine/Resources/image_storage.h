@@ -6,9 +6,9 @@
 #include "grid_atlas.h"
 #include "types.h"
 
-void load_image_data(const char *image_data_name, const Bool alpha, const Bool make_image);
-void load_grid_atlas(const char *image_data_name, const Bool alpha, const Size2DInt item_size);
-void load_sprite_sheet(const char *sprite_sheet_name, const Bool alpha);
+void load_image_data(const char *image_data_name, const bool alpha, const bool make_image);
+void load_grid_atlas(const char *image_data_name, const bool alpha, const Size2DInt item_size);
+void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha);
 ImageData *get_image_data(const char *image_data_name);
 GridAtlas *get_grid_atlas(const char *atlas_name);
 Image *image_slice_create_and_store(const char *image_data_name, const char *image_name, const Rect2DInt rect, const Size2DInt original, const Vector2DInt offset);

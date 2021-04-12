@@ -30,7 +30,7 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
         flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y,
     };
     
-    const Bool source_has_alpha = image_has_alpha(image);
+    const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
     for (int32_t i = 0; i < source_width; i++) {
@@ -98,7 +98,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     const uint32_t source_channels = image_channel_count(image);
     ImageBuffer *target = context->target_buffer->buffer;
     
-    const Bool source_has_alpha = image_has_alpha(image);
+    const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
     const int32_t flip_x = flip_flags_xy & (1 << 0);
@@ -210,7 +210,7 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
         flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y,
     };
     
-    const Bool source_has_alpha = image_has_alpha(image);
+    const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
     for (int32_t i = 0; i < source_width; i++) {

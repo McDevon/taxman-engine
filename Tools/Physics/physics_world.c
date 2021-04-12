@@ -180,10 +180,10 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                                         nb_mul(body->control_movement.y, dt_ms) / 1000);
         Vector2D target_movement = vec_vec_add(body->velocity, control_movement);
 
-        body->collision_dir[dir_left] = False;
-        body->collision_dir[dir_right] = False;
-        body->collision_dir[dir_up] = False;
-        body->collision_dir[dir_down] = False;
+        body->collision_dir[dir_left] = false;
+        body->collision_dir[dir_right] = false;
+        body->collision_dir[dir_up] = false;
+        body->collision_dir[dir_down] = false;
         
 #ifdef ENABLE_PROFILER
         profiler_end_segment();
@@ -206,7 +206,7 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
             Number x_current = nb_zero, x_target = nb_zero;
             Number y_current = nb_zero, y_target = nb_zero;
             
-            Bool tile_collision = False;
+            bool tile_collision = false;
 
             if (target_movement.x > nb_zero) {
                 x_current = current_position.x + body->body_rect.size.width - 1;
@@ -259,8 +259,8 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                     {
                         target_movement.y = collision_distance * dist_multiplier;
                         body->velocity.y = nb_zero;
-                        body->collision_dir[dir] = True;
-                        tile_collision = True;
+                        body->collision_dir[dir] = true;
+                        tile_collision = true;
                         break;
                     }
                 }
@@ -281,8 +281,8 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                     {
                         target_movement.x = collision_distance * dist_multiplier;
                         body->velocity.x = nb_zero;
-                        body->collision_dir[dir] = True;
-                        tile_collision = True;
+                        body->collision_dir[dir] = true;
+                        tile_collision = true;
                         break;
                     }
                 }
@@ -298,7 +298,7 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
                 {
                     target_movement.y = collision_distance * dist_multiplier;
                     body->velocity.y = nb_zero;
-                    body->collision_dir[dir] = True;
+                    body->collision_dir[dir] = true;
                 }
             }
 #ifdef ENABLE_PROFILER

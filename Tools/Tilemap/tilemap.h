@@ -16,7 +16,7 @@ typedef struct TileMap {
     ArrayList *tiles;
     Size2DInt map_size;
     Size2D tile_size;
-    Bool rotate_and_scale;
+    bool rotate_and_scale;
 } TileMap;
 
 extern GameObjectType TileMapType;

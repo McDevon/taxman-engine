@@ -43,12 +43,12 @@ PhysicsBody *pbd_create()
     PhysicsBody *pho = (PhysicsBody *)comp_alloc(sizeof(PhysicsBody));
     
     pho->w_type = &PhysicsBodyComponentType;
-    pho->gravity_affects = True;
+    pho->gravity_affects = true;
     pho->collision_layer = 0;
-    pho->collision_dir[dir_left] = False;
-    pho->collision_dir[dir_right] = False;
-    pho->collision_dir[dir_up] = False;
-    pho->collision_dir[dir_down] = False;
+    pho->collision_dir[dir_left] = false;
+    pho->collision_dir[dir_right] = false;
+    pho->collision_dir[dir_up] = false;
+    pho->collision_dir[dir_down] = false;
 
     return pho;
 }

@@ -19,7 +19,7 @@ typedef struct GameObjectComponentType {
 #define GO_COMPONENT_CONTENTS \
     BASE_OBJECT; \
     struct go_comp_private *comp_private; \
-    Bool active
+    bool active
 
 typedef struct GameObjectComponent {
     GO_COMPONENT_CONTENTS;

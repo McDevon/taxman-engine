@@ -30,7 +30,7 @@ typedef struct GameObjectType {
     Size2D size; \
     Number rotation; \
     uint32_t tag; \
-    Bool active
+    bool active
 
 typedef struct GameObject {
     GO_CONTENTS;

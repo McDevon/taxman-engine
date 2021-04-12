@@ -63,9 +63,9 @@ Sprite *sprite_create(const char *image_name)
     sprite->size.width = nb_from_int(sprite->w_image->original.width);
     sprite->size.height = nb_from_int(sprite->w_image->original.height);
     
-    sprite->rotate_and_scale = True;
-    sprite->flip_x = False;
-    sprite->flip_y = False;
+    sprite->rotate_and_scale = true;
+    sprite->flip_x = false;
+    sprite->flip_y = false;
 
     return sprite;
 }

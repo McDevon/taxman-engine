@@ -10,8 +10,8 @@ typedef struct PhysicsBody {
     Vector2D control_movement;
     Rect2D body_rect;
     uint8_t collision_layer;
-    Bool collision_dir[4];
-    Bool gravity_affects;
+    bool collision_dir[4];
+    bool gravity_affects;
 } PhysicsBody;
 
 extern GameObjectComponentType PhysicsBodyComponentType;

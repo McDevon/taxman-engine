@@ -10,7 +10,7 @@
     char *text; \
     int32_t text_length; \
     int32_t visible_chars; \
-    Bool rotate_and_scale
+    bool rotate_and_scale
 
 typedef struct Label {
     LABEL_CONTENTS;

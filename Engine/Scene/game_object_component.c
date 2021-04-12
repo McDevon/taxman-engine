@@ -10,7 +10,7 @@ GameObjectComponent *comp_alloc(size_t type_size)
     GameObjectComponent *object = platform_calloc(1, type_size);
     object->comp_private = platform_calloc(1, sizeof(struct go_comp_private));
     object->comp_private->w_parent = NULL;
-    object->active = True;
+    object->active = true;
     
     return object;
 }

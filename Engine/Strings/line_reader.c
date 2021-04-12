@@ -27,15 +27,15 @@ void read_token_line(const char *line, int32_t row_number, void *context)
     
     for (int32_t i = 0; i < length; ++i) {
         char chr = line[i];
-        Bool delimeter_found = False;
+        bool delimeter_found = false;
         for (int32_t j = 0; j < delimeter_count; ++j) {
             if (chr == delimeters[j]) {
-                delimeter_found = True;
+                delimeter_found = true;
                 break;
             }
         }
         if (!delimeter_found && i == length - 1) {
-            delimeter_found = True;
+            delimeter_found = true;
             ++token_length;
         }
         

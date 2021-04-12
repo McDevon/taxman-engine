@@ -6,9 +6,9 @@
 #define SPRITE_CONTENTS \
     GAME_OBJECT; \
     Image *w_image; \
-    Bool flip_x; \
-    Bool flip_y; \
-    Bool rotate_and_scale
+    bool flip_x; \
+    bool flip_y; \
+    bool rotate_and_scale
 
 typedef struct Sprite {
     SPRITE_CONTENTS;

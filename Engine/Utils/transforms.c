@@ -336,12 +336,12 @@ inline Direction dir_opposite(Direction d)
     }
 }
 
-inline Bool dir_positive(Direction d)
+inline bool dir_positive(Direction d)
 {
     return d == dir_right || d == dir_down;
 }
 
-inline Bool dir_horizontal(Direction d)
+inline bool dir_horizontal(Direction d)
 {
     return d == dir_right || d == dir_left;
 }

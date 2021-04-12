@@ -93,14 +93,14 @@ inline size_t list_count(ArrayList *list)
     return list->count;
 }
 
-Bool list_contains(ArrayList *list, void *value)
+bool list_contains(ArrayList *list, void *value)
 {
     for (int i = 0; i < list->count; ++i) {
         if (list->first[i] == value) {
-            return True;
+            return true;
         }
     }
-    return False;
+    return false;
 }
 
 void list_sort(ArrayList *list, list_compare_t *compare_fn)

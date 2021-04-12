@@ -233,7 +233,7 @@ struct tm_c_context {
     TileMap *tilemap;
     const HashTable *tile_dictionary;
     TileMapPart current_part;
-    Bool valid;
+    bool valid;
 };
 
 void read_tilemap_line(const char *line, int32_t row_number, void *context)
@@ -250,7 +250,7 @@ void read_tilemap_line(const char *line, int32_t row_number, void *context)
     if (line[0] == '[') {
         if (ctx->current_part == tmp_map && list_count(tilemap->tiles) != tilemap->map_size.width * tilemap->map_size.height) {
             LOG_ERROR("Tilemap map size does not match");
-            ctx->valid = False;
+            ctx->valid = false;
             ctx->current_part = tmp_none;
             return;
         }
@@ -267,7 +267,7 @@ void read_tilemap_line(const char *line, int32_t row_number, void *context)
     if (ctx->current_part == tmp_size) {
         if (sscanf(line, "%dx%d", &tilemap->map_size.width, &tilemap->map_size.height) != 2) {
             LOG_ERROR("Cannot read tilemap size");
-            ctx->valid = False;
+            ctx->valid = false;
             return;
         }
         ctx->current_part = tmp_none;
@@ -292,18 +292,18 @@ void read_tilemap_line(const char *line, int32_t row_number, void *context)
                     } else if (nb_from_int(tile->w_image->rect.size.width) != tilemap->tile_size.width ||
                                nb_from_int(tile->w_image->rect.size.height) != tilemap->tile_size.height) {
                         LOG_ERROR("Tilemap tile images are of different size");
-                        ctx->valid = False;
+                        ctx->valid = false;
                     }
                 }
                 list_add(tilemap->tiles, tile);
             } else {
                 LOG_ERROR("No tile type found for key %s", key);
-                ctx->valid = False;
+                ctx->valid = false;
             }
         }
         if (i != tilemap->map_size.width) {
             LOG_ERROR("Tilemap row %d length is wrong", row_number);
-            ctx->valid = False;
+            ctx->valid = false;
         }
     }
 }
@@ -373,13 +373,13 @@ TileMap *tilemap_create(const char *tilemap_file_name, const HashTable *tile_dic
     TileMap *tilemap = (TileMap *)go;
     tilemap->w_type = &TileMapType;
     tilemap->tiles = list_create();
-    tilemap->rotate_and_scale = False;
+    tilemap->rotate_and_scale = false;
     
     struct tm_c_context ctx;
     ctx.tilemap = tilemap;
     ctx.tile_dictionary = tile_dictionary;
     ctx.current_part = tmp_none;
-    ctx.valid = True;
+    ctx.valid = true;
     
     file_read_lines(tilemap_file_name, &read_tilemap_line, &ctx);
     

@@ -40,7 +40,7 @@ AffineTransform af_identity(void);
 Number vec_length(Vector2D v);
 
 Direction dir_opposite(Direction d);
-Bool dir_positive(Direction d);
-Bool dir_horizontal(Direction d);
+bool dir_positive(Direction d);
+bool dir_horizontal(Direction d);
 
 #endif /* transforms_h */

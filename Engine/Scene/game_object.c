@@ -28,9 +28,9 @@ GameObject *go_alloc(size_t type_size)
     object->go_private->components = list_create();
     object->go_private->w_parent = NULL;
     object->go_private->z_order = 0;
-    object->go_private->z_order_dirty = False;
-    object->go_private->start_called = False;
-    object->active = True;
+    object->go_private->z_order_dirty = false;
+    object->go_private->start_called = false;
+    object->active = true;
     object->scale = (Vector2D){ nb_one, nb_one };
     
     return object;
@@ -90,7 +90,7 @@ void go_start(GameObject *object)
         go_start((GameObject *)list_get(list, i));
     }
     
-    object->go_private->start_called = True;
+    object->go_private->start_called = true;
 }
 
 void go_update(GameObject *object, Number dt_ms)
@@ -175,7 +175,7 @@ void go_render(GameObject *object, RenderContext *ctx)
 
     if (object->go_private->z_order_dirty) {
         list_sort(list, go_compare_z_order);
-        object->go_private->z_order_dirty = False;
+        object->go_private->z_order_dirty = false;
     }
     
     size_t count = list_count(list);
@@ -222,7 +222,7 @@ void go_add_child(void *obj, void *child)
     goc->go_private->w_parent = go;
     goc->go_private->w_scene_manager = go->go_private->w_scene_manager;
     
-    go->go_private->z_order_dirty = True;
+    go->go_private->z_order_dirty = true;
 
     GameObjectType *c_type = go_type(goc);
     if (c_type->added_to_parent) {
@@ -273,7 +273,7 @@ void go_add_component(void *obj, void *comp)
         if (c_type->start) {
             c_type->start(component);
         }
-        component->comp_private->start_called = True;
+        component->comp_private->start_called = true;
     }
 }
 
@@ -296,7 +296,7 @@ void go_set_z_order(void *obj, int32_t z_order)
     go->go_private->z_order = z_order;
     
     if (go->go_private->w_parent) {
-        go->go_private->w_parent->go_private->z_order_dirty = True;
+        go->go_private->w_parent->go_private->z_order_dirty = true;
     }
 }
 

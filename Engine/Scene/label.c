@@ -155,7 +155,7 @@ Label *label_create(const char *image_name, const char *text)
     Label *label = (Label *)go;
     label->w_type = &LabelType;
     label->w_font_atlas = get_grid_atlas(image_name);
-    label->rotate_and_scale = False;
+    label->rotate_and_scale = false;
     
     label_set_text(label, text);
 

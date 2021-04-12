@@ -17,11 +17,11 @@ static HashTable image_slice_table = { { { &HashTableType } }, image_slice_table
 static HashTableEntry *grid_atlas_table_entry[HASHSIZE];
 static HashTable grid_atlas_table = { { { &HashTableType } }, grid_atlas_table_entry };
 
-void load_image_data(const char *image_data_name, const Bool alpha, const Bool make_image)
+void load_image_data(const char *image_data_name, const bool alpha, const bool make_image)
 {
     uint32_t width;
     uint32_t height;
-    Bool source_has_alpha;
+    bool source_has_alpha;
     ImageBuffer *buffer = NULL;
     platform_load_image(image_data_name, &width, &height, &source_has_alpha, &buffer);
     LOG("Load image data %s w: %d h: %d", image_data_name, width, height);
@@ -62,9 +62,9 @@ ImageData *get_image_data(const char *image_data_name)
     return entry;
 }
 
-void load_grid_atlas(const char *image_data_name, const Bool alpha, const Size2DInt item_size)
+void load_grid_atlas(const char *image_data_name, const bool alpha, const Size2DInt item_size)
 {
-    load_image_data(image_data_name, alpha, False);
+    load_image_data(image_data_name, alpha, false);
     GridAtlas *atlas = grid_atlas_create(get_image_data(image_data_name), item_size);
     hashtable_put(&grid_atlas_table, image_data_name, atlas);
 }
@@ -108,7 +108,7 @@ Image *get_image(const char *image_name)
     return entry;
 }
 
-void load_sprite_sheet(const char *sprite_sheet_name, const Bool alpha)
+void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha)
 {
     StringBuilder *sb = sb_create();
     sb_append_string(sb, sprite_sheet_name);
@@ -137,7 +137,7 @@ void load_sprite_sheet(const char *sprite_sheet_name, const Bool alpha)
             if (row == 0) {
                 strncpy(sprite_sheet_data_name, sheet_data + row_start, row_length);
                 sprite_sheet_data_name[row_length] = '\0';
-                load_image_data(sprite_sheet_data_name, alpha, True);
+                load_image_data(sprite_sheet_data_name, alpha, true);
             } else if (row == 5 || sprite_row == 7) {
                 sprite_row = 0;
                 strncpy(sprite_name, sheet_data + row_start, row_length);
