@@ -45,7 +45,7 @@ Current Features include
 - Pseudorandom number generator
 - Profiler
 
-The engine uses fixed-point numbers for in-game calculations. This is due to the original game idea needing platform-indepent deterministic game replays using only player inputs. Option to use floats instead is on the works.
+The engine can use fixed-point numbers for in-game calculations. This is due to the original game idea needing platform-indepent deterministic game replays using only player inputs. By deafult regular floats are used.
 
 There is no actual camera, as the viewport remains always in origin. But functionally there is equivalent camera node, which translates (transform, scale, and rotate supported) the node and child nodes. This also allows easy HUD implementation as there is no need for multiple camera trickery.
 
@@ -62,7 +62,6 @@ There is no actual camera, as the viewport remains always in origin. But functio
 - Support sprite rotation in sprite atlases
 - Moving platforms and pushable objects
 - Clean exit (clear all allocated memory and quit)
-- Option to use floats instead of fixed-point numbers as the primary number type
 - Tool to compute bezier curve values ahead-of-time
 - Use user-defined resolution instead of a hard-coded one
 
