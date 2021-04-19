@@ -13,13 +13,13 @@
 #define DECIMAL_MASK 0x3ff
 #define FULL_MASK -1
 
-Number nb_max_value = INT_MAX;
-Number nb_min_value = INT_MIN;
-Number nb_zero = 0;
-Number nb_one = 1 << DECIMAL_BITS;
-Number nb_two = 1 << (DECIMAL_BITS + 1);
-Number nb_half = 1 << (DECIMAL_BITS - 1);
-Number nb_precision = 1;
+const Number nb_max_value = INT_MAX;
+const Number nb_min_value = INT_MIN;
+const Number nb_zero = 0;
+const Number nb_one = 1 << DECIMAL_BITS;
+const Number nb_two = 1 << (DECIMAL_BITS + 1);
+const Number nb_half = 1 << (DECIMAL_BITS - 1);
+const Number nb_precision = 1;
 
 const Number nb_pi = 3216;
 const Number nb_pi_times_two = 6433;
@@ -386,13 +386,13 @@ void nb_calculate_constants() {
 #include <float.h>
 #include <math.h>
 
-Number nb_max_value = FLT_MAX;
-Number nb_min_value = FLT_MIN;
-Number nb_zero = 0;
-Number nb_one = 1.f;
-Number nb_two = 2.f;
-Number nb_half = 0.5f;
-Number nb_precision = FLT_EPSILON;
+const Number nb_max_value = FLT_MAX;
+const Number nb_min_value = FLT_MIN;
+const Number nb_zero = 0;
+const Number nb_one = 1.f;
+const Number nb_two = 2.f;
+const Number nb_half = 0.5f;
+const Number nb_precision = FLT_EPSILON;
 
 const Number nb_pi = (float)M_PI;
 const Number nb_pi_times_two = (float)(M_PI * 2);

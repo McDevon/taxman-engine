@@ -18,13 +18,13 @@ typedef int32_t Number;
 typedef float Number;
 #endif
 
-extern Number nb_max_value;
-extern Number nb_min_value;
-extern Number nb_zero;
-extern Number nb_one;
-extern Number nb_two;
-extern Number nb_half;
-extern Number nb_precision;
+extern const Number nb_max_value;
+extern const Number nb_min_value;
+extern const Number nb_zero;
+extern const Number nb_one;
+extern const Number nb_two;
+extern const Number nb_half;
+extern const Number nb_precision;
 
 extern const Number nb_pi;
 extern const Number nb_pi_times_two;
