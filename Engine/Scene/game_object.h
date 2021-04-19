@@ -58,8 +58,13 @@ void go_add_component(void *obj, void *comp);
 ArrayList *go_get_children(void *obj);
 ArrayList *go_get_components(void *obj);
 GameObject *go_get_parent(void *obj);
+GameObject *go_get_root_ancestor(void *obj);
 struct SceneManager *go_get_scene_manager(void *obj);
 struct GameObjectComponent *go_get_component(GameObject *obj, struct GameObjectComponentType *type);
+
+Vector2D go_position_in_ancestor(void *obj, void *ancestor);
+
+void go_schedule_destroy(void *obj);
 
 void go_set_z_order(void *obj, int32_t z_order);
 int32_t go_get_z_order(void *obj);

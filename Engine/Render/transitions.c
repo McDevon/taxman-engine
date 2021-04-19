@@ -102,11 +102,11 @@ void transition_swipe_ltr_step(SceneManager *scene_manager, RenderContext *ctx)
 
     const Number half_time = scene_manager->transition_length / 2;
     if (scene_manager->transition_step < half_time) {
-        draw_ltr_first_half(full_width * nb_div(scene_manager->transition_step, half_time), dither_width, scene_manager->transition_dither, ctx);
+        draw_ltr_first_half(full_width * nb_div(scene_manager->transition_step, half_time), dither_width, scene_manager->w_transition_dither, ctx);
     } else {
         ctx->camera_matrix = af_identity();
         go_render(scene_manager->current_scene, ctx);
-        draw_ltr_second_half(full_width * nb_div((scene_manager->transition_length - scene_manager->transition_step), half_time), dither_width, scene_manager->transition_dither, ctx);
+        draw_ltr_second_half(full_width * nb_div((scene_manager->transition_length - scene_manager->transition_step), half_time), dither_width, scene_manager->w_transition_dither, ctx);
     }
 }
 
@@ -149,10 +149,10 @@ void transition_fade_black_step(SceneManager *scene_manager, RenderContext *ctx)
 {
     const int32_t half_time = scene_manager->transition_length / 2;
     if (scene_manager->transition_step < half_time) {
-        draw_fade_black(255 - nb_div(nb_mul(scene_manager->transition_step, 255), half_time), scene_manager->transition_dither, ctx);
+        draw_fade_black(255 - nb_div(nb_mul(scene_manager->transition_step, 255), half_time), scene_manager->w_transition_dither, ctx);
     } else {
         ctx->camera_matrix = af_identity();
         go_render(scene_manager->current_scene, ctx);
-        draw_fade_black(255 - nb_div(nb_mul((scene_manager->transition_length - scene_manager->transition_step), 255), half_time), scene_manager->transition_dither, ctx);
+        draw_fade_black(255 - nb_div(nb_mul((scene_manager->transition_length - scene_manager->transition_step), 255), half_time), scene_manager->w_transition_dither, ctx);
     }
 }

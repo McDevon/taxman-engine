@@ -242,13 +242,8 @@ void *go_remove_from_parent(void *obj)
         return NULL;
     }
     ArrayList *par_children = go->go_private->w_parent->go_private->children;
-    size_t count = list_count(par_children);
-    for (size_t i = 0; i < count; ++i) {
-        if (list_get(par_children, i) == go) {
-            return list_drop_index(par_children, i);
-        }
-    }
-    return NULL;
+    go->go_private->w_parent = NULL;
+    return list_drop_item(par_children, go);
 }
 
 void go_add_component(void *obj, void *comp)
@@ -341,6 +336,60 @@ GameObject *go_get_parent(void *obj)
 {
     GameObject *go = (GameObject *)obj;
     return go->go_private->w_parent;
+}
+
+GameObject *go_get_root_ancestor(void *obj)
+{
+    GameObject *root = (GameObject *)obj;
+    while (root->go_private->w_parent) {
+        root = root->go_private->w_parent;
+    }
+    return root;
+}
+
+AffineTransform go_recursive_position_search(GameObject *current, GameObject *ancestor)
+{
+    if (current == ancestor) {
+        return af_identity();
+    }
+    
+    AffineTransform ctx = go_recursive_position_search(current->go_private->w_parent, ancestor);
+
+    AffineTransform pos = af_identity();
+    
+    pos = af_scale(pos, current->scale);
+    pos = af_rotate(pos, current->rotation);
+    pos = af_translate(pos, current->position);
+    pos = af_af_multiply(ctx, pos);
+    
+    return pos;
+}
+
+Vector2D go_position_in_ancestor(void *obj, void *ancestor)
+{
+    GameObject *current = (GameObject *)obj;
+    
+    if (!current->go_private->w_parent) {
+        return vec_zero();
+    }
+    
+    AffineTransform pos = go_recursive_position_search(current, ancestor);
+    
+    return vec(pos.i13, pos.i23);
+}
+
+void go_schedule_destroy(void *obj)
+{
+    SceneManager *scene_manager = go_get_scene_manager(obj);
+    if (!scene_manager) {
+        if (go_get_parent(obj)) {
+            go_remove_from_parent(obj);
+        } else {
+            destroy(obj);
+        }
+    } else {
+        list_add(scene_manager->destroy_queue, obj);
+    }
 }
 
 struct SceneManager *go_get_scene_manager(void *obj)
