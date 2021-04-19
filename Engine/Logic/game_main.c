@@ -28,6 +28,7 @@ void game_init(void *first_scene)
     
     _ctx.target_buffer = &_screen;
     
+    _scene_manager.destroy_queue = list_create_with_weak_references();
     _scene_manager.current_scene = first_scene;
     go_initialize(_scene_manager.current_scene, &_scene_manager);    
 }
@@ -35,6 +36,7 @@ void game_init(void *first_scene)
 void switch_scene()
 {
     destroy(_scene_manager.current_scene);
+    list_clear(_scene_manager.destroy_queue);
     _scene_manager.current_scene = _scene_manager.next_scene;
     _scene_manager.next_scene = NULL;
     go_initialize(_scene_manager.current_scene, &_scene_manager);
@@ -46,7 +48,7 @@ void transition_finish()
     _scene_manager.transition = st_none;
     _scene_manager.transition_length = 0;
     _scene_manager.transition_step = 0;
-    _scene_manager.transition_dither = NULL;
+    _scene_manager.w_transition_dither = NULL;
 }
 
 void transition_step(Number delta_time_millis)
@@ -78,12 +80,31 @@ void transition_step(Number delta_time_millis)
     }
 }
 
+void scene_cleanup()
+{
+    size_t count = list_count(_scene_manager.destroy_queue);
+    
+    if (count == 0) {
+        return;
+    }
+    
+    for (size_t i = 0; i < count; ++i) {
+        GameObject *obj = list_get(_scene_manager.destroy_queue, i);
+        go_remove_from_parent(obj);
+        destroy(obj);
+    }
+    
+    list_clear(_scene_manager.destroy_queue);
+}
+
 void game_step(Number delta_time_millis, Controls controls)
 {
 #ifdef ENABLE_PROFILER
     if (controls.button_menu && !_scene_manager.controls.button_menu) {
         profiler_toggle();
     }
+    
+    profiler_start_segment("Game loop");
 #endif
     _scene_manager.controls = controls;
     
@@ -147,6 +168,14 @@ void game_step(Number delta_time_millis, Controls controls)
 #endif
 
 #ifdef ENABLE_PROFILER
+    profiler_start_segment("Cleanup");
+#endif
+    scene_cleanup();
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+    
+#ifdef ENABLE_PROFILER
     profiler_start_segment("Render");
 #endif
     _ctx.camera_matrix = af_identity();
@@ -160,6 +189,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #endif
     update_buffer(_screen.buffer);
 #ifdef ENABLE_PROFILER
+    profiler_end_segment();
     profiler_end_segment();
 #endif
 }
