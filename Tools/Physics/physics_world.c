@@ -18,7 +18,36 @@ uint16_t *world_collision_masks(uint8_t row1[16],
                                 uint8_t row15[2],
                                 uint8_t row16[1])
 {
-    return NULL;
+    uint16_t *masks = calloc(16, sizeof(uint16_t));
+    uint8_t *rows[] = {
+        row1, row2, row3, row4, row5, row6, row7, row8,
+        row9, row10, row11, row12, row13, row14, row15, row16
+    };
+    
+    for (int i = 0; i < 16; ++i) {
+        for (int j = 0; j < 16 - i; ++j) {
+            int k = 15 - i;
+            uint16_t is_set = rows[i][j] > 0;
+            masks[j] |= is_set << k;
+            masks[k] |= is_set << j;
+        }
+    }
+    
+    StringBuilder *sb = sb_create();
+    sb_append_string(sb, "MASKS { ");
+    for (int i = 0; i < 16; ++i) {
+        sb_append_string(sb, "0x");
+        sb_append_hex(sb, masks[i]);
+        if (i < 15) {
+            sb_append_string(sb, ", ");
+        }
+    }
+    sb_append_string(sb, " }\n");
+    
+    sb_debug_log_to_console(sb);
+    destroy(sb);
+    
+    return masks;
 }
 
 struct PhysicsWorld {
@@ -179,11 +208,6 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
         Vector2D control_movement = vec(nb_mul(body->control_movement.x, dt_ms) / 1000,
                                         nb_mul(body->control_movement.y, dt_ms) / 1000);
         Vector2D target_movement = vec_vec_add(body->velocity, control_movement);
-
-        body->collision_dir[dir_left] = false;
-        body->collision_dir[dir_right] = false;
-        body->collision_dir[dir_up] = false;
-        body->collision_dir[dir_down] = false;
         
 #ifdef ENABLE_PROFILER
         profiler_end_segment();
@@ -194,6 +218,11 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
             profiler_start_segment("Tilemap collision");
 #endif
             
+            body->collision_dir[dir_left] = false;
+            body->collision_dir[dir_right] = false;
+            body->collision_dir[dir_up] = false;
+            body->collision_dir[dir_down] = false;
+
             Vector2D target_node_position = vec_vec_add(target_movement, object->position);
             Vector2D current_position = vec(object->position.x + body->body_rect.origin.x,
                                             object->position.y + body->body_rect.origin.y);
