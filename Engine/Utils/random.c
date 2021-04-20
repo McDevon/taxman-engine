@@ -61,9 +61,20 @@ bool random_next_bool(Random *state)
 Number random_next_number(Random *state)
 {
 #ifdef NUMBER_TYPE_FIXED_POINT
-    return random_next_uint64(state) & (nb_one * 100);
+    return (Number)(random_next_uint64(state) / (UINT64_MAX / (uint64_t)(nb_one)));
 #elif defined NUMBER_TYPE_FLOATING_POINT
-    return random_next_uint64(state) / UINT64_MAX * 100;
+    return (Number)random_next_uint64(state) / (Number)UINT64_MAX;
+#else
+    return 0;
+#endif
+}
+
+Number random_next_number_limit(Random *state, Number limit)
+{
+#ifdef NUMBER_TYPE_FIXED_POINT
+    return (Number)(random_next_uint64(state) / (UINT64_MAX / (uint64_t)limit));
+#elif defined NUMBER_TYPE_FLOATING_POINT
+    return (Number)random_next_uint64(state) / (Number)UINT64_MAX * limit;
 #else
     return 0;
 #endif
