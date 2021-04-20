@@ -20,7 +20,7 @@ void life_timer_fixed_update(GameObjectComponent *comp, Number dt_ms)
     
     self->timer -= dt_ms;
     if (self->timer < nb_zero) {
-        go_schedule_destroy(self);
+        go_schedule_destroy(comp_get_parent(self));
     }
 }
 
