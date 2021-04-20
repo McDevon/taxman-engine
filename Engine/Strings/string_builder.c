@@ -1,5 +1,6 @@
 #include "string_builder.h"
 #include "platform_adapter.h"
+#include "engine_log.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -158,4 +159,14 @@ int sb_append_int_rect(StringBuilder *sb, Rect2DInt value)
 char *sb_get_string(StringBuilder *builder)
 {
     return platform_strdup(builder->string);
+}
+
+void sb_debug_log_to_console(StringBuilder *sb)
+{
+    LOG("%s", sb->string);
+}
+
+void sb_log_to_console(StringBuilder *sb)
+{
+    printf("%s\n", sb->string);
 }

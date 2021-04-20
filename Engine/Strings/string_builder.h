@@ -14,6 +14,8 @@ typedef struct StringBuilder {
 StringBuilder *sb_create(void);
 
 char *sb_get_string(StringBuilder *sb);
+void sb_debug_log_to_console(StringBuilder *sb);
+void sb_log_to_console(StringBuilder *sb);
 
 void sb_clear(StringBuilder *sb);
 
