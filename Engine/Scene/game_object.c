@@ -347,6 +347,18 @@ GameObject *go_get_root_ancestor(void *obj)
     return root;
 }
 
+GameObject *go_get_ancestor_with_tag(void *obj, int32_t tag)
+{
+    GameObject *root = (GameObject *)obj;
+    while (root) {
+        if (root->tag == tag) {
+            return root;
+        }
+        root = root->go_private->w_parent;
+    }
+    return root;
+}
+
 AffineTransform go_recursive_position_search(GameObject *current, GameObject *ancestor)
 {
     if (current == ancestor) {

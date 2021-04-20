@@ -29,7 +29,7 @@ typedef struct GameObjectType {
     Vector2D scale; \
     Size2D size; \
     Number rotation; \
-    uint32_t tag; \
+    int32_t tag; \
     bool active
 
 typedef struct GameObject {
@@ -59,6 +59,7 @@ ArrayList *go_get_children(void *obj);
 ArrayList *go_get_components(void *obj);
 GameObject *go_get_parent(void *obj);
 GameObject *go_get_root_ancestor(void *obj);
+GameObject *go_get_ancestor_with_tag(void *obj, int32_t tag);
 struct SceneManager *go_get_scene_manager(void *obj);
 struct GameObjectComponent *go_get_component(GameObject *obj, struct GameObjectComponentType *type);
 
