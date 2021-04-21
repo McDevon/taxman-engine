@@ -207,7 +207,9 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
         
         Vector2D control_movement = vec(nb_mul(body->control_movement.x, dt_ms) / 1000,
                                         nb_mul(body->control_movement.y, dt_ms) / 1000);
-        Vector2D target_movement = vec_vec_add(body->velocity, control_movement);
+        Vector2D velocity_movement = vec(nb_mul(body->velocity.x, dt_ms) / 1000,
+                                         nb_mul(body->velocity.y, dt_ms) / 1000);
+        Vector2D target_movement = vec_vec_add(velocity_movement, control_movement);
         
 #ifdef ENABLE_PROFILER
         profiler_end_segment();
@@ -358,7 +360,7 @@ PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger
     self->w_type = &PhysicsWorldComponentType;
     self->physics_components = list_create_with_weak_references();
     self->sweep_list_x = list_create_with_weak_references();
-    self->gravity = vec(nb_from_int(0), nb_from_int(18));
+    self->gravity = vec(nb_from_int(0), nb_from_int(450));
     self->trigger_collision = trigger_collision;
     self->w_callback_context = callback_context;
     for (int i = 0; i < 16; ++i) {
