@@ -1,7 +1,7 @@
 #include "transforms.h"
 #include <math.h>
 
-Vector2D vec_vec_add(Vector2D a, Vector2D b)
+inline Vector2D vec_vec_add(Vector2D a, Vector2D b)
 {
     return (Vector2D) {
         a.x + b.x,
@@ -9,7 +9,7 @@ Vector2D vec_vec_add(Vector2D a, Vector2D b)
     };
 }
 
-Vector2D vec_vec_subtract(Vector2D a, Vector2D b)
+inline Vector2D vec_vec_subtract(Vector2D a, Vector2D b)
 {
     return (Vector2D) {
         a.x - b.x,
@@ -17,7 +17,7 @@ Vector2D vec_vec_subtract(Vector2D a, Vector2D b)
     };
 }
 
-Vector2D vec_scale(Vector2D v, Number n)
+inline Vector2D vec_scale(Vector2D v, Number n)
 {
     return (Vector2D) {
         nb_mul(v.x, n),
@@ -25,7 +25,25 @@ Vector2D vec_scale(Vector2D v, Number n)
     };
 }
 
-Vector2D vec_f_scale(Vector2D v, Float f)
+inline Vector2D vec_scale_to_length(Vector2D v, Number length)
+{
+    Number curr_length = vec_length(v);
+    return (Vector2D) {
+        nb_div(nb_mul(v.x, length), curr_length),
+        nb_div(nb_mul(v.y, length), curr_length)
+    };
+}
+
+inline Vector2D vec_normalize(Vector2D v)
+{
+    Number curr_length = vec_length(v);
+    return (Vector2D) {
+        nb_div(v.x, curr_length),
+        nb_div(v.y, curr_length)
+    };
+}
+
+inline Vector2D vec_f_scale(Vector2D v, Float f)
 {
     return (Vector2D) {
         (Number)(v.x * f),
@@ -33,7 +51,7 @@ Vector2D vec_f_scale(Vector2D v, Float f)
     };
 }
 
-Vector2D vec_f_lerp(Vector2D a, Vector2D b, Float f)
+inline Vector2D vec_f_lerp(Vector2D a, Vector2D b, Float f)
 {
     return (Vector2D) {
         (Number)(a.x * (1.f - f) + b.x * f),
@@ -47,6 +65,26 @@ inline Vector2D vec_inverse(Vector2D v)
         -v.x,
         -v.y
     };
+}
+
+inline Vector2D vec(Number x, Number y)
+{
+    return (Vector2D){ x, y };
+}
+
+inline Vector2D vec_unit()
+{
+    return (Vector2D){ nb_one, nb_one };
+}
+
+inline Vector2D vec_zero()
+{
+    return (Vector2D){ nb_zero, nb_zero };
+}
+
+inline Number vec_length(Vector2D v)
+{
+    return nb_sqrt(nb_mul(v.x, v.x) + nb_mul(v.y, v.y));
 }
 
 Vector2D af_vec_multiply(AffineTransform trf, Vector2D pos)
@@ -301,26 +339,6 @@ AffineTransformFloat af_to_faf(AffineTransform a)
         nb_to_float(a.i11), nb_to_float(a.i12), nb_to_float(a.i13),
         nb_to_float(a.i21), nb_to_float(a.i22), nb_to_float(a.i23)
     };
-}
-
-inline Vector2D vec(Number x, Number y)
-{
-    return (Vector2D){ x, y };
-}
-
-inline Vector2D vec_unit()
-{
-    return (Vector2D){ nb_one, nb_one };
-}
-
-inline Vector2D vec_zero()
-{
-    return (Vector2D){ nb_zero, nb_zero };
-}
-
-inline Number vec_length(Vector2D v)
-{
-    return nb_sqrt(nb_mul(v.x, v.x) + nb_mul(v.y, v.y));
 }
 
 inline Direction dir_opposite(Direction d)

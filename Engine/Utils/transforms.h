@@ -4,9 +4,17 @@
 #include "types.h"
 #include "number.h"
 
+Vector2D vec(Number x, Number y);
+
+Vector2D vec_unit(void);
+Vector2D vec_zero(void);
+Number vec_length(Vector2D v);
+
 Vector2D vec_vec_add(Vector2D, Vector2D);
 Vector2D vec_vec_subtract(Vector2D, Vector2D);
 Vector2D vec_scale(Vector2D v, Number n);
+Vector2D vec_scale_to_length(Vector2D v, Number length);
+Vector2D vec_normalize(Vector2D v);
 Vector2D vec_f_scale(Vector2D, Float);
 Vector2D vec_f_lerp(Vector2D, Vector2D, Float);
 Vector2D vec_inverse(Vector2D);
@@ -32,12 +40,7 @@ AffineTransformFloat faf_identity(void);
 
 AffineTransformFloat af_to_faf(AffineTransform);
 
-Vector2D vec(Number x, Number y);
-
-Vector2D vec_unit(void);
-Vector2D vec_zero(void);
 AffineTransform af_identity(void);
-Number vec_length(Vector2D v);
 
 Direction dir_opposite(Direction d);
 bool dir_positive(Direction d);
