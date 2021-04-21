@@ -10,7 +10,8 @@ struct GameObjectComponent;
 
 typedef struct GameObjectComponentType {
     BASE_TYPE;
-    void (*added_to_parent)(struct GameObjectComponent *);
+    void (*added_to_object)(struct GameObjectComponent *);
+    void (*object_will_be_removed_from_parent)(struct GameObjectComponent *);
     void (*start)(struct GameObjectComponent *);
     void (*update)(struct GameObjectComponent *, Number);
     void (*fixed_update)(struct GameObjectComponent *, Number);

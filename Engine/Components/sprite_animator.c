@@ -100,6 +100,7 @@ void animator_update(GameObjectComponent *comp, Number dt_ms)
 GameObjectComponentType SpriteAnimationComponentType = {
     { { "SpriteAnimationComponent", &animator_destroy, &animator_describe } },
     &animator_added,
+    NULL,
     &animator_start,
     &animator_update,
     NULL

@@ -29,6 +29,7 @@ GameObjectComponentType LifeTimerComponentType = {
     NULL,
     NULL,
     NULL,
+    NULL,
     &life_timer_fixed_update
 };
 

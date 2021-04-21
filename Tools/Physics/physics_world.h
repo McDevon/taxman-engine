@@ -5,6 +5,7 @@
 #include "tilemap.h"
 
 struct PhysicsBody;
+extern GameObjectComponentType PhysicsWorldComponentType;
 
 typedef struct PhysicsWorld PhysicsWorld;
 typedef void (collision_callback_t)(void *context, struct PhysicsBody *obj_a, struct PhysicsBody *obj_b);
@@ -29,6 +30,6 @@ uint16_t *world_collision_masks(uint8_t row1[16],
 PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger_collision, uint16_t collision_masks[16]);
 
 void world_add_child(PhysicsWorld *world, void *child);
-void *world_remove_object_from_parent(void *child);
+void *world_remove_object_from_world(void *child);
 
 #endif /* physics_world_h */

@@ -34,7 +34,7 @@ uint16_t *world_collision_masks(uint8_t row1[16],
     }
     
     StringBuilder *sb = sb_create();
-    sb_append_string(sb, "MASKS { ");
+    sb_append_string(sb, "uint16_t *masks = { ");
     for (int i = 0; i < 16; ++i) {
         sb_append_string(sb, "0x");
         sb_append_hex(sb, masks[i]);
@@ -42,7 +42,7 @@ uint16_t *world_collision_masks(uint8_t row1[16],
             sb_append_string(sb, ", ");
         }
     }
-    sb_append_string(sb, " }\n");
+    sb_append_string(sb, " };\n");
     
     sb_debug_log_to_console(sb);
     destroy(sb);
@@ -342,9 +342,10 @@ void world_fixed_update(GameObjectComponent *comp, Number dt_ms)
 #endif
 }
 
-static GameObjectComponentType PhysicsWorldComponentType = {
+GameObjectComponentType PhysicsWorldComponentType = {
     { { "PhysicsWorld", &world_destroy, &world_describe } },
     &world_added,
+    NULL,
     &world_start,
     &world_update,
     &world_fixed_update
@@ -369,25 +370,41 @@ PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger
 
 void world_add_child(PhysicsWorld *self, void *child)
 {
-    go_add_child(self, child);
+    if (!go_get_parent(child)) {
+        go_add_child(self, child);
+    }
     
     PhysicsBody *body = (PhysicsBody*)go_get_component(child, &PhysicsBodyComponentType);
-    if (body) {
+    if (body && !list_contains(self->physics_components, body)) {
         list_add(self->physics_components, body);
         list_add(self->sweep_list_x, body);
     }
 }
 
-void *world_remove_object_from_parent(void *child)
+void *world_remove_object_from_world(void *child)
 {
-    GameObject *parent = go_get_parent(child);
-    GameObject *dropped_child = (GameObject *)go_remove_from_parent(child);
-    
-    if (dropped_child && parent->w_type == &PhysicsWorldComponentType) {
-        PhysicsWorld *world = (PhysicsWorld*)parent;
-        list_drop_item(world->physics_components, child);
-        list_drop_item(world->sweep_list_x, child);
+    PhysicsBody *body = (PhysicsBody*)go_get_component(child, &PhysicsBodyComponentType);
+    if (!body) {
+        LOG_ERROR("Trying to remove object from world: does not have body");
+        return NULL;
     }
     
-    return dropped_child;
+    GameObject *parent = go_get_parent(child);
+    
+    if (!parent) {
+        LOG_ERROR("Trying to remove object from world: does not have parent");
+        return NULL;
+    }
+    
+    PhysicsWorld *world = (PhysicsWorld*)go_get_component(parent, &PhysicsWorldComponentType);
+    
+    if (!world) {
+        LOG_ERROR("Trying to remove object from world: parent does not have world");
+        return NULL;
+    }
+    
+    list_drop_item(world->physics_components, body);
+    list_drop_item(world->sweep_list_x, body);
+    
+    return child;
 }

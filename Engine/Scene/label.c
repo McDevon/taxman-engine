@@ -115,6 +115,7 @@ GameObjectType LabelType = {
     NULL,
     NULL,
     NULL,
+    NULL,
     &label_render
 };
 

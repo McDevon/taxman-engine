@@ -65,6 +65,7 @@ void act_update(GameObjectComponent *comp, Number dt_ms)
 GameObjectComponentType ActType = {
     { { "Act [Component]", &act_destroy, &act_describe } },
     &act_added,
+    NULL,
     &act_start,
     &act_update,
     NULL

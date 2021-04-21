@@ -51,6 +51,7 @@ GameObjectType SpriteType = {
     NULL,
     NULL,
     NULL,
+    NULL,
     &sprite_render
 };
 

@@ -174,6 +174,7 @@ GameObjectType TileMapType = {
     NULL,
     NULL,
     NULL,
+    NULL,
     &tilemap_render
 };
 

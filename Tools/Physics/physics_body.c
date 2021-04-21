@@ -1,7 +1,8 @@
 #include "physics_body.h"
+#include "physics_world.h"
 
 void pbd_destroy(void *comp)
-{
+{    
     comp_destroy(comp);
 }
 
@@ -21,6 +22,34 @@ void pbd_set_body_rect_to_parent(PhysicsBody *self)
     }
 }
 
+void pbd_add_to_world(PhysicsBody* self)
+{
+    GameObject *obj = comp_get_parent(self);
+    GameObject *parent = go_get_parent(obj);
+    if (!parent) {
+        return;
+    }
+    GameObjectComponent *world_comp = go_get_component(parent, &PhysicsWorldComponentType);
+    if (!world_comp) {
+        return;
+    }
+    world_add_child((PhysicsWorld *)world_comp, obj);
+}
+
+void pbd_obj_will_be_removed(GameObjectComponent *comp)
+{
+    GameObject *obj = comp_get_parent(comp);
+    GameObject *parent = go_get_parent(obj);
+    if (!parent) {
+        return;
+    }
+    GameObjectComponent *world_comp = go_get_component(parent, &PhysicsWorldComponentType);
+    if (!world_comp) {
+        return;
+    }
+    world_remove_object_from_world(obj);
+}
+
 void pbd_start(GameObjectComponent *comp)
 {
     PhysicsBody *self = (PhysicsBody *)comp;
@@ -28,11 +57,14 @@ void pbd_start(GameObjectComponent *comp)
     if (self->body_rect.size.width == nb_zero || self->body_rect.size.height == nb_zero) {
         pbd_set_body_rect_to_parent(self);
     }
+    
+    pbd_add_to_world(self);
 }
 
 GameObjectComponentType PhysicsBodyComponentType = {
     { { "PhysicsBody", &pbd_destroy, &pbd_describe } },
     NULL,
+    &pbd_obj_will_be_removed,
     &pbd_start,
     NULL,
     NULL

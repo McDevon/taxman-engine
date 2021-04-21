@@ -12,7 +12,7 @@
 
 static GameObjectType PlainGameObjectType = {
     { { "GameObject", &go_destroy, &go_describe } },
-    NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 inline GameObjectType *go_type(GameObject *object)
@@ -241,6 +241,19 @@ void *go_remove_from_parent(void *obj)
         LOG_ERROR("Trying to remove game object from parent, has no parent");
         return NULL;
     }
+    ArrayList *components = go->go_private->components;
+    size_t c_count = list_count(components);
+    for (size_t i = 0; i < c_count; ++i) {
+        GameObjectComponent *comp = list_get(components, i);
+        GameObjectComponentType *c_type = comp_type(comp);
+        if (c_type->object_will_be_removed_from_parent) {
+            c_type->object_will_be_removed_from_parent(comp);
+        }
+    }
+    GameObjectType *c_type = go_type(go);
+    if (c_type->will_be_removed_from_parent) {
+        c_type->will_be_removed_from_parent(go);
+    }
     ArrayList *par_children = go->go_private->w_parent->go_private->children;
     go->go_private->w_parent = NULL;
     return list_drop_item(par_children, go);
@@ -260,8 +273,8 @@ void go_add_component(void *obj, void *comp)
     component->comp_private->w_parent = go;
     
     GameObjectComponentType *c_type = comp_type(component);
-    if (c_type->added_to_parent) {
-        c_type->added_to_parent(component);
+    if (c_type->added_to_object) {
+        c_type->added_to_object(component);
     }
     
     if (go->go_private->start_called && !component->comp_private->start_called) {

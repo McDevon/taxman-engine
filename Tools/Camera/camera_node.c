@@ -35,6 +35,7 @@ GameObjectType CameraNodeType = {
     NULL,
     NULL,
     NULL,
+    NULL,
 };
 
 void camera_calculate_values(CameraNode *camera_node)
