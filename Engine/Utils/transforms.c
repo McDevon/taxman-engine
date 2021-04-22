@@ -87,6 +87,11 @@ inline Number vec_length(Vector2D v)
     return nb_sqrt(nb_mul(v.x, v.x) + nb_mul(v.y, v.y));
 }
 
+inline Number vec_length_sq(Vector2D v)
+{
+    return nb_mul(v.x, v.x) + nb_mul(v.y, v.y);
+}
+
 Vector2D af_vec_multiply(AffineTransform trf, Vector2D pos)
 {
     /*

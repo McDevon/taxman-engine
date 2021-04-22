@@ -9,6 +9,7 @@ Vector2D vec(Number x, Number y);
 Vector2D vec_unit(void);
 Vector2D vec_zero(void);
 Number vec_length(Vector2D v);
+Number vec_length_sq(Vector2D v);
 
 Vector2D vec_vec_add(Vector2D, Vector2D);
 Vector2D vec_vec_subtract(Vector2D, Vector2D);
