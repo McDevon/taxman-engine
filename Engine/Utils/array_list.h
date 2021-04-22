@@ -25,6 +25,7 @@ bool list_contains(ArrayList *list, void *value);
 
 void list_sort(ArrayList *list, list_compare_t *compare_fn);
 void list_sort_insertsort(ArrayList *list, list_compare_t *compare_fn);
+void list_reverse(ArrayList *list);
 
 ArrayList *list_create(void);
 ArrayList *list_create_with_weak_references(void);
