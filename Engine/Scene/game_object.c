@@ -409,11 +409,12 @@ void go_schedule_destroy(void *obj)
     if (!scene_manager) {
         if (go_get_parent(obj)) {
             go_remove_from_parent(obj);
-        } else {
-            destroy(obj);
         }
+        destroy(obj);
     } else {
-        list_add(scene_manager->destroy_queue, obj);
+        if (!list_contains(scene_manager->destroy_queue, obj)) {
+            list_add(scene_manager->destroy_queue, obj);
+        }
     }
 }
 
