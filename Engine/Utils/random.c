@@ -55,7 +55,7 @@ uint64_t random_next_uint64(Random *state)
 
 bool random_next_bool(Random *state)
 {
-    return random_next_uint64(state) & (1LU << 40) ? true : false;
+    return random_next_uint64(state) & (1LLU << 20) ? true : false;
 }
 
 Number random_next_number(Random *state)
@@ -78,4 +78,14 @@ Number random_next_number_limit(Random *state, Number limit)
 #else
     return 0;
 #endif
+}
+
+int random_next_int(Random *state)
+{
+    return (int)(random_next_uint64(state) & INT_MAX);
+}
+
+int random_next_int_limit(Random *state, int limit)
+{
+    return (int)(random_next_uint64(state) / ((uint64_t)INT_MAX / (uint64_t)limit));
 }

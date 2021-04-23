@@ -11,5 +11,7 @@ uint64_t random_next_uint64(Random *);
 bool random_next_bool(Random *);
 Number random_next_number(Random *);
 Number random_next_number_limit(Random *, Number limit);
+int random_next_int(Random *);
+int random_next_int_limit(Random *, int limit);
 
 #endif /* random_h */
