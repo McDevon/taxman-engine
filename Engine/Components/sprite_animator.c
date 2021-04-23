@@ -80,6 +80,10 @@ void animator_update(GameObjectComponent *comp, Number dt_ms)
         return;
     }
     
+    if (self->repeat_counter == 0) {
+        return;
+    }
+    
     size_t frame_count = list_count(self->w_current_animation);
     if (frame_count <= 1) {
         return;
@@ -88,9 +92,19 @@ void animator_update(GameObjectComponent *comp, Number dt_ms)
     self->frame_timer -= dt_ms;
     
     if (self->frame_timer <= nb_zero) {
-        self->current_frame++;
-        if (self->current_frame >= list_count(self->w_current_animation)) {
-            self->current_frame = 0;
+        if (self->current_frame + 1 >= list_count(self->w_current_animation)) {
+            if (self->repeat_counter > 0) {
+                self->repeat_counter -= 1;
+            }
+            if (self->repeat_counter != 0) {
+                self->current_frame = 0;
+            } else {
+                if (self->completion_callback) {
+                    self->completion_callback(self, self->callback_context);
+                }
+            }
+        } else {
+            self->current_frame++;
         }
         animator_set_current_frame(self);
     }
@@ -116,7 +130,7 @@ Animator *animator_create()
     return anim;
 }
 
-void animator_set_animation(Animator *self, const char *animation_name)
+void animator_set_animation_count(Animator *self, const char *animation_name, int32_t repeat_count, void (*completion_callback)(void *obj, void *context), void *context)
 {
     ArrayList *target_animation = hashtable_get(self->animations, animation_name);
     if (!target_animation || self->w_current_animation == target_animation) {
@@ -125,7 +139,15 @@ void animator_set_animation(Animator *self, const char *animation_name)
     self->w_current_animation = target_animation;
     self->current_frame = 0;
     self->frame_timer = nb_zero;
+    self->repeat_counter = repeat_count;
+    self->completion_callback = completion_callback;
+    self->callback_context = context;
     animator_set_current_frame(self);
+}
+
+void animator_set_animation(Animator *self, const char *animation_name)
+{
+    animator_set_animation_count(self, animation_name, -1, NULL, NULL);
 }
 
 void animator_add_animation(Animator *self, const char *animation_name, ArrayList *frame_list)
