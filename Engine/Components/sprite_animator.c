@@ -130,7 +130,7 @@ Animator *animator_create()
     return anim;
 }
 
-void animator_set_animation_count(Animator *self, const char *animation_name, int32_t repeat_count, void (*completion_callback)(void *obj, void *context), void *context)
+void animator_set_animation_count(Animator *self, const char *animation_name, int32_t repeat_count, void (*completion_callback)(Animator *obj, void *context), void *context)
 {
     ArrayList *target_animation = hashtable_get(self->animations, animation_name);
     if (!target_animation || self->w_current_animation == target_animation) {

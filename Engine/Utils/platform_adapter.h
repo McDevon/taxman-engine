@@ -1,10 +1,12 @@
 #ifndef platform_adapter_h
 #define platform_adapter_h
 
+#include "stdbool.h"
+
 typedef uint32_t platform_time_t;
 
 void platform_display_set_image(uint8_t *buffer);
-void platform_load_image(const char *file_path, uint32_t *width, uint32_t *height, uint8_t *alpha, uint8_t **buffer);
+void platform_load_image(const char *file_path, uint32_t *width, uint32_t *height, bool *alpha, uint8_t **buffer);
 void platform_destroy_image(void *ptr);
 char *platform_read_text_file(const char *file_path);
 void platform_close_text_file(char *file_data);
