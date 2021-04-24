@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "constants.h"
 
-void image_render(RenderContext *context, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy)
+void image_render(RenderContext *context, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert)
 {
     if (!context || !image) { return; }
     
@@ -33,6 +33,9 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
+    const uint8_t white = invert ? 0 : 255;
+    const uint8_t black = invert ? 255 : 0;
+
     for (int32_t i = 0; i < source_width; i++) {
         for (int32_t j = 0; j < image->rect.size.height; j++) {
             const int32_t ctx_x = i + position.x + draw_offset.x;
@@ -51,8 +54,8 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
             }
             
             int32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
-            //target[t_index] = image_buffer[i_index] > 127 ? 255 : 0;
-            target[t_index] = (image_buffer[i_index] > 127) * 255;
+            target[t_index] = image_buffer[i_index] > 127 ? white : black;
+            //target[t_index] = (image_buffer[i_index] > 127) * 255;
         }
     }
 }
@@ -84,7 +87,7 @@ void context_clear_black(RenderContext *context)
     context_fill(context, 0x00);
 }
 
-void context_render(RenderContext *context, const Image *image, const uint8_t flip_flags_xy)
+void context_render(RenderContext *context, const Image *image, const uint8_t flip_flags_xy, const bool invert)
 {
     if (!context || !image) { return; }
     
@@ -157,6 +160,9 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     const uint32_t source_origin_x = image->rect.origin.x;
     const uint32_t source_origin_y = image->rect.origin.y;
     
+    const uint8_t white = invert ? 0 : 255;
+    const uint8_t black = invert ? 255 : 0;
+
     for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
         for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
             AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
@@ -174,8 +180,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
             
             int32_t t_index = (i + j * target_width) * target_channels;
             //target[t_index] = ((image_buffer[i_index] + 128) >> 8) * 255;
-            //target[t_index] = image_buffer[i_index] > 127 ? 255 : 0;
-            target[t_index] = (image_buffer[i_index] > 127) * 255;
+            target[t_index] = image_buffer[i_index] > 127 ? white : black;
+            //target[t_index] = (image_buffer[i_index] > 127) * 255;
         }
     }
 }

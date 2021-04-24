@@ -132,7 +132,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 ctx->camera_matrix = tile_pos;
                 
                 Tile *tile = (Tile *)list_get(self->tiles, index);
-                context_render(ctx, tile->w_image, 0);
+                context_render(ctx, tile->w_image, 0, false);
             }
         }
     } else {
@@ -149,7 +149,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 int32_t index = x + y * self->map_size.width;
                 Tile *tile = (Tile *)list_get(self->tiles, index);
                 
-                image_render(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, 0);
+                image_render(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, 0, false);
             }
         }
         

@@ -8,7 +8,8 @@
     Image *w_image; \
     bool flip_x; \
     bool flip_y; \
-    bool rotate_and_scale
+    bool rotate_and_scale; \
+    bool invert
 
 typedef struct Sprite {
     SPRITE_CONTENTS;
