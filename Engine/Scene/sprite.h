@@ -23,4 +23,6 @@ extern GameObjectType SpriteType;
 
 Sprite *sprite_create(const char *image_name);
 
+void sprite_set_image(Sprite *sprite, Image *image);
+
 #endif /* sprite_h */

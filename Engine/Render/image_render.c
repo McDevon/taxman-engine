@@ -27,7 +27,7 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y,
+        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height),
     };
     
     const bool source_has_alpha = image_has_alpha(image);
@@ -106,7 +106,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     
     const Vector2DInt draw_offset_int = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y
+        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height)
     };
     const Vector2D draw_offset = (Vector2D){
         nb_from_int(draw_offset_int.x),
@@ -207,7 +207,7 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y,
+        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height),
     };
     
     const bool source_has_alpha = image_has_alpha(image);

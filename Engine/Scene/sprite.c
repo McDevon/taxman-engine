@@ -55,15 +55,20 @@ GameObjectType SpriteType = {
     &sprite_render
 };
 
+void sprite_set_image(Sprite *self, Image *image)
+{
+    self->w_image = image;
+    self->size.width = nb_from_int(image->original.width);
+    self->size.height = nb_from_int(image->original.height);
+}
+
 Sprite *sprite_create(const char *image_name)
 {
     GameObject *go = go_alloc(sizeof(Sprite));
     Sprite *sprite = (Sprite *)go;
     go->w_type = &SpriteType;
-    sprite->w_image = get_image(image_name);
-    sprite->size.width = nb_from_int(sprite->w_image->original.width);
-    sprite->size.height = nb_from_int(sprite->w_image->original.height);
-    
+    sprite_set_image(sprite, get_image(image_name));
+
     sprite->rotate_and_scale = true;
     sprite->flip_x = false;
     sprite->flip_y = false;

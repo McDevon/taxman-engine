@@ -56,7 +56,7 @@ void animator_set_current_frame(Animator *self)
     Sprite *sprite = (Sprite*)comp_get_parent(self);
     AnimationFrame *frame = list_get(self->w_current_animation, self->current_frame);
     
-    sprite->w_image = frame->w_image;
+    sprite_set_image(sprite, frame->w_image);
     self->frame_timer += frame->frame_time_ms;
 }
 
