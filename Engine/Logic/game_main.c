@@ -11,7 +11,7 @@
 #include "platform_adapter.h"
 #include "types.h"
 
-#include "profiler.h"
+#include "profiler_internal.h"
 
 static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0 /*image_settings_alpha | image_settings_rgb*/ };
 static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, { 0, 0, 0, 0, 0, 0 } };
@@ -99,9 +99,30 @@ void scene_cleanup()
 
 void game_step(Number delta_time_millis, Controls controls)
 {
-#ifdef ENABLE_PROFILER
-    if (controls.button_menu && !_scene_manager.controls.button_menu) {
-        profiler_toggle();
+#ifdef ENABLE_PROFILER    
+    switch (profiler_schedule()) {
+        case prof_start:
+        {
+            profiler_init();
+            break;
+        }
+        case prof_end:
+        {
+            char *data = profiler_get_data();
+            printf("%s", data);
+            free(data);
+            
+            profiler_finish();
+            break;
+        }
+        case prof_toggle:
+        {
+            profiler_toggle();
+            break;
+        }
+
+        default:
+            break;
     }
     
     profiler_start_segment("Game loop");
@@ -120,6 +141,7 @@ void game_step(Number delta_time_millis, Controls controls)
             update_buffer(_screen.buffer);
         }
 #ifdef ENABLE_PROFILER
+        profiler_end_segment();
         profiler_end_segment();
 #endif
         return;

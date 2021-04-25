@@ -1,4 +1,5 @@
 #include "profiler.h"
+#include "profiler_internal.h"
 #include "hash_table.h"
 #include "hash_table_private.h"
 #include "array_list.h"
@@ -23,6 +24,7 @@ typedef struct ProfilerEntry {
 
 ProfilerEntry *profiler_root_entry;
 ProfilerEntry *w_profiler_top_entry;
+ProfilerScheduleState _profiler_schedule_state = prof_none;
 
 char *profiler_entry_describe(void *obj)
 {
@@ -60,12 +62,16 @@ void profiler_init()
     profiler_root_entry->key = "Total";
     
     profiler_root_entry->start_time = platform_current_time();
+    
+    _profiler_schedule_state = prof_none;
 }
 
 void profiler_finish()
 {
     destroy(profiler_root_entry);
     profiler_root_entry = NULL;
+
+    _profiler_schedule_state = prof_none;
 }
 
 void profiler_start_segment(const char *segment_name)
@@ -100,6 +106,20 @@ void profiler_indent(StringBuilder *sb, int depth)
     }
 }
 
+int profiler_compare_entry_time(const void *a, const void *b)
+{
+    ProfilerEntry *entry_a = *(ProfilerEntry **)a;
+    ProfilerEntry *entry_b = *(ProfilerEntry **)b;
+    
+    if (entry_a->total_time > entry_b->total_time) {
+        return list_sorted_ascending;
+    } else if (entry_a->total_time < entry_b->total_time) {
+        return list_sorted_descending;
+    } else {
+        return list_sorted_same;
+    }
+}
+
 void profiler_add_entry_data(ProfilerEntry *entry, StringBuilder *sb, int depth)
 {
     if (!hashtable_count(entry->subentries)) {
@@ -121,6 +141,8 @@ void profiler_add_entry_data(ProfilerEntry *entry, StringBuilder *sb, int depth)
             table_entry = table_entry->next;
         }
     }
+    
+    list_sort(profiler_stack, &profiler_compare_entry_time);
     
     float total_seconds = platform_time_to_seconds(entry->total_time);
     float measured_seconds = platform_time_to_seconds(measured_time);
@@ -190,4 +212,26 @@ void profiler_toggle()
         LOG("#PROFILER Started");
         profiler_init();
     }
+
+    _profiler_schedule_state = prof_none;
+}
+
+ProfilerScheduleState profiler_schedule(void)
+{
+    return _profiler_schedule_state;
+}
+
+void profiler_schedule_start(void)
+{
+    _profiler_schedule_state = prof_start;
+}
+
+void profiler_schedule_end(void)
+{
+    _profiler_schedule_state = prof_end;
+}
+
+void profiler_schedule_toggle(void)
+{
+    _profiler_schedule_state = prof_toggle;
 }

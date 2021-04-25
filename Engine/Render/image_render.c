@@ -5,11 +5,16 @@
 #include "engine_log.h"
 #include "utils.h"
 #include "constants.h"
+#include "profiler.h"
 
 void image_render(RenderContext *context, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert)
 {
     if (!context || !image) { return; }
     
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Prepare image_render");
+#endif
+
     const uint32_t source_width = image->rect.size.width;
     const uint32_t source_height = image->rect.size.height;
     const uint32_t source_data_width = image->w_image_data->size.width;
@@ -33,31 +38,61 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
-    const uint8_t white = invert ? 0 : 255;
-    const uint8_t black = invert ? 255 : 0;
-
-    for (int32_t i = 0; i < source_width; i++) {
-        for (int32_t j = 0; j < image->rect.size.height; j++) {
-            const int32_t ctx_x = i + position.x + draw_offset.x;
-            const int32_t ctx_y = j + position.y + draw_offset.y;
-            if (ctx_x < 0 || ctx_x >= target_width
-                || ctx_y < 0 || ctx_y >= target_height) {
-                continue;
+    uint8_t colors[2] = {0, 255};
+    if (invert) {
+        colors[0] = 255;
+        colors[1] = 0;
+    }
+    
+    const int32_t start_x = max(0, -position.x - draw_offset.x);
+    const int32_t end_x = min(source_width, target_width - position.x - draw_offset.x);
+    const int32_t start_y = max(0, -position.y - draw_offset.y);
+    const int32_t end_y = min(source_height, target_height - position.y - draw_offset.y);
+    
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+    profiler_start_segment("Fill image_render");
+#endif
+    
+    if (source_has_alpha) {
+        for (int32_t j = start_y; j < end_y; j++) {
+            for (int32_t i = start_x; i < end_x; i++) {
+                const int32_t ctx_x = i + position.x + draw_offset.x;
+                const int32_t ctx_y = j + position.y + draw_offset.y;
+                
+                const int32_t x = flip_x * (source_width - i) + !flip_x * i;
+                const int32_t y = flip_y * (source_height - j) + !flip_y * j;
+                
+                int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                if (image_buffer[i_index + source_alpha_offset] < 128) {
+                    continue;
+                }
+                
+                int32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
+                
+                target[t_index] = colors[image_buffer[i_index] > 127];
             }
-            
-            const int32_t x = flip_x ? source_width - i : i;
-            const int32_t y = flip_y ? source_height - j : j;
-            
-            int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
-            if (source_has_alpha && image_buffer[i_index + source_alpha_offset] < 128) {
-                continue;
+        }
+    } else {
+        for (int32_t j = start_y; j < end_y; j++) {
+            for (int32_t i = start_x; i < end_x; i++) {
+                const int32_t ctx_x = i + position.x + draw_offset.x;
+                const int32_t ctx_y = j + position.y + draw_offset.y;
+                
+                const int32_t x = flip_x * (source_width - i) + !flip_x * i;
+                const int32_t y = flip_y * (source_height - j) + !flip_y * j;
+                
+                int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                int32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
+                
+                target[t_index] = colors[image_buffer[i_index] > 127];
             }
-            
-            int32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
-            target[t_index] = image_buffer[i_index] > 127 ? white : black;
-            //target[t_index] = (image_buffer[i_index] > 127) * 255;
         }
     }
+
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
 }
 
 void context_fill(RenderContext *context, uint8_t color)
@@ -90,6 +125,10 @@ void context_clear_black(RenderContext *context)
 void context_render(RenderContext *context, const Image *image, const uint8_t flip_flags_xy, const bool invert)
 {
     if (!context || !image) { return; }
+    
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Prepare context_render");
+#endif
     
     const uint32_t source_width = image->rect.size.width;
     const uint32_t source_height = image->rect.size.height;
@@ -150,6 +189,9 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     }
     
     if (right < nb_zero || left > nb_from_int(SCREEN_WIDTH) || bottom < nb_zero || top > nb_from_int(SCREEN_HEIGHT)) {
+#ifdef ENABLE_PROFILER
+        profiler_end_segment();
+#endif
         return;
     }
     
@@ -160,36 +202,69 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     const uint32_t source_origin_x = image->rect.origin.x;
     const uint32_t source_origin_y = image->rect.origin.y;
     
-    const uint8_t white = invert ? 0 : 255;
-    const uint8_t black = invert ? 255 : 0;
+    uint8_t colors[2] = {0, 255};
+    if (invert) {
+        colors[0] = 255;
+        colors[1] = 0;
+    }
 
-    for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+    profiler_start_segment("Fill context_render");
+#endif
+
+    if (source_has_alpha) {
         for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
-            AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
-            
-            const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x : (int)t.i13 - draw_offset_int.x;
-            const int32_t y = flip_y ? source_height - (int)t.i23 + draw_offset_int.y : (int)t.i23 - draw_offset_int.y;
-            
-            if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
-                continue;
+            for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
+                AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
+                
+                const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x : (int)t.i13 - draw_offset_int.x;
+                const int32_t y = flip_y ? source_height - (int)t.i23 + draw_offset_int.y : (int)t.i23 - draw_offset_int.y;
+                
+                if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
+                    continue;
+                }
+                int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                if (image_buffer[i_index + source_alpha_offset] < 128) {
+                    continue;
+                }
+                
+                int32_t t_index = (i + j * target_width) * target_channels;
+                target[t_index] = colors[image_buffer[i_index] > 127];
             }
-            int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
-            if (source_has_alpha && image_buffer[i_index + source_alpha_offset] < 128) {
-                continue;
+        }
+    } else {
+        for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
+            for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
+                AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
+                
+                const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x : (int)t.i13 - draw_offset_int.x;
+                const int32_t y = flip_y ? source_height - (int)t.i23 + draw_offset_int.y : (int)t.i23 - draw_offset_int.y;
+                
+                if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
+                    continue;
+                }
+                int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                int32_t t_index = (i + j * target_width) * target_channels;
+                
+                target[t_index] = colors[image_buffer[i_index] > 127];
             }
-            
-            int32_t t_index = (i + j * target_width) * target_channels;
-            //target[t_index] = ((image_buffer[i_index] + 128) >> 8) * 255;
-            target[t_index] = image_buffer[i_index] > 127 ? white : black;
-            //target[t_index] = (image_buffer[i_index] > 127) * 255;
         }
     }
+    
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
 }
 
 void image_render_dither(RenderContext *context, const Image *image, const Image *dither_texture, const Vector2DInt position, const Vector2DInt offset, const int flip_flags_xy)
 {
     if (!context || !dither_texture) { return; }
     
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Prepare image_render_dither");
+#endif
+
     const uint32_t source_width = image->rect.size.width;
     const uint32_t source_height = image->rect.size.height;
     const uint32_t source_data_width = image->w_image_data->size.width;
@@ -219,27 +294,54 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
-    for (int32_t i = 0; i < source_width; i++) {
-        for (int32_t j = 0; j < source_height; j++) {
-            const int32_t ctx_x = i + position.x + draw_offset.x;
-            const int32_t ctx_y = j + position.y + draw_offset.y;
-            if (ctx_x < 0 || ctx_x >= target_width
-                || ctx_y < 0 || ctx_y >= target_height) {
-                continue;
+    const int32_t start_x = max(0, -position.x - draw_offset.x);
+    const int32_t end_x = min(source_width, target_width - position.x - draw_offset.x);
+    const int32_t start_y = max(0, -position.y - draw_offset.y);
+    const int32_t end_y = min(source_height, target_height - position.y - draw_offset.y);
+    
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+    profiler_start_segment("Fill image_render_dither");
+#endif
+    
+    if (source_has_alpha) {
+        for (int32_t j = start_y; j < end_y; j++) {
+            for (int32_t i = start_x; i < end_x; i++) {
+                const int32_t ctx_x = i + position.x + draw_offset.x;
+                const int32_t ctx_y = j + position.y + draw_offset.y;
+
+                const int32_t dither_x = (i + offset.x) % dither_width;
+                const int32_t dither_y = (j + offset.y) % dither_height;
+                
+                const uint32_t i_index = (i + source_origin_x + (j + source_origin_y) * source_data_width) * source_channels;
+                
+                if (image_buffer[i_index + source_alpha_offset] < 128) {
+                    continue;
+                }
+                
+                const uint32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
+                const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_width) * dither_channels;
+                target[t_index] = (image_buffer[i_index] > dither_buffer[d_index]) * 255;
             }
-            const int32_t dither_x = (i + offset.x) % dither_width;
-            const int32_t dither_y = (j + offset.y) % dither_height;
-            
-            const uint32_t i_index = (i + source_origin_x + (j + source_origin_y) * source_data_width) * source_channels;
-            
-            if (source_has_alpha && image_buffer[i_index + source_alpha_offset] < 128) {
-                continue;
+        }
+    } else {
+        for (int32_t j = start_y; j < end_y; j++) {
+            for (int32_t i = start_x; i < end_x; i++) {
+                const int32_t ctx_x = i + position.x + draw_offset.x;
+                const int32_t ctx_y = j + position.y + draw_offset.y;
+
+                const int32_t dither_x = (i + offset.x) % dither_width;
+                const int32_t dither_y = (j + offset.y) % dither_height;
+                
+                const uint32_t i_index = (i + source_origin_x + (j + source_origin_y) * source_data_width) * source_channels;
+                const uint32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
+                const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_width) * dither_channels;
+                target[t_index] = (image_buffer[i_index] > dither_buffer[d_index]) * 255;
             }
-            
-            const uint32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
-            const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_width) * dither_channels;
-            target[t_index] = (image_buffer[i_index] > dither_buffer[d_index]) * 255;
-            //target[t_index] = image_buffer[i_index] > dither_buffer[d_index] ? 255 : 0;
         }
     }
+
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
 }
