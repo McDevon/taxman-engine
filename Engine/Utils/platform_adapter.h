@@ -21,4 +21,6 @@ void platform_free(void *ptr);
 platform_time_t platform_current_time(void);
 float platform_time_to_seconds(platform_time_t);
 
+void platform_print(const char *text);
+
 #endif /* platform_adapter_h */

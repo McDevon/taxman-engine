@@ -168,5 +168,5 @@ void sb_debug_log_to_console(StringBuilder *sb)
 
 void sb_log_to_console(StringBuilder *sb)
 {
-    printf("%s\n", sb->string);
+    platform_print(sb->string);
 }

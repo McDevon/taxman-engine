@@ -203,7 +203,7 @@ void profiler_toggle()
 {
     if (profiler_root_entry) {
         char *data = profiler_get_data();
-        printf("%s", data);
+        platform_print(data);
         free(data);
         
         profiler_finish();

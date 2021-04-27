@@ -99,7 +99,7 @@ void scene_cleanup()
 
 void game_step(Number delta_time_millis, Controls controls)
 {
-#ifdef ENABLE_PROFILER    
+#ifdef ENABLE_PROFILER
     switch (profiler_schedule()) {
         case prof_start:
         {
@@ -109,7 +109,7 @@ void game_step(Number delta_time_millis, Controls controls)
         case prof_end:
         {
             char *data = profiler_get_data();
-            printf("%s", data);
+            platform_print(data);
             free(data);
             
             profiler_finish();
