@@ -15,16 +15,16 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     profiler_start_segment("Prepare image_render");
 #endif
 
-    const uint32_t source_width = image->rect.size.width;
-    const uint32_t source_height = image->rect.size.height;
-    const uint32_t source_data_width = image->w_image_data->size.width;
+    const int32_t source_width = image->rect.size.width;
+    const int32_t source_height = image->rect.size.height;
+    const int32_t source_data_width = image->w_image_data->size.width;
     const ImageBuffer *image_buffer = image->w_image_data->buffer;
-    const uint32_t target_width = context->target_buffer->size.width;
-    const uint32_t target_height = context->target_buffer->size.height;
-    const uint32_t target_channels = image_data_channel_count(context->target_buffer);
-    const uint32_t source_channels = image_channel_count(image);
-    const uint32_t source_origin_x = image->rect.origin.x;
-    const uint32_t source_origin_y = image->rect.origin.y;
+    const int32_t target_width = context->target_buffer->size.width;
+    const int32_t target_height = context->target_buffer->size.height;
+    const int32_t target_channels = image_data_channel_count(context->target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
     ImageBuffer *target = context->target_buffer->buffer;
     
     const int32_t flip_x = flip_flags_xy & (1 << 0);
@@ -35,6 +35,21 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
         flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height),
     };
     
+    if (position.x + draw_offset.x > target_width
+        || position.x + draw_offset.x + source_width < 0
+        || position.y + draw_offset.y > target_height
+        || position.y + draw_offset.y + source_height < 0) {
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+        return;
+    }
+    
+    const int32_t start_x = max(0, -position.x - draw_offset.x);
+    const int32_t end_x = min(source_width, target_width - position.x - draw_offset.x);
+    const int32_t start_y = max(0, -position.y - draw_offset.y);
+    const int32_t end_y = min(source_height, target_height - position.y - draw_offset.y);
+    
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
@@ -44,11 +59,6 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
         colors[1] = 0;
     }
     
-    const int32_t start_x = max(0, -position.x - draw_offset.x);
-    const int32_t end_x = min(source_width, target_width - position.x - draw_offset.x);
-    const int32_t start_y = max(0, -position.y - draw_offset.y);
-    const int32_t end_y = min(source_height, target_height - position.y - draw_offset.y);
-    
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
     profiler_start_segment("Fill image_render");
@@ -56,34 +66,42 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     
     if (source_has_alpha) {
         for (int32_t j = start_y; j < end_y; j++) {
+            const int32_t ctx_y = j + position.y + draw_offset.y;
+            const int32_t y = flip_y * (source_height - j) + !flip_y * j;
+            const int32_t y_i_index = (y + source_origin_y) * source_data_width;
+            const int32_t y_t_index = ctx_y * target_width;
+
             for (int32_t i = start_x; i < end_x; i++) {
                 const int32_t ctx_x = i + position.x + draw_offset.x;
-                const int32_t ctx_y = j + position.y + draw_offset.y;
-                
                 const int32_t x = flip_x * (source_width - i) + !flip_x * i;
-                const int32_t y = flip_y * (source_height - j) + !flip_y * j;
                 
-                int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                 if (image_buffer[i_index + source_alpha_offset] < 128) {
                     continue;
                 }
                 
-                int32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
+                int32_t t_index = (ctx_x + y_t_index) * target_channels;
                 
                 target[t_index] = colors[image_buffer[i_index] > 127];
             }
         }
     } else {
         for (int32_t j = start_y; j < end_y; j++) {
+            const int32_t ctx_y = j + position.y + draw_offset.y;
+            const int32_t y = flip_y * (source_height - j) + !flip_y * j;
+            const int32_t y_i_index = (y + source_origin_y) * source_data_width;
+            const int32_t y_t_index = ctx_y * target_width;
+            
             for (int32_t i = start_x; i < end_x; i++) {
                 const int32_t ctx_x = i + position.x + draw_offset.x;
-                const int32_t ctx_y = j + position.y + draw_offset.y;
-                
                 const int32_t x = flip_x * (source_width - i) + !flip_x * i;
-                const int32_t y = flip_y * (source_height - j) + !flip_y * j;
                 
-                int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
-                int32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
+                /*if (ctx_y >= target_height) {
+                    continue;
+                }*/
+                
+                int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
+                int32_t t_index = min((ctx_x + y_t_index) * target_channels, target_width * target_height - 1);
                 
                 target[t_index] = colors[image_buffer[i_index] > 127];
             }
@@ -99,9 +117,9 @@ void context_fill(RenderContext *context, uint8_t color)
 {
     if (!context) { return; }
 
-    const uint32_t target_width = context->target_buffer->size.width;
-    const uint32_t target_height = context->target_buffer->size.height;
-    const uint32_t target_channels = image_data_channel_count(context->target_buffer);
+    const int32_t target_width = context->target_buffer->size.width;
+    const int32_t target_height = context->target_buffer->size.height;
+    const int32_t target_channels = image_data_channel_count(context->target_buffer);
     ImageBuffer *target = context->target_buffer->buffer;
 
     for (int32_t i = 0; i < target_width; i++) {
@@ -130,14 +148,14 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     profiler_start_segment("Prepare context_render");
 #endif
     
-    const uint32_t source_width = image->rect.size.width;
-    const uint32_t source_height = image->rect.size.height;
-    const uint32_t source_data_width = image->w_image_data->size.width;
+    const int32_t source_width = image->rect.size.width;
+    const int32_t source_height = image->rect.size.height;
+    const int32_t source_data_width = image->w_image_data->size.width;
     const ImageBuffer *image_buffer = image->w_image_data->buffer;
-    const uint32_t target_width = context->target_buffer->size.width;
-    const uint32_t target_height = context->target_buffer->size.height;
-    const uint32_t target_channels = image_data_channel_count(context->target_buffer);
-    const uint32_t source_channels = image_channel_count(image);
+    const int32_t target_width = context->target_buffer->size.width;
+    const int32_t target_height = context->target_buffer->size.height;
+    const int32_t target_channels = image_data_channel_count(context->target_buffer);
+    const int32_t source_channels = image_channel_count(image);
     ImageBuffer *target = context->target_buffer->buffer;
     
     const bool source_has_alpha = image_has_alpha(image);
@@ -199,8 +217,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
         
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
     int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
-    const uint32_t source_origin_x = image->rect.origin.x;
-    const uint32_t source_origin_y = image->rect.origin.y;
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
     
     uint8_t colors[2] = {0, 255};
     if (invert) {
@@ -215,6 +233,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
 
     if (source_has_alpha) {
         for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
+            const int32_t y_t_index = j * target_width;
+
             for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
                 AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
                 
@@ -229,12 +249,14 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
                     continue;
                 }
                 
-                int32_t t_index = (i + j * target_width) * target_channels;
+                int32_t t_index = (i + y_t_index) * target_channels;
                 target[t_index] = colors[image_buffer[i_index] > 127];
             }
         }
     } else {
         for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
+            const int32_t y_t_index = j * target_width;
+
             for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
                 AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
                 
@@ -245,7 +267,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
                     continue;
                 }
                 int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
-                int32_t t_index = (i + j * target_width) * target_channels;
+                int32_t t_index = (i + y_t_index) * target_channels;
                 
                 target[t_index] = colors[image_buffer[i_index] > 127];
             }
@@ -265,22 +287,22 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
     profiler_start_segment("Prepare image_render_dither");
 #endif
 
-    const uint32_t source_width = image->rect.size.width;
-    const uint32_t source_height = image->rect.size.height;
-    const uint32_t source_data_width = image->w_image_data->size.width;
+    const int32_t source_width = image->rect.size.width;
+    const int32_t source_height = image->rect.size.height;
+    const int32_t source_data_width = image->w_image_data->size.width;
     const ImageBuffer *image_buffer = image->w_image_data->buffer;
-    const uint32_t target_width = context->target_buffer->size.width;
-    const uint32_t target_height = context->target_buffer->size.height;
+    const int32_t target_width = context->target_buffer->size.width;
+    const int32_t target_height = context->target_buffer->size.height;
     const ImageBuffer *dither_buffer = dither_texture->w_image_data->buffer;
-    const uint32_t dither_width = dither_texture->rect.size.width;
-    const uint32_t dither_height = dither_texture->rect.size.height;
-    const uint32_t target_channels = image_data_channel_count(context->target_buffer);
-    const uint32_t source_channels = image_channel_count(image);
-    const uint32_t dither_channels = image_channel_count(dither_texture);
-    const uint32_t source_origin_x = image->rect.origin.x;
-    const uint32_t source_origin_y = image->rect.origin.y;
-    const uint32_t dither_origin_x = dither_texture->rect.origin.x;
-    const uint32_t dither_origin_y = dither_texture->rect.origin.y;
+    const int32_t dither_width = dither_texture->rect.size.width;
+    const int32_t dither_height = dither_texture->rect.size.height;
+    const int32_t target_channels = image_data_channel_count(context->target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    const int32_t dither_channels = image_channel_count(dither_texture);
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
+    const int32_t dither_origin_x = dither_texture->rect.origin.x;
+    const int32_t dither_origin_y = dither_texture->rect.origin.y;
     ImageBuffer *target = context->target_buffer->buffer;
     
     const int32_t flip_x = flip_flags_xy & (1 << 0);
@@ -290,6 +312,16 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
         flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height),
     };
+    
+    if (position.x + draw_offset.x > target_width
+        || position.x + draw_offset.x + source_width < 0
+        || position.y + draw_offset.y > target_height
+        || position.y + draw_offset.y + source_height < 0) {
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+        return;
+    }
     
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
