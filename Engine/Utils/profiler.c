@@ -40,7 +40,7 @@ void profiler_entry_destroy(void *obj)
 
 static BaseType ProfilerEntryType = { "ProfilerEntry", &profiler_entry_destroy, &profiler_entry_describe };
 
-ProfilerEntry *profiler_entry_create()
+ProfilerEntry *profiler_entry_create(void)
 {
     ProfilerEntry *entry = platform_calloc(1, sizeof(ProfilerEntry));
 

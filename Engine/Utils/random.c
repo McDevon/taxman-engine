@@ -87,5 +87,5 @@ int random_next_int(Random *state)
 
 int random_next_int_limit(Random *state, int limit)
 {
-    return (int)(random_next_uint64(state) / ((uint64_t)INT_MAX / (uint64_t)limit));
+    return (int)((random_next_uint64(state) & INT_MAX) % limit);
 }
