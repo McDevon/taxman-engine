@@ -14,7 +14,7 @@
 #include "profiler_internal.h"
 
 static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0 /*image_settings_alpha | image_settings_rgb*/ };
-static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, { 0, 0, 0, 0, 0, 0 } };
+static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false };
 
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
 static Number _fixed_dt_counter = 0;
@@ -27,13 +27,15 @@ void game_init(void *first_scene)
     _screen.buffer = screenBuffer;
     
     _ctx.target_buffer = &_screen;
-    
+    _ctx.rendered_squares = list_create();
+    _ctx.square_pool = list_create();
+
     _scene_manager.destroy_queue = list_create_with_weak_references();
     _scene_manager.current_scene = first_scene;
     go_initialize(_scene_manager.current_scene, &_scene_manager);    
 }
 
-void switch_scene()
+void switch_scene(void)
 {
     destroy(_scene_manager.current_scene);
     list_clear(_scene_manager.destroy_queue);
@@ -43,7 +45,7 @@ void switch_scene()
     go_start(_scene_manager.current_scene);
 }
 
-void transition_finish()
+void transition_finish(void)
 {
     _scene_manager.transition = st_none;
     _scene_manager.transition_length = 0;
@@ -80,7 +82,7 @@ void transition_step(Number delta_time_millis)
     }
 }
 
-void scene_cleanup()
+void scene_cleanup(void)
 {
     size_t count = list_count(_scene_manager.destroy_queue);
     
