@@ -5,10 +5,12 @@
 void log_print(const char *format, ...)
 {
     va_list none;
+    va_start (none, format);
     vfprintf (stdout, "[debug] ", none);
+    va_end (none);
+    
     va_list arg;
     int done;
-
     va_start (arg, format);
     done = vfprintf (stdout, format, arg);
     va_end (arg);
@@ -18,10 +20,12 @@ void log_print(const char *format, ...)
 void log_print_error(const char *format, ...)
 {
     va_list none;
+    va_start (none, format);
     vfprintf (stdout, "[error] ", none);
+    va_end (none);
+    
     va_list arg;
     int done;
-
     va_start (arg, format);
     done = vfprintf (stdout, format, arg);
     va_end (arg);
