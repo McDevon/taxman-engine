@@ -100,8 +100,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
         if (list_count(ends)) {
             Square *next_end = (Square *)list_get(ends, 0);
             if (!sq || next_end->right < sq->left) {
-                // TODO: Handle square ending
-                
+                // Square ended
                 Square *dropped = NULL;
                 
                 const size_t actives_count = list_count(actives);
@@ -109,13 +108,16 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                     Square *active = list_get(actives, k);
                     
                     if (active->top > next_end->bottom || active->bottom < next_end->top) {
+                        // Active does not overlap with ended square
                         continue;
                     }
                     
                     if (next_end->top > active->top && next_end->bottom < active->bottom && next_end->right < active->right) {
+                        // Ended square completely contained in this active
                         break;
                     }
                     
+                    // Ended square overlaps with active but not completely contained
                     list_add(result, square_create(active->left, next_end->right, active->top, active->bottom));
 
                     list_drop_index(actives, k);
@@ -131,13 +133,66 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                         Square *end = list_get(ends, k);
                         
                         if (end->top > dropped->bottom || end->bottom < dropped->top) {
+                            // This rect completely outside dropped active rect
                             continue;
                         }
                         
-                        list_add(actives, square_create(next_end->right + 1, end->right, end->top, end->bottom));
+                        // This rect overlaps with dropped rect, needs to be handled
+                        list_add(temps, square_create(next_end->right + 1, end->right, end->top, end->bottom));
                     }
                 
                     destroy(dropped);
+                }
+                
+                // Merge continuing rects where needed
+                int t_index = (int)list_count(temps) - 1;
+                while (t_index >= 0) {
+                    int temps_count = (int)list_count(temps);
+                    Square *continuing = list_get(temps, t_index);
+                    bool continuing_is_active = true;
+                    
+                    int top = continuing->top;
+                    int bottom = continuing->bottom;
+                    for (int32_t k = (int32_t)temps_count - 1; k >= 0; --k) {
+                        Square *temp = list_get(temps, k);
+                        if (temp == continuing) {
+                            continue;
+                        }
+                        
+                        if (temp->top > continuing->bottom || temp->bottom < continuing->top) {
+                            // No overlap
+                            continue;
+                        }
+                        
+                        if (continuing->top > temp->top && continuing->bottom < temp->bottom) {
+                            continuing_is_active = false;
+                            // continuing is completely contained by this rect
+                            break;
+                        }
+                        
+                        if (temp->top < top) {
+                            top = temp->top;
+                        }
+                        if (temp->bottom > bottom) {
+                            bottom = temp->bottom;
+                        }
+                                    
+                        list_drop_index(temps, k);
+                        if (k < t_index) {
+                            --t_index;
+                        }
+                    }
+                    
+                    if (continuing_is_active) {
+                        list_add(temps, square_create(next_end->right + 1, continuing->right, top, bottom));
+                    }
+                    list_drop_item(temps, continuing);
+                    
+                    --t_index;
+                }
+                
+                for (int k = (int)list_count(temps) - 1; k >= 0; --k) {
+                    list_add(actives, list_drop_index(temps, k));
                 }
                 
                 continue;
@@ -165,7 +220,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                 continue;
             }
             
-            if (sq->top > active->top && sq->bottom < active->bottom) {
+            if (sq->top >= active->top && sq->bottom <= active->bottom) {
                 sq_is_active = false;
                 break;
             }
@@ -190,14 +245,15 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
     }
     
     count = list_count(actives);
-    
-    /*for (size_t i = 0; i < count; ++i) {
-        list_add(result, list_get(actives, i));
-    }*/
-    
+
     destroy(actives);
     destroy(temps);
     destroy(ends);
+    
+    for (int i = 0; i < (int)list_count(result); ++i) {
+        Square *sq = (Square *)list_get(result, i);
+        LOG("Square l: %d r: %d t: %d b: %d", sq->left, sq->right, sq->top, sq->bottom);
+    }
 }
 
 BaseType RenderContextType = { "RenderContext", &render_context_destroy, &render_context_describe };
