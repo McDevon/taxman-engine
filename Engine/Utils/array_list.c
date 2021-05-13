@@ -23,7 +23,7 @@ char *list_describe(void *value);
 
 BaseType ArrayListType = { "ArrayList", &list_destroy, &list_describe };
 
-int32_t list_add(ArrayList *list, void *value)
+int list_add(ArrayList *list, void *value)
 {
     if (value == NULL) {
         LOG_ERROR("Cannot add NULL to a list");
@@ -41,6 +41,38 @@ int32_t list_add(ArrayList *list, void *value)
     }
 
     list->first[list->count] = value;
+    list->count++;
+    
+    return 0;
+}
+
+int list_insert(ArrayList *list, void *value, size_t index)
+{
+    if (value == NULL) {
+        LOG_ERROR("Cannot add NULL to a list");
+        return -1;
+    }
+    
+    if (index > list->count) {
+        LOG_ERROR("Cannot add item to list: index too high");
+        return -2;
+    }
+    
+    if (list->count >= list->capacity) {
+        void **buffer = list->first;
+        size_t new_capacity = list->capacity * 2;
+        void *new_buffer = platform_realloc(buffer, sizeof(void *) * new_capacity);
+        if (!new_buffer) { return 1; }
+        
+        list->capacity = new_capacity;
+        list->first = new_buffer;
+    }
+    
+    for (int32_t i = (int32_t)list->count - 1; i >= (int32_t)index; --i) {
+        list->first[i + 1] = list->first[i];
+    }
+
+    list->first[index] = value;
     list->count++;
     
     return 0;

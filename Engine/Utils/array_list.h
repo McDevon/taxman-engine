@@ -13,7 +13,8 @@ typedef struct ArrayList ArrayList;
 
 typedef int (list_compare_t)(const void *, const void *);
 
-int32_t list_add(ArrayList *list, void *value);
+int list_add(ArrayList *list, void *value);
+int list_insert(ArrayList *list, void *value, size_t index);
 void * list_get(ArrayList *list, size_t index);
 void * list_drop_index(ArrayList *list, size_t index);
 void * list_drop_item(ArrayList *list, void *value);
