@@ -212,6 +212,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
         const size_t actives_count = list_count(actives);
         int top = sq->top;
         int bottom = sq->bottom;
+        int right = sq->right;
         bool sq_is_active = true;
         for (int32_t k = (int32_t)actives_count - 1; k >= 0; --k) {
             Square *active = list_get(actives, k);
@@ -231,6 +232,10 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
             if (active->bottom > bottom) {
                 bottom = active->bottom;
             }
+            if (active->right < right) {
+                right = active->right;
+            }
+            
                         
             list_add(result, square_create(active->left, sq->left - 1, active->top, active->bottom));
             list_drop_index(actives, k);
@@ -238,7 +243,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
         }
         
         if (sq_is_active) {
-            list_add(actives, square_create(sq->left, sq->right, top, bottom));
+            list_add(actives, square_create(sq->left, right, top, bottom));
         }
         
         ++i;
