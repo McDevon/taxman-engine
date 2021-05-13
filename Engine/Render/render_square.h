@@ -12,5 +12,6 @@ typedef struct Square {
 } Square;
 
 Square *square_create(int left, int right, int top, int bottom);
+Square *square_copy(Square *sq);
 
 #endif /* render_square_h */

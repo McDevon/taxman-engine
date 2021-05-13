@@ -40,3 +40,8 @@ Square *square_create(int left, int right, int top, int bottom)
     
     return square;
 }
+
+Square *square_copy(Square *sq)
+{
+    return square_create(sq->left, sq->right, sq->top, sq->bottom);
+}
