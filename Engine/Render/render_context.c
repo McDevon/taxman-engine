@@ -116,9 +116,6 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                         // Ended square completely contained in this active
                         break;
                     }
-                    
-                    // Ended square overlaps with active but not completely contained
-                    list_add(result, square_create(active->left, next_end->right, active->top, active->bottom));
 
                     list_drop_index(actives, k);
                     dropped = active;
@@ -184,13 +181,24 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                         }
                     }
                 
+                    bool keep_dropped = false;
                     // Add temps to actives
                     for (int k = (int)list_count(temps) - 1; k >= 0; --k) {
                         Square *temp = list_drop_index(temps, k);
-                        list_add(actives, temp);
+                        if (dropped->top == temp->top && dropped->bottom == temp->bottom && temp->right > dropped->right) {
+                            keep_dropped = true;
+                            dropped->right = temp->right;
+                            list_add(actives, dropped);
+                        } else {
+                            list_add(actives, temp);
+                        }
                     }
                     
-                    destroy(dropped);
+                    if (!keep_dropped) {
+                        // Ended square overlaps with active but not completely contained
+                        list_add(result, square_create(dropped->left, next_end->right, dropped->top, dropped->bottom));
+                        destroy(dropped);
+                    }
                 }
                 
                 continue;
