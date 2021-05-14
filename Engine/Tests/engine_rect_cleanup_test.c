@@ -123,6 +123,8 @@ int engine_rect_cleanup_test_run_generated_test_case(Random *state, int index)
     int result = engine_rect_cleanup_test_run_test_case(start, test_name);
     
     platform_free(test_name);
+    destroy(start);
+    destroy(end);
     
     return result;
 }
@@ -136,21 +138,27 @@ int engine_rect_cleanup_test()
         {240, 340, 40, 100},
         {280, 330, 170, 220}
     };
-    result += engine_rect_cleanup_test_run_test_case(engine_rect_cleanup_test_array_to_square_list(ending_valley_rects, 3), "Ending valley");
+    ArrayList *ending_valley_list = engine_rect_cleanup_test_array_to_square_list(ending_valley_rects, 3);
+    result += engine_rect_cleanup_test_run_test_case(ending_valley_list, "Ending valley");
+    destroy(ending_valley_list);
     
-    int long_thin_rect[][4] = {
+    int long_thin_rects[][4] = {
         {100, 300, 50, 200},
         {140, 340, 40, 70},
         {50, 380, 55, 58},
         {150, 320, 60, 80}
     };
-    result += engine_rect_cleanup_test_run_test_case(engine_rect_cleanup_test_array_to_square_list(long_thin_rect, 4), "Long thin rect");
+    ArrayList *long_thin_list = engine_rect_cleanup_test_array_to_square_list(long_thin_rects, 4);
+    result += engine_rect_cleanup_test_run_test_case(long_thin_list, "Long thin rect");
+    destroy(long_thin_list);
     
     Random *rect_random = random_create(4608090406132658590LL, 5588768554981732228LL);
     
     for (int i = 1; i <= 200; ++i) {
         result += engine_rect_cleanup_test_run_generated_test_case(rect_random, i);
     }
+    
+    destroy(rect_random);
     
     return result;
 }

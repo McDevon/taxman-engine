@@ -189,6 +189,7 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                             keep_dropped = true;
                             dropped->right = temp->right;
                             list_add(actives, dropped);
+                            destroy(temp);
                         } else {
                             list_add(actives, temp);
                         }
