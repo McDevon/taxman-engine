@@ -66,6 +66,7 @@ int engine_rect_cleanup_test_run_test_case(ArrayList *start, const char *test_na
     platform_free(end_canvas);
     
     bool overlap_passed = true;
+    bool form_passed = true;
     size_t end_count = list_count(end);
     for (int i = 0; i < end_count; ++i) {
         RenderRect *a = list_get(end, i);
@@ -78,15 +79,21 @@ int engine_rect_cleanup_test_run_test_case(ArrayList *start, const char *test_na
                 overlap_passed = false;
             }
         }
+        if (a->left > a->right || a->top > a->bottom) {
+            form_passed = false;
+        }
     }
     
     if (!overlap_passed) {
         LOG_ERROR("Rect test OVERLAP %s FAILED", test_name);
     }
+    if (!form_passed) {
+        LOG_ERROR("Rect test RECTS PROPERLY FORMED %s FAILED", test_name);
+    }
 
     destroy(end);
     
-    return (fills_passed ? 0 : 1) + (overlap_passed ? 0 : 1);
+    return (fills_passed ? 0 : 1) + (overlap_passed ? 0 : 1) + (form_passed ? 0 : 1);
 }
 
 int engine_rect_cleanup_test_run_generated_test_case(Random *state, int index)
