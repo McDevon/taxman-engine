@@ -122,14 +122,14 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
 
                     list_drop_index(actives, k);
                     dropped = active;
-                    //break;
+                    break;
                 }
                 
                 list_drop_index(ends, 0);
 
                 if (dropped) {
                     const size_t ends_count = list_count(ends);
-                    for (int32_t k = (int32_t)ends_count - 1; k >= 0; --k) {
+                    for (int32_t k = 0; k < ends_count; ++k) {
                         Square *end = list_get(ends, k);
                         
                         if (end->top > dropped->bottom || end->bottom < dropped->top) {
@@ -137,62 +137,60 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                             continue;
                         }
                         
-                        // This rect overlaps with dropped rect, needs to be handled
-                        list_add(temps, square_create(next_end->right + 1, end->right, end->top, end->bottom));
+                        // Find if there is a temp overlapping this one
+                        bool has_overlapping_temp = false;
+                        const size_t temps_count = list_count(temps);
+                        Square *first_contact = NULL;
+                        for (int t = (int)temps_count - 1; t >= 0; --t) {
+                            Square *temp = list_get(temps, t);
+                            if (end->top > temp->bottom || end->bottom < temp->top) {
+                                // This rect completely outside temp
+                                continue;
+                            }
+                            has_overlapping_temp = true;
+                            
+                            if (first_contact) {
+                                // This end has already met another temp, join to it
+                                if (temp->top < first_contact->top) {
+                                    first_contact->top = temp->top;
+                                }
+                                if (temp->bottom > first_contact->bottom) {
+                                    first_contact->bottom = temp->bottom;
+                                }
+                                if (temp->right < first_contact->right) {
+                                    first_contact->right = temp->right;
+                                }
+                                list_drop_index(temps, t);
+                                destroy(temp);
+                                continue;
+                            }
+                            
+                            // Overlaps with this temp, adjust temp
+                            if (end->top < temp->top) {
+                                temp->top = end->top;
+                            }
+                            if (end->bottom > temp->bottom) {
+                                temp->bottom = end->bottom;
+                            }
+                            if (end->right < temp->right) {
+                                temp->right = end->right;
+                            }
+                            first_contact = temp;
+                        }
+                        
+                        if (!has_overlapping_temp) {
+                            // Does not overlap with existings temps, create new
+                            list_add(temps, square_create(next_end->right + 1, end->right, end->top, end->bottom));
+                        }
                     }
                 
+                    // Add temps to actives
+                    for (int k = (int)list_count(temps) - 1; k >= 0; --k) {
+                        Square *temp = list_drop_index(temps, k);
+                        list_add(actives, temp);
+                    }
+                    
                     destroy(dropped);
-                }
-                
-                // Merge continuing rects where needed
-                int t_index = (int)list_count(temps) - 1;
-                while (t_index >= 0) {
-                    int temps_count = (int)list_count(temps);
-                    Square *continuing = list_get(temps, t_index);
-                    bool continuing_is_active = true;
-                    
-                    int top = continuing->top;
-                    int bottom = continuing->bottom;
-                    for (int32_t k = (int32_t)temps_count - 1; k >= 0; --k) {
-                        Square *temp = list_get(temps, k);
-                        if (temp == continuing) {
-                            continue;
-                        }
-                        
-                        if (temp->top > continuing->bottom || temp->bottom < continuing->top) {
-                            // No overlap
-                            continue;
-                        }
-                        
-                        if (continuing->top > temp->top && continuing->bottom < temp->bottom) {
-                            continuing_is_active = false;
-                            // continuing is completely contained by this rect
-                            break;
-                        }
-                        
-                        if (temp->top < top) {
-                            top = temp->top;
-                        }
-                        if (temp->bottom > bottom) {
-                            bottom = temp->bottom;
-                        }
-                                    
-                        list_drop_index(temps, k);
-                        if (k < t_index) {
-                            --t_index;
-                        }
-                    }
-                    
-                    if (continuing_is_active) {
-                        list_add(temps, square_create(next_end->right + 1, continuing->right, top, bottom));
-                    }
-                    list_drop_item(temps, continuing);
-                    
-                    --t_index;
-                }
-                
-                for (int k = (int)list_count(temps) - 1; k >= 0; --k) {
-                    list_add(actives, list_drop_index(temps, k));
                 }
                 
                 continue;
@@ -235,7 +233,6 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
             if (active->right < right) {
                 right = active->right;
             }
-            
                         
             list_add(result, square_create(active->left, sq->left - 1, active->top, active->bottom));
             list_drop_index(actives, k);
@@ -254,11 +251,6 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
     destroy(actives);
     destroy(temps);
     destroy(ends);
-    
-    for (int i = 0; i < (int)list_count(result); ++i) {
-        Square *sq = (Square *)list_get(result, i);
-        LOG("Square l: %d r: %d t: %d b: %d", sq->left, sq->right, sq->top, sq->bottom);
-    }
 }
 
 BaseType RenderContextType = { "RenderContext", &render_context_destroy, &render_context_describe };
