@@ -1,6 +1,6 @@
 #include "engine_rect_cleanup_test.h"
 #include "array_list.h"
-#include "render_square.h"
+#include "render_rect.h"
 #include "constants.h"
 #include "render_context.h"
 #include "platform_adapter.h"
@@ -13,7 +13,7 @@ void engine_rect_cleanup_test_fill_canvas(uint8_t *canvas, ArrayList *squares)
     size_t count = list_count(squares);
     
     for (size_t i = 0; i < count; ++i) {
-        Square *sq = list_get(squares, i);
+        RenderRect *sq = list_get(squares, i);
         for (int k = sq->top; k <= sq->bottom; ++k) {
             for (int j = sq->left; j <= sq->right; ++j) {
                 int32_t t_index = j + k * SCREEN_WIDTH;
@@ -28,7 +28,7 @@ ArrayList * engine_rect_cleanup_test_array_to_square_list(int squares[][4], int 
     ArrayList *list = list_create();
     
     for (int i = 0; i < len; ++i) {
-        Square *sq = square_create(squares[i][0],
+        RenderRect *sq = rrect_create(squares[i][0],
                                    squares[i][1],
                                    squares[i][2],
                                    squares[i][3]);
@@ -41,7 +41,7 @@ ArrayList * engine_rect_cleanup_test_array_to_square_list(int squares[][4], int 
 int engine_rect_cleanup_test_run_test_case(ArrayList *start, const char *test_name)
 {
     ArrayList *end = list_create();
-    context_clean_union_of_rendered_squares(start, end);
+    context_clean_union_of_rendered_rects(start, end);
 
     uint8_t *start_canvas = platform_calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint8_t));
     uint8_t *end_canvas = platform_calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint8_t));
@@ -68,9 +68,9 @@ int engine_rect_cleanup_test_run_test_case(ArrayList *start, const char *test_na
     bool overlap_passed = true;
     size_t end_count = list_count(end);
     for (int i = 0; i < end_count; ++i) {
-        Square *a = list_get(end, i);
+        RenderRect *a = list_get(end, i);
         for (int k = i + 1; k < end_count; ++k) {
-            Square *b = list_get(end, k);
+            RenderRect *b = list_get(end, k);
             if (!(a->left > b->right
                 || a->right < b->left
                 || a->top > b->bottom
@@ -102,10 +102,10 @@ int engine_rect_cleanup_test_run_generated_test_case(Random *state, int index)
         int top = random_next_int_limit(state, SCREEN_HEIGHT - 20);
         int bottom = top + random_next_int_limit(state, SCREEN_HEIGHT - top);
         list_add(start,
-                 square_create(left, right, top, bottom));
+                 rrect_create(left, right, top, bottom));
     }
     
-    context_clean_union_of_rendered_squares(start, end);
+    context_clean_union_of_rendered_rects(start, end);
     
     StringBuilder *sb = sb_create();
     sb_append_string(sb, "generated_squares_");

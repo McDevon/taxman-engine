@@ -161,7 +161,6 @@ void list_sort_insertsort(ArrayList *list, list_compare_t *compare_fn)
 void list_reverse(ArrayList *list)
 {
     void *key;
-    int32_t j;
     size_t count = list->count;
     size_t half_count = count / 2;
     void **array = list->first;

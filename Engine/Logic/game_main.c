@@ -27,8 +27,8 @@ void game_init(void *first_scene)
     _screen.buffer = screenBuffer;
     
     _ctx.target_buffer = &_screen;
-    _ctx.rendered_squares = list_create();
-    _ctx.square_pool = list_create();
+    _ctx.rendered_rects = list_create();
+    _ctx.rect_pool = list_create();
 
     _scene_manager.destroy_queue = list_create_with_weak_references();
     _scene_manager.current_scene = first_scene;

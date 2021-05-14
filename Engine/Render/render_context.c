@@ -1,5 +1,5 @@
 #include "render_context.h"
-#include "render_square.h"
+#include "render_rect.h"
 #include "platform_adapter.h"
 #include "string_builder.h"
 #include "engine_log.h"
@@ -8,11 +8,11 @@
 void render_context_destroy(void *value)
 {
     RenderContext *self = (RenderContext *)value;
-    if (self->rendered_squares) {
-        destroy(self->rendered_squares);
+    if (self->rendered_rects) {
+        destroy(self->rendered_rects);
     }
-    if (self->square_pool) {
-        destroy(self->square_pool);
+    if (self->rect_pool) {
+        destroy(self->rect_pool);
     }
 }
 
@@ -21,30 +21,30 @@ char *render_context_describe(void *value)
     return platform_strdup("[]");
 }
 
-void context_square_rendered(RenderContext *self, int left, int right, int top, int bottom)
+void context_rect_rendered(RenderContext *self, int left, int right, int top, int bottom)
 {
     if (!self->background_enabled) {
         return;
     }
     
-    Square *sq = NULL;
-    size_t pool_count = list_count(self->square_pool);
+    RenderRect *sq = NULL;
+    size_t pool_count = list_count(self->rect_pool);
     if (pool_count) {
-        sq = list_drop_index(self->square_pool, pool_count - 1);
+        sq = list_drop_index(self->rect_pool, pool_count - 1);
         sq->left = left;
         sq->right = right;
         sq->top = top;
         sq->bottom = bottom;
     } else {
-        sq = square_create(left, right, top, bottom);
+        sq = rrect_create(left, right, top, bottom);
     }
-    list_add(self->rendered_squares, sq);
+    list_add(self->rendered_rects, sq);
 }
 
-int context_square_compare_left_edge(const void *a, const void *b)
+int context_rect_compare_left_edge(const void *a, const void *b)
 {
-    Square *sq_a = *(Square**)a;
-    Square *sq_b = *(Square**)b;
+    RenderRect *sq_a = *(RenderRect**)a;
+    RenderRect *sq_b = *(RenderRect**)b;
     
     int diff = sq_a->left - sq_b->left;
     
@@ -57,10 +57,10 @@ int context_square_compare_left_edge(const void *a, const void *b)
     }
 }
 
-int context_square_compare_right_edge(const void *a, const void *b)
+int context_rect_compare_right_edge(const void *a, const void *b)
 {
-    Square *sq_a = *(Square**)a;
-    Square *sq_b = *(Square**)b;
+    RenderRect *sq_a = *(RenderRect**)a;
+    RenderRect *sq_b = *(RenderRect**)b;
     
     int diff = sq_a->right - sq_b->right;
     
@@ -73,39 +73,39 @@ int context_square_compare_right_edge(const void *a, const void *b)
     }
 }
 
-void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayList *result)
+void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList *result)
 {
-    if (!rendered_squares || !result) {
-        LOG_ERROR("clean_union_of_rendered_squares: received null parameter");
+    if (!rendered_rects || !result) {
+        LOG_ERROR("clean_union_of_rendered_rects: received null parameter");
         return;
     }
     
     if (list_count(result) != 0) {
-        LOG_ERROR("clean_union_of_rendered_squares: result array not empty");
+        LOG_ERROR("clean_union_of_rendered_rects: result array not empty");
         return;
     }
     
-    size_t count = list_count(rendered_squares);
+    size_t count = list_count(rendered_rects);
     
     ArrayList *actives = list_create();
     ArrayList *temps = list_create_with_weak_references();
     ArrayList *ends = list_create_with_weak_references();
 
-    list_sort(rendered_squares, &context_square_compare_left_edge);
+    list_sort(rendered_rects, &context_rect_compare_left_edge);
     
     size_t i = 0;
     while (i < count || list_count(ends)) {
-        Square *sq = list_count(rendered_squares) ? list_get(rendered_squares, i) : NULL;
+        RenderRect *sq = list_count(rendered_rects) ? list_get(rendered_rects, i) : NULL;
         
         if (list_count(ends)) {
-            Square *next_end = (Square *)list_get(ends, 0);
+            RenderRect *next_end = (RenderRect *)list_get(ends, 0);
             if (!sq || next_end->right < sq->left) {
                 // Square ended
-                Square *dropped = NULL;
+                RenderRect *dropped = NULL;
                 
                 const size_t actives_count = list_count(actives);
                 for (int32_t k = (int32_t)actives_count - 1; k >= 0; --k) {
-                    Square *active = list_get(actives, k);
+                    RenderRect *active = list_get(actives, k);
                     
                     if (active->top > next_end->bottom || active->bottom < next_end->top) {
                         // Active does not overlap with ended square
@@ -127,7 +127,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                 if (dropped) {
                     const size_t ends_count = list_count(ends);
                     for (int32_t k = 0; k < ends_count; ++k) {
-                        Square *end = list_get(ends, k);
+                        RenderRect *end = list_get(ends, k);
                         
                         if (end->top > dropped->bottom || end->bottom < dropped->top) {
                             // This rect completely outside dropped active rect
@@ -137,9 +137,9 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                         // Find if there is a temp overlapping this one
                         bool has_overlapping_temp = false;
                         const size_t temps_count = list_count(temps);
-                        Square *first_contact = NULL;
+                        RenderRect *first_contact = NULL;
                         for (int t = (int)temps_count - 1; t >= 0; --t) {
-                            Square *temp = list_get(temps, t);
+                            RenderRect *temp = list_get(temps, t);
                             if (end->top > temp->bottom || end->bottom < temp->top) {
                                 // This rect completely outside temp
                                 continue;
@@ -177,14 +177,14 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                         
                         if (!has_overlapping_temp) {
                             // Does not overlap with existings temps, create new
-                            list_add(temps, square_create(next_end->right + 1, end->right, end->top, end->bottom));
+                            list_add(temps, rrect_create(next_end->right + 1, end->right, end->top, end->bottom));
                         }
                     }
                 
                     bool keep_dropped = false;
                     // Add temps to actives
                     for (int k = (int)list_count(temps) - 1; k >= 0; --k) {
-                        Square *temp = list_drop_index(temps, k);
+                        RenderRect *temp = list_drop_index(temps, k);
                         if (dropped->top == temp->top && dropped->bottom == temp->bottom && temp->right > dropped->right) {
                             keep_dropped = true;
                             dropped->right = temp->right;
@@ -196,7 +196,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                     
                     if (!keep_dropped) {
                         // Ended square overlaps with active but not completely contained
-                        list_add(result, square_create(dropped->left, next_end->right, dropped->top, dropped->bottom));
+                        list_add(result, rrect_create(dropped->left, next_end->right, dropped->top, dropped->bottom));
                         destroy(dropped);
                     }
                 }
@@ -208,7 +208,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
         const size_t ends_count = list_count(ends);
         size_t k;
         for (k = 0; k < ends_count; ++k) {
-            Square *end = list_get(ends, k);
+            RenderRect *end = list_get(ends, k);
             if (end->right > sq->right) {
                 break;
             }
@@ -221,7 +221,7 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
         int right = sq->right;
         bool sq_is_active = true;
         for (int32_t k = (int32_t)actives_count - 1; k >= 0; --k) {
-            Square *active = list_get(actives, k);
+            RenderRect *active = list_get(actives, k);
             
             if (active->top > sq->bottom || active->bottom < sq->top) {
                 continue;
@@ -242,13 +242,13 @@ void context_clean_union_of_rendered_squares(ArrayList *rendered_squares, ArrayL
                 right = active->right;
             }
                         
-            list_add(result, square_create(active->left, sq->left - 1, active->top, active->bottom));
+            list_add(result, rrect_create(active->left, sq->left - 1, active->top, active->bottom));
             list_drop_index(actives, k);
             destroy(active);
         }
         
         if (sq_is_active) {
-            list_add(actives, square_create(sq->left, right, top, bottom));
+            list_add(actives, rrect_create(sq->left, right, top, bottom));
         }
         
         ++i;

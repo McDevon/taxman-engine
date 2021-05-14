@@ -1,4 +1,4 @@
-#include "render_square.h"
+#include "render_rect.h"
 #include "string_builder.h"
 #include "platform_adapter.h"
 
@@ -8,7 +8,7 @@ void square_destroy(void *value)
 
 char *square_describe(void *value)
 {
-    Square *self = (Square *)value;
+    RenderRect *self = (RenderRect *)value;
     
     StringBuilder *sb = sb_create();
     sb_append_string(sb, "[");
@@ -28,9 +28,9 @@ char *square_describe(void *value)
 
 BaseType SquareType = { "Square", &square_destroy, &square_describe };
 
-Square *square_create(int left, int right, int top, int bottom)
+RenderRect *rrect_create(int left, int right, int top, int bottom)
 {
-    Square *square = platform_calloc(1, sizeof(Square));
+    RenderRect *square = platform_calloc(1, sizeof(RenderRect));
     square->w_type = &SquareType;
     
     square->left = left;
@@ -41,7 +41,7 @@ Square *square_create(int left, int right, int top, int bottom)
     return square;
 }
 
-Square *square_copy(Square *sq)
+RenderRect *rrect_copy(RenderRect *sq)
 {
-    return square_create(sq->left, sq->right, sq->top, sq->bottom);
+    return rrect_create(sq->left, sq->right, sq->top, sq->bottom);
 }
