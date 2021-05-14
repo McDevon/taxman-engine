@@ -175,7 +175,7 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                             first_contact = temp;
                         }
                         
-                        if (!has_overlapping_temp) {
+                        if (!has_overlapping_temp && end->right >= next_end->right + 1) {
                             // Does not overlap with existings temps, create new
                             list_add(temps, rrect_create(next_end->right + 1, end->right, end->top, end->bottom));
                         }
@@ -196,7 +196,9 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                     
                     if (!keep_dropped) {
                         // Ended square overlaps with active but not completely contained
-                        list_add(result, rrect_create(dropped->left, next_end->right, dropped->top, dropped->bottom));
+                        if (dropped->left <= next_end->right) {
+                            list_add(result, rrect_create(dropped->left, next_end->right, dropped->top, dropped->bottom));
+                        }
                         destroy(dropped);
                     }
                 }
@@ -241,8 +243,10 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
             if (active->right < right) {
                 right = active->right;
             }
-                        
-            list_add(result, rrect_create(active->left, sq->left - 1, active->top, active->bottom));
+                      
+            if (active->left <= sq->left - 1) {
+                list_add(result, rrect_create(active->left, sq->left - 1, active->top, active->bottom));
+            }
             list_drop_index(actives, k);
             destroy(active);
         }
