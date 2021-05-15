@@ -10,35 +10,29 @@ void render_context_destroy(void *value)
     RenderContext *self = (RenderContext *)value;
     if (self->rendered_rects) {
         destroy(self->rendered_rects);
+        self->rendered_rects = NULL;
     }
     if (self->rect_pool) {
         destroy(self->rect_pool);
+        self->rect_pool = NULL;
+    }
+    if (self->active_rects) {
+        destroy(self->active_rects);
+        self->active_rects = NULL;
+    }
+    if (self->end_rects) {
+        destroy(self->end_rects);
+        self->end_rects = NULL;
+    }
+    if (self->merge_rects) {
+        destroy(self->merge_rects);
+        self->merge_rects = NULL;
     }
 }
 
 char *render_context_describe(void *value)
 {
     return platform_strdup("[]");
-}
-
-void context_rect_rendered(RenderContext *self, int left, int right, int top, int bottom)
-{
-    if (!self->background_enabled) {
-        return;
-    }
-    
-    RenderRect *sq = NULL;
-    size_t pool_count = list_count(self->rect_pool);
-    if (pool_count) {
-        sq = list_drop_index(self->rect_pool, pool_count - 1);
-        sq->left = left;
-        sq->right = right;
-        sq->top = top;
-        sq->bottom = bottom;
-    } else {
-        sq = rrect_create(left, right, top, bottom);
-    }
-    list_add(self->rendered_rects, sq);
 }
 
 int context_rect_compare_top_edge(const void *a, const void *b)
@@ -57,7 +51,55 @@ int context_rect_compare_top_edge(const void *a, const void *b)
     }
 }
 
-void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList *result)
+void context_background_rendered(RenderContext *self)
+{
+    size_t rect_count = list_count(self->rendered_rects);
+    for (int i = (int)rect_count - 1; i >= 0 ; --i) {
+        list_add(self->rect_pool, list_drop_index(self->rendered_rects, i));
+    }
+}
+
+RenderRect *context_get_render_rect(RenderContext *ctx, int left, int right, int top, int bottom)
+{
+    RenderRect *rect = NULL;
+    size_t pool_count;
+    if (ctx && (pool_count = list_count(ctx->rect_pool) > 0)) {
+        rect = list_drop_index(ctx->rect_pool, pool_count - 1);
+        rect->left = left;
+        rect->right = right;
+        rect->top = top;
+        rect->bottom = bottom;
+    } else {
+        rect = rrect_create(left, right, top, bottom);
+    }
+    
+    return rect;
+}
+
+void context_release_render_rect(RenderContext *ctx, RenderRect *rect)
+{
+    if (ctx) {
+        list_add(ctx->rect_pool, rect);
+    } else {
+        destroy(rect);
+    }
+}
+
+void context_rect_rendered(RenderContext *self, int left, int right, int top, int bottom)
+{
+    if (!self->background_enabled) {
+        return;
+    }
+    
+    list_add(self->rendered_rects, context_get_render_rect(self, left, right, top, bottom));
+}
+
+void clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList *result)
+{
+    context_clean_union_of_rendered_rects(NULL, rendered_rects, result);
+}
+
+void context_clean_union_of_rendered_rects(RenderContext *ctx, ArrayList *rendered_rects, ArrayList *result)
 {
     if (!rendered_rects || !result) {
         LOG_ERROR("clean_union_of_rendered_rects: received null parameter");
@@ -71,9 +113,19 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
     
     size_t count = list_count(rendered_rects);
     
-    ArrayList *actives = list_create();
-    ArrayList *temps = list_create_with_weak_references();
-    ArrayList *ends = list_create_with_weak_references();
+    ArrayList *actives;
+    ArrayList *merged;
+    ArrayList *ends;
+    
+    if (ctx) {
+        actives = ctx->active_rects;
+        merged = ctx->merge_rects;
+        ends = ctx->end_rects;
+    } else {
+        actives = list_create();
+        merged = list_create_with_weak_references();
+        ends = list_create_with_weak_references();
+    }
 
     list_sort(rendered_rects, &context_rect_compare_top_edge);
     
@@ -123,10 +175,10 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                 
                 // Find if there is a temp overlapping this one
                 bool has_overlapping_temp = false;
-                const size_t temp_count = list_count(temps);
+                const size_t temp_count = list_count(merged);
                 RenderRect *first_contact = NULL;
                 for (int t = (int)temp_count - 1; t >= 0; --t) {
-                    RenderRect *temp = list_get(temps, t);
+                    RenderRect *temp = list_get(merged, t);
                     if (end->left > temp->right || end->right < temp->left) {
                         // This rect completely outside temp
                         continue;
@@ -144,8 +196,8 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                         if (temp->bottom < first_contact->bottom) {
                             first_contact->bottom = temp->bottom;
                         }
-                        list_drop_index(temps, t);
-                        destroy(temp);
+                        list_drop_index(merged, t);
+                        context_release_render_rect(ctx, temp);
                         continue;
                     }
                     
@@ -164,19 +216,19 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                 
                 if (!has_overlapping_temp && end->bottom >= next_end->bottom + 1) {
                     // Does not overlap with existings temps, create new
-                    list_add(temps, rrect_create(end->left, end->right, next_end->bottom + 1, end->bottom));
+                    list_add(merged, context_get_render_rect(ctx, end->left, end->right, next_end->bottom + 1, end->bottom));
                 }
             }
         
             bool keep_dropped = false;
             // Add temps to actives
-            for (int k = (int)list_count(temps) - 1; k >= 0; --k) {
-                RenderRect *temp = list_drop_index(temps, k);
+            for (int k = (int)list_count(merged) - 1; k >= 0; --k) {
+                RenderRect *temp = list_drop_index(merged, k);
                 if (dropped->left == temp->left && dropped->right == temp->right && temp->bottom > dropped->bottom) {
                     keep_dropped = true;
                     dropped->bottom = temp->bottom;
                     list_add(actives, dropped);
-                    destroy(temp);
+                    context_release_render_rect(ctx, temp);
                 } else {
                     list_add(actives, temp);
                 }
@@ -185,9 +237,9 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
             if (!keep_dropped) {
                 // Ended square overlaps with active but not completely contained
                 if (dropped->top <= next_end->bottom) {
-                    list_add(result, rrect_create(dropped->left, dropped->right, dropped->top, next_end->bottom));
+                    list_add(result, context_get_render_rect(ctx, dropped->left, dropped->right, dropped->top, next_end->bottom));
                 }
-                destroy(dropped);
+                context_release_render_rect(ctx, dropped);
             }
         } else {
             int k;
@@ -227,25 +279,29 @@ void context_clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList 
                 }
                           
                 if (active->top <= sq->top - 1) {
-                    list_add(result, rrect_create(active->left, active->right, active->top, sq->top - 1));
+                    list_add(result, context_get_render_rect(ctx, active->left, active->right, active->top, sq->top - 1));
                 }
                 list_drop_index(actives, k);
-                destroy(active);
+                context_release_render_rect(ctx, active);
             }
             
             if (sq_is_active) {
-                list_add(actives, rrect_create(left, right, sq->top, bottom));
+                list_add(actives, context_get_render_rect(ctx, left, right, sq->top, bottom));
             }
             
             ++i;
         }
     }
     
-    count = list_count(actives);
-
-    destroy(actives);
-    destroy(temps);
-    destroy(ends);
+    if (list_count(actives) || list_count(merged) || list_count(ends)) {
+        LOG_ERROR("clean_union_of_rendered_rects LIST NOT EMPTY WHEN FINISHED");
+    }
+    
+    if (!ctx) {
+        destroy(actives);
+        destroy(merged);
+        destroy(ends);
+    }
 }
 
 BaseType RenderContextType = { "RenderContext", &render_context_destroy, &render_context_describe };

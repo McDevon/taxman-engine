@@ -41,7 +41,7 @@ ArrayList * engine_rect_cleanup_test_array_to_square_list(int squares[][4], int 
 int engine_rect_cleanup_test_run_test_case(ArrayList *start, const char *test_name)
 {
     ArrayList *end = list_create();
-    context_clean_union_of_rendered_rects(start, end);
+    context_clean_union_of_rendered_rects(NULL, start, end);
 
     uint8_t *start_canvas = platform_calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint8_t));
     uint8_t *end_canvas = platform_calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint8_t));
@@ -112,7 +112,7 @@ int engine_rect_cleanup_test_run_generated_test_case(Random *state, int index)
                  rrect_create(left, right, top, bottom));
     }
     
-    context_clean_union_of_rendered_rects(start, end);
+    context_clean_union_of_rendered_rects(NULL, start, end);
     
     StringBuilder *sb = sb_create();
     sb_append_string(sb, "generated_squares_");
