@@ -27,12 +27,12 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     const int32_t source_origin_y = image->rect.origin.y;
     ImageBuffer *target = context->target_buffer->buffer;
     
-    const int32_t flip_x = flip_flags_xy & (1 << 0);
-    const int32_t flip_y = flip_flags_xy & (1 << 1);
+    const bool flip_x = flip_flags_xy & (1 << 0);
+    const bool flip_y = flip_flags_xy & (1 << 1);
     
     const Vector2DInt draw_offset = (Vector2DInt){
-        flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height),
+        flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x,
+        flip_y ? image->offset.y : image->original.height - (image->offset.y + source_height),
     };
     
     if (position.x + draw_offset.x > target_width
@@ -161,8 +161,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
-    const int32_t flip_x = flip_flags_xy & (1 << 0);
-    const int32_t flip_y = flip_flags_xy & (1 << 1);
+    const bool flip_x = flip_flags_xy & (1 << 0);
+    const bool flip_y = flip_flags_xy & (1 << 1);
     
     const Vector2DInt draw_offset_int = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
@@ -305,8 +305,8 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
     const int32_t dither_origin_y = dither_texture->rect.origin.y;
     ImageBuffer *target = context->target_buffer->buffer;
     
-    const int32_t flip_x = flip_flags_xy & (1 << 0);
-    const int32_t flip_y = flip_flags_xy & (1 << 1);
+    const bool flip_x = flip_flags_xy & (1 << 0);
+    const bool flip_y = flip_flags_xy & (1 << 1);
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
