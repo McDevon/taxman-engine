@@ -96,10 +96,6 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
                 const int32_t ctx_x = i + position.x + draw_offset.x;
                 const int32_t x = flip_x * (source_width - i) + !flip_x * i;
                 
-                /*if (ctx_y >= target_height) {
-                    continue;
-                }*/
-                
                 int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                 int32_t t_index = min((ctx_x + y_t_index) * target_channels, target_width * target_height - 1);
                 
