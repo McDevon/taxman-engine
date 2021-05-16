@@ -107,6 +107,8 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
             }
         }
     }
+    
+    context_rect_rendered(context, start_x + position.x + draw_offset.x, end_x + position.x + draw_offset.x - 1, start_y + position.y + draw_offset.y, end_y + position.y + draw_offset.y - 1);
 
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -217,6 +219,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
         
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
     int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
+    int32_t i_left = max(nb_to_int(nb_round(left)), 0);
+    int32_t i_top = max(nb_to_int(nb_round(top)), 0);
     const int32_t source_origin_x = image->rect.origin.x;
     const int32_t source_origin_y = image->rect.origin.y;
     
@@ -232,10 +236,10 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
 #endif
 
     if (source_has_alpha) {
-        for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
+        for (int32_t j = i_top; j < i_bottom; j++) {
             const int32_t y_t_index = j * target_width;
 
-            for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
+            for (int32_t i = i_left; i < i_right; i++) {
                 AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
                 
                 const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x : (int)t.i13 - draw_offset_int.x;
@@ -254,10 +258,10 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
             }
         }
     } else {
-        for (int32_t j = max(nb_to_int(nb_round(top)), 0); j < i_bottom; j++) {
+        for (int32_t j = i_top; j < i_bottom; j++) {
             const int32_t y_t_index = j * target_width;
 
-            for (int32_t i = max(nb_to_int(nb_round(left)), 0); i < i_right; i++) {
+            for (int32_t i = i_left; i < i_right; i++) {
                 AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
                 
                 const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x : (int)t.i13 - draw_offset_int.x;
@@ -273,7 +277,9 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
             }
         }
     }
-    
+
+    context_rect_rendered(context, i_left, i_right - 1, i_top, i_bottom - 1);
+
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
 #endif
