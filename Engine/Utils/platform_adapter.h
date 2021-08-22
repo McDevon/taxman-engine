@@ -3,7 +3,7 @@
 
 #include "stdbool.h"
 
-typedef uint32_t platform_time_t;
+typedef uint64_t platform_time_t;
 
 void platform_display_set_image(uint8_t *buffer);
 void platform_load_image(const char *file_path, uint32_t *width, uint32_t *height, bool *alpha, uint8_t **buffer);
