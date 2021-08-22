@@ -5,8 +5,9 @@
 #include "types.h"
 #include <stdio.h>
 
-#define image_settings_alpha 1
-#define image_settings_rgb 2
+#define image_settings_alpha 0x01
+#define image_settings_rgb 0x02
+#define image_settings_one_bit_color 0x04
 
 typedef uint8_t ImageBuffer;
 
@@ -33,6 +34,8 @@ uint32_t image_data_channel_count(const ImageData *image);
 uint32_t image_channel_count(const Image *image);
 bool image_data_has_alpha(const ImageData *image);
 bool image_has_alpha(const Image *image);
+bool image_data_has_one_bit_color(const ImageData *image);
+bool image_has_one_bit_color(const Image *image);
 int32_t image_data_alpha_offset(const ImageData *image);
 int32_t image_alpha_offset(const Image *image);
 

@@ -27,16 +27,44 @@ char *image_data_describe(void *value)
     return description;
 }
 
+static inline uint32_t image_settings_channel_count(uint32_t settings)
+{
+    return 1 + (settings & image_settings_alpha) + (settings & image_settings_rgb);
+}
+
+static inline bool image_settings_has_one_bit_color(uint32_t settings)
+{
+    return (settings & image_settings_one_bit_color) > 0;
+}
+
+bool image_data_has_one_bit_color(const ImageData *image)
+{
+    return image_settings_has_one_bit_color(image->settings);
+}
+
+bool image_has_one_bit_color(const Image *image)
+{
+    return image_settings_has_one_bit_color(image->w_image_data->settings);
+}
+
+uint32_t image_data_byte_count(const ImageData *image)
+{
+    const uint32_t channel_count = image_settings_channel_count(image->settings);
+    if (image_settings_has_one_bit_color(image->settings)) {
+        const uint32_t bit_count = image->size.width * image->size.height * channel_count;
+        return (bit_count + 7) / 8;
+    } else {
+        return image->size.width * image->size.height * channel_count;
+    }
+}
+
 void image_data_clear(ImageData *image)
 {
     if (!image) { return; }
     
-    const uint32_t image_width = image->size.width;
-    for (int32_t i = 0; i < image_width; i++) {
-        for (int32_t j = 0; j < image->size.height; j++) {
-            int32_t i_index = (i + j * image_width) * 4;
-            image->buffer[i_index] = 0;
-        }
+    const uint32_t byte_count = image_data_byte_count(image);
+    for (int32_t i = 0; i < byte_count; ++i) {
+        image->buffer[i] = 0;
     }
 }
 
@@ -54,13 +82,13 @@ ImageData *image_data_create(ImageBuffer *buffer, const Size2DInt size, const ui
     return image;
 }
 
-static inline uint32_t image_settings_channel_count(uint32_t settings)
-{
-    return 1 + (settings & image_settings_alpha) + (settings & image_settings_rgb);
-}
-
 ImageData *image_data_xor_texture(const Size2DInt size, const Vector2DInt offset, const uint32_t settings)
 {
+    if (image_settings_has_one_bit_color(settings)) {
+        LOG_ERROR("Cannot create one-bit xor image. Xor image should be used with a dither");
+        return NULL;
+    }
+    
     uint32_t channels = image_settings_channel_count(settings);
     ImageData *image_data = image_data_create(platform_calloc(size.width * size.height * channels, sizeof(uint8_t)), size, settings);
     bool colors = settings & image_settings_rgb;
