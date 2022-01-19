@@ -56,7 +56,7 @@ CameraNode *camera_create(Size2D viewport_size)
     camera->w_type = &CameraNodeType;
     camera->viewport_size = viewport_size;
     camera->camera_position = vec_zero();
-    camera->scale = vec_unit();
+    camera->scale = vec(nb_one, nb_one);
     camera->rotation = nb_zero;
     
     camera_calculate_values(camera);

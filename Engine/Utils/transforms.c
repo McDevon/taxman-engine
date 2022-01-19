@@ -72,9 +72,9 @@ inline Vector2D vec(Number x, Number y)
     return (Vector2D){ x, y };
 }
 
-inline Vector2D vec_unit()
+inline Vector2D vec_angle(Number angle)
 {
-    return (Vector2D){ nb_one, nb_one };
+    return (Vector2D){ nb_cos(angle), nb_sin(angle) };
 }
 
 inline Vector2D vec_zero()
