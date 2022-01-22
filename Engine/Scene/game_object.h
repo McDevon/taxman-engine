@@ -65,6 +65,7 @@ struct SceneManager *go_get_scene_manager(void *obj);
 struct GameObjectComponent *go_get_component(GameObject *obj, struct GameObjectComponentType *type);
 
 Vector2D go_position_in_ancestor(void *obj, void *ancestor);
+Number go_rotation_in_ancestor(void *obj, void *ancestor);
 
 void go_schedule_destroy(void *obj);
 
