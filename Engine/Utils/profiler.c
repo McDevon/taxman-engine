@@ -228,7 +228,9 @@ void profiler_schedule_start(void)
 
 void profiler_schedule_end(void)
 {
-    _profiler_schedule_state = prof_end;
+    if (profiler_root_entry) {
+        _profiler_schedule_state = prof_end;        
+    }
 }
 
 void profiler_schedule_toggle(void)
