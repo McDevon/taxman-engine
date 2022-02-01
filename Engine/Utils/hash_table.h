@@ -13,6 +13,8 @@ typedef struct HashTable HashTable;
 HashTable *hashtable_create(void);
 void *hashtable_get(const HashTable *table, const char *key);
 int hashtable_put(HashTable *table, const char *key, void *value);
+bool hashtable_contains(HashTable *table, const char *key);
+int hashtable_remove(HashTable *table, const char *key);
 
 size_t hashtable_count(HashTable *table);
 
