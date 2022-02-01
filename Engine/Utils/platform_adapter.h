@@ -5,11 +5,12 @@
 
 typedef uint64_t platform_time_t;
 
+typedef void (load_image_data_callback_t)(const char *, const uint32_t, const uint32_t, const bool, const uint8_t *, void *);
+typedef void (load_text_data_callback_t)(const char *, const char *, void *);
+
 void platform_display_set_image(uint8_t *buffer);
-void platform_load_image(const char *file_path, uint32_t *width, uint32_t *height, bool *alpha, uint8_t **buffer);
-void platform_destroy_image(void *ptr);
-char *platform_read_text_file(const char *file_path);
-void platform_close_text_file(char *file_data);
+void platform_load_image(const char *file_path, load_image_data_callback_t *callback, void *payload);
+void platform_read_text_file(const char *file_path, load_text_data_callback_t *callback, void *payload);
 
 void *platform_malloc(size_t size);
 void *platform_calloc(size_t count, size_t size);

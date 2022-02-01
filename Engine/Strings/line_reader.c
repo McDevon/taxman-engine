@@ -89,7 +89,7 @@ void file_read_lines_tokenize(const char *file_name, const char delimeters[], co
 
 void file_read_lines(const char *file_name, line_callback_t line_callback, void *context)
 {
-    char *file_data = platform_read_text_file(file_name);
+    char *file_data = NULL; // platform_read_text_file(file_name);
     
     int row = 0;
     int row_length = 0;
@@ -110,7 +110,5 @@ void file_read_lines(const char *file_name, line_callback_t line_callback, void 
         } else {
             ++row_length;
         }
-    }
-    
-    platform_close_text_file(file_data);
+    }    
 }
