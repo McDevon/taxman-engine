@@ -9,21 +9,21 @@
 #include "string_builder.h"
 
 typedef struct ImageDataPackage {
-    resource_callback_t *resource_callback;
-    void *payload;
+    resource_callback_t resource_callback;
+    void *context;
     bool alpha;
     bool make_image;
 } ImageDataPackage;
 
 typedef struct GridAtlasDataPackage {
-    resource_callback_t *resource_callback;
-    void *payload;
+    resource_callback_t resource_callback;
+    void *context;
     Size2DInt item_size;
 } GridAtlasDataPackage;
 
 typedef struct SpriteSheetDataPackage {
-    resource_callback_t *resource_callback;
-    void *payload;
+    resource_callback_t resource_callback;
+    void *context;
     char *sprite_sheet_name;
     char *sprite_sheet_data;
     bool alpha;
@@ -38,11 +38,11 @@ static HashTable image_slice_table = { { { &HashTableType } }, image_slice_table
 static HashTableEntry *grid_atlas_table_entry[HASHSIZE];
 static HashTable grid_atlas_table = { { { &HashTableType } }, grid_atlas_table_entry };
 
-void load_image_data_callback(const char *image_data_name, const uint32_t width, const uint32_t height, const bool source_has_alpha, const ImageBuffer *buffer, void *payload) {
-    ImageDataPackage *data = (ImageDataPackage *)payload;
+void load_image_data_callback(const char *image_data_name, const uint32_t width, const uint32_t height, const bool source_has_alpha, const ImageBuffer *buffer, void *context) {
+    ImageDataPackage *data = (ImageDataPackage *)context;
     
     if (!buffer) {
-        data->resource_callback(image_data_name, false, data->payload);
+        data->resource_callback(image_data_name, false, data->context);
         platform_free(data);
         return;
     }
@@ -73,17 +73,17 @@ void load_image_data_callback(const char *image_data_name, const uint32_t width,
         }
     }
     
-    data->resource_callback(image_data_name, true, data->payload);
+    data->resource_callback(image_data_name, true, data->context);
     platform_free(data);
 }
 
-void load_image_data(const char *image_data_name, const bool alpha, const bool make_image, resource_callback_t *resource_callback, void *payload)
+void load_image_data(const char *image_data_name, const bool alpha, const bool make_image, resource_callback_t resource_callback, void *context)
 {
     ImageDataPackage *data = platform_calloc(sizeof(ImageDataPackage), 1);
     data->alpha = alpha;
     data->make_image = make_image;
     data->resource_callback = resource_callback;
-    data->payload = payload;
+    data->context = context;
     platform_load_image(image_data_name, &load_image_data_callback, data);
 }
 
@@ -97,11 +97,11 @@ ImageData *get_image_data(const char *image_data_name)
     return entry;
 }
 
-void load_grid_atlas_callback(const char *image_data_name, bool success, void *payload) {
-    GridAtlasDataPackage *data = (GridAtlasDataPackage*)payload;
+void load_grid_atlas_callback(const char *image_data_name, bool success, void *context) {
+    GridAtlasDataPackage *data = (GridAtlasDataPackage*)context;
     
     if (!success) {
-        data->resource_callback(image_data_name, false, data->payload);
+        data->resource_callback(image_data_name, false, data->context);
         platform_free(data);
         return;
     }
@@ -109,16 +109,16 @@ void load_grid_atlas_callback(const char *image_data_name, bool success, void *p
     GridAtlas *atlas = grid_atlas_create(get_image_data(image_data_name), data->item_size);
     hashtable_put(&grid_atlas_table, image_data_name, atlas);
     
-    data->resource_callback(image_data_name, true, data->payload);
+    data->resource_callback(image_data_name, true, data->context);
     platform_free(data);
 }
 
-void load_grid_atlas(const char *image_data_name, const bool alpha, const Size2DInt item_size, resource_callback_t *resource_callback, void *payload)
+void load_grid_atlas(const char *image_data_name, const bool alpha, const Size2DInt item_size, resource_callback_t resource_callback, void *context)
 {
     GridAtlasDataPackage *data = platform_calloc(sizeof(GridAtlasDataPackage), 1);
     data->item_size = item_size;
     data->resource_callback = resource_callback;
-    data->payload = payload;
+    data->context = context;
     load_image_data(image_data_name, alpha, false, &load_grid_atlas_callback, data);
 }
 
@@ -161,12 +161,12 @@ Image *get_image(const char *image_name)
     return entry;
 }
 
-void load_sprite_sheet_image_callback(const char *image_data_name, bool success, void *payload)
+void load_sprite_sheet_image_callback(const char *image_data_name, bool success, void *context)
 {
-    SpriteSheetDataPackage *data = (SpriteSheetDataPackage*)payload;
+    SpriteSheetDataPackage *data = (SpriteSheetDataPackage*)context;
     
     if (!success) {
-        data->resource_callback(data->sprite_sheet_name, false, data->payload);
+        data->resource_callback(data->sprite_sheet_name, false, data->context);
         platform_free(data->sprite_sheet_name);
         platform_free(data->sprite_sheet_data);
         platform_free(data);
@@ -235,18 +235,18 @@ void load_sprite_sheet_image_callback(const char *image_data_name, bool success,
         }
     }
     
-    data->resource_callback(data->sprite_sheet_name, read_success, data->payload);
+    data->resource_callback(data->sprite_sheet_name, read_success, data->context);
     platform_free(data->sprite_sheet_name);
     platform_free(data->sprite_sheet_data);
     platform_free(data);
 }
 
-void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, void *payload)
+void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, void *context)
 {
-    SpriteSheetDataPackage *data = (SpriteSheetDataPackage*)payload;
+    SpriteSheetDataPackage *data = (SpriteSheetDataPackage*)context;
     
     if (!sheet_data) {
-        data->resource_callback(data->sprite_sheet_name, false, data->payload);
+        data->resource_callback(data->sprite_sheet_name, false, data->context);
         platform_free(data->sprite_sheet_name);
         platform_free(data);
         return;
@@ -273,13 +273,13 @@ void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, v
     }
     
     if (!success) {
-        data->resource_callback(data->sprite_sheet_name, false, data->payload);
+        data->resource_callback(data->sprite_sheet_name, false, data->context);
         platform_free(data->sprite_sheet_name);
         platform_free(data);
     }
 }
 
-void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha, resource_callback_t *resource_callback, void *payload)
+void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha, resource_callback_t resource_callback, void *context)
 {
     StringBuilder *sb = sb_create();
     sb_append_string(sb, sprite_sheet_name);
@@ -290,7 +290,7 @@ void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha, resource
     SpriteSheetDataPackage *data = platform_calloc(sizeof(SpriteSheetDataPackage), 1);
     data->alpha = alpha;
     data->resource_callback = resource_callback;
-    data->payload = payload;
+    data->context = context;
     data->sprite_sheet_name = strdup(sprite_sheet_name);
 
     platform_read_text_file(file_name, &load_sprite_sheet_callback, data);

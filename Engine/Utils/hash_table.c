@@ -116,7 +116,9 @@ void hashtable_entry_destroy(HashTableEntry *entry)
         hashtable_entry_destroy(entry->next);
         entry->next = NULL;
     }
-    destroy(entry->value);
+    if (entry->value) {
+        destroy(entry->value);        
+    }
     platform_free(entry->key);
     platform_free(entry);
 }

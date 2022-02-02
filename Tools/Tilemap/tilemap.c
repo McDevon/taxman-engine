@@ -191,18 +191,30 @@ int32_t hex_char_to_int(char hex_char) {
     return 0;
 }
 
-void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number, void *context)
+struct tile_types_context {
+    void *context;
+    resource_callback_t file_callback;
+    HashTable *w_tile_dictionary;
+    char *file_name;
+};
+
+void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number, bool last_row, void *context)
 {
+    struct tile_types_context *tile_ctx = (struct tile_types_context *)context;
+
     if (token_count != 4
         || strlen(tokens[0]) != 1
         || tokens[0][0] == '#'
         || strlen(tokens[3]) != 4)
     {
+        if (last_row) {
+            tile_ctx->file_callback(tile_ctx->file_name, false, tile_ctx->context);
+            platform_free(tile_ctx->file_name);
+            platform_free(tile_ctx);
+        }
         return;
     }
-    
-    HashTable *tile_dictionary = (HashTable*)context;
-    
+        
     char *image_base_name = strcmp(tokens[1], "$clear") == 0 ? NULL : tokens[1];
     
     uint8_t collision_layer = (uint8_t)atoi(tokens[2]);
@@ -212,15 +224,25 @@ void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number
     collision_directions += tokens[3][1] == '1' ? (1 << 1) : 0;
     collision_directions += tokens[3][2] == '1' ? (1 << 2) : 0;
     collision_directions += tokens[3][3] == '1' ? (1 << 3) : 0;
-
     
     TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
-    hashtable_put(tile_dictionary, tokens[0], base);
+    hashtable_put(tile_ctx->w_tile_dictionary, tokens[0], base);
+    
+    if (last_row) {
+        tile_ctx->file_callback(tile_ctx->file_name, true, tile_ctx->context);
+        platform_free(tile_ctx->file_name);
+        platform_free(tile_ctx);
+    }
 }
 
-void load_tile_types(const char *type_file_name, HashTable *tile_dictionary)
+void load_tile_types(const char *type_file_name, HashTable *tile_dictionary, resource_callback_t resource_callback, void *context)
 {
-    file_read_lines_tokenize(type_file_name, " ", 1, &read_tile_type_line, tile_dictionary);
+    struct tile_types_context *tile_ctx = platform_calloc(sizeof(struct tile_types_context), 1);
+    tile_ctx->context = context;
+    tile_ctx->file_callback = resource_callback;
+    tile_ctx->w_tile_dictionary = tile_dictionary;
+    tile_ctx->file_name = strdup(type_file_name);
+    file_read_lines_tokenize(type_file_name, " ", 1, &read_tile_type_line, tile_ctx);
 }
 
 typedef enum {
@@ -232,12 +254,97 @@ typedef enum {
 
 struct tm_c_context {
     TileMap *tilemap;
+    void *context;
     const HashTable *tile_dictionary;
+    tilemap_callback_t tilemap_callback;
+    char *file_name;
     TileMapPart current_part;
     bool valid;
 };
 
-void read_tilemap_line(const char *line, int32_t row_number, void *context)
+void tilemap_set_tile_edges(TileMap *tilemap, const HashTable *tile_dictionary)
+{
+    StringBuilder *sb = sb_create();
+    for (int32_t y = 0; y < tilemap->map_size.height; ++y) {
+        for (int32_t x = 0; x < tilemap->map_size.width; ++x) {
+            int32_t index = x + y * tilemap->map_size.width;
+            Tile *tile = (Tile *)list_get(tilemap->tiles, index);
+            
+            if (tile->type_char == '\0') {
+                continue;
+            }
+            char key[2] = "\0\0";
+            key[0] = tile->type_char;
+            
+            TileBase *base = hashtable_get(tile_dictionary, key);
+            if (!base || !base->image_base_name) {
+                continue;
+            }
+            
+            sb_clear(sb);
+            sb_append_string(sb, base->image_base_name);
+            
+            Tile *l = tilemap_tile_at(tilemap, x - 1, y);
+            Tile *r = tilemap_tile_at(tilemap, x + 1, y);
+            Tile *u = tilemap_tile_at(tilemap, x, y - 1);
+            Tile *d = tilemap_tile_at(tilemap, x, y + 1);
+            
+            if (l && l->type_char != tile->type_char) {
+                sb_append_string(sb, "l");
+            }
+            if (r && r->type_char != tile->type_char) {
+                sb_append_string(sb, "r");
+            }
+            if (u && u->type_char != tile->type_char) {
+                sb_append_string(sb, "u");
+            }
+            if (d && d->type_char != tile->type_char) {
+                sb_append_string(sb, "d");
+            }
+
+            char *image_name = sb_get_string(sb);
+            
+            Image *image = NULL;
+            if (image_name) {
+                image = get_image(image_name);
+                if (!image) {
+                    image = get_image(base->image_base_name);
+                }
+                if (image) {
+                    tile->w_image = image;
+                }
+            }
+            
+            platform_free(image_name);
+        }
+    }
+    destroy(sb);
+}
+
+void tilemap_create_finish(struct tm_c_context *ctx)
+{
+    if (!ctx->valid) {
+        LOG_ERROR("Not a valid tilemap file: %s", ctx->file_name);
+        ctx->tilemap_callback(ctx->file_name, NULL, ctx->context);
+        platform_free(ctx->file_name);
+        destroy(ctx->tilemap);
+        return;
+    }
+    
+    ctx->tilemap->size = (Size2D){
+        ctx->tilemap->map_size.width * ctx->tilemap->tile_size.width,
+        ctx->tilemap->map_size.height * ctx->tilemap->tile_size.height
+    };
+    
+    tilemap_set_tile_edges(ctx->tilemap, ctx->tile_dictionary);
+    
+    LOG("Tilemap tile count %llu", list_count(ctx->tilemap->tiles));
+    
+    ctx->tilemap_callback(ctx->file_name, ctx->tilemap, ctx->context);
+    platform_free(ctx->file_name);
+}
+
+void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void *context)
 {
     struct tm_c_context *ctx = (struct tm_c_context *)context;
     TileMap *tilemap = ctx->tilemap;
@@ -307,68 +414,13 @@ void read_tilemap_line(const char *line, int32_t row_number, void *context)
             ctx->valid = false;
         }
     }
-}
-
-void tilemap_set_tile_edges(TileMap *tilemap, const HashTable *tile_dictionary)
-{
-    StringBuilder *sb = sb_create();
-    for (int32_t y = 0; y < tilemap->map_size.height; ++y) {
-        for (int32_t x = 0; x < tilemap->map_size.width; ++x) {
-            int32_t index = x + y * tilemap->map_size.width;
-            Tile *tile = (Tile *)list_get(tilemap->tiles, index);
-            
-            if (tile->type_char == '\0') {
-                continue;
-            }
-            char key[2] = "\0\0";
-            key[0] = tile->type_char;
-            
-            TileBase *base = hashtable_get(tile_dictionary, key);
-            if (!base || !base->image_base_name) {
-                continue;
-            }
-            
-            sb_clear(sb);
-            sb_append_string(sb, base->image_base_name);
-            
-            Tile *l = tilemap_tile_at(tilemap, x - 1, y);
-            Tile *r = tilemap_tile_at(tilemap, x + 1, y);
-            Tile *u = tilemap_tile_at(tilemap, x, y - 1);
-            Tile *d = tilemap_tile_at(tilemap, x, y + 1);
-            
-            if (l && l->type_char != tile->type_char) {
-                sb_append_string(sb, "l");
-            }
-            if (r && r->type_char != tile->type_char) {
-                sb_append_string(sb, "r");
-            }
-            if (u && u->type_char != tile->type_char) {
-                sb_append_string(sb, "u");
-            }
-            if (d && d->type_char != tile->type_char) {
-                sb_append_string(sb, "d");
-            }
-
-            char *image_name = sb_get_string(sb);
-            
-            Image *image = NULL;
-            if (image_name) {
-                image = get_image(image_name);
-                if (!image) {
-                    image = get_image(base->image_base_name);
-                }
-                if (image) {
-                    tile->w_image = image;
-                }
-            }
-            
-            platform_free(image_name);
-        }
+    
+    if (last_row) {
+        tilemap_create_finish(ctx);
     }
-    destroy(sb);
 }
 
-TileMap *tilemap_create(const char *tilemap_file_name, const HashTable *tile_dictionary)
+void tilemap_create(const char *tilemap_file_name, const HashTable *tile_dictionary, tilemap_callback_t tilemap_callback, void *context)
 {
     GameObject *go = go_alloc(sizeof(TileMap));
     TileMap *tilemap = (TileMap *)go;
@@ -376,30 +428,16 @@ TileMap *tilemap_create(const char *tilemap_file_name, const HashTable *tile_dic
     tilemap->tiles = list_create();
     tilemap->rotate_and_scale = false;
     
-    struct tm_c_context ctx;
-    ctx.tilemap = tilemap;
-    ctx.tile_dictionary = tile_dictionary;
-    ctx.current_part = tmp_none;
-    ctx.valid = true;
+    struct tm_c_context *ctx = platform_calloc(1, sizeof(struct tm_c_context));
+    ctx->context = context;
+    ctx->tilemap = tilemap;
+    ctx->tilemap_callback = tilemap_callback;
+    ctx->file_name = platform_strdup(tilemap_file_name);
+    ctx->tile_dictionary = tile_dictionary;
+    ctx->current_part = tmp_none;
+    ctx->valid = true;
     
-    file_read_lines(tilemap_file_name, &read_tilemap_line, &ctx);
-    
-    if (!ctx.valid) {
-        LOG_ERROR("Not a valid tilemap file: %s", tilemap_file_name);
-        destroy(tilemap);
-        return NULL;
-    }
-    
-    tilemap->size = (Size2D){
-        tilemap->map_size.width * tilemap->tile_size.width,
-        tilemap->map_size.height * tilemap->tile_size.height
-    };
-    
-    tilemap_set_tile_edges(tilemap, tile_dictionary);
-    
-    LOG("Tilemap tile count %llu", list_count(tilemap->tiles));
-    
-    return tilemap;
+    file_read_lines(tilemap_file_name, &read_tilemap_line, ctx);
 }
 
 Tile *tilemap_tile_at(TileMap *tilemap, const int32_t x, const int32_t y)

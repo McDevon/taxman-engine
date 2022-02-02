@@ -7,6 +7,8 @@
 
 typedef float Float;
 
+typedef void (*resource_callback_t)(const char *, bool, void *);
+
 typedef struct Vector2D {
     Number x;
     Number y;
