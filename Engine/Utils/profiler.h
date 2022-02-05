@@ -2,7 +2,7 @@
 #define profiler_h
 
 #define ENABLE_PROFILER
-//#undef ENABLE_PROFILER
+#undef ENABLE_PROFILER
 
 void profiler_start_segment(const char *segment_name);
 void profiler_end_segment(void);

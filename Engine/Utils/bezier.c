@@ -187,7 +187,6 @@ BezierPrecomputed *bezier_precomputed_create(Float control_points[4], size_t tab
     
     for (size_t i = 0; i < table_size; ++i) {
         data->table[i] = bezier_compute(model, i * (1.f / (table_size - 1)));
-        LOG("%llu: %.3f -> %.3f", i, i * (1.f / (table_size - 1)), data->table[i]);
     }
     
     destroy(model);
