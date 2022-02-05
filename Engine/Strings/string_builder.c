@@ -3,6 +3,7 @@
 #include "engine_log.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 void string_builder_destroy(void *value)
 {
@@ -50,6 +51,25 @@ int sb_append_string(StringBuilder *sb, const char *string)
     
     strncpy(sb->string + sb->length, string, len + 1);
     sb->length += len;
+    
+    return 0;
+}
+
+int sb_append_char(StringBuilder *sb, const char ch)
+{
+    while (sb->length + 1 >= sb->capacity) {
+        char *buffer = sb->string;
+        size_t new_capacity = sb->capacity * 2;
+        char *new_buffer = platform_realloc(buffer, sizeof(char) * new_capacity);
+        if (!new_buffer) { return -1; }
+        
+        sb->capacity = new_capacity;
+        sb->string = new_buffer;
+    }
+    
+    sb->string[sb->length] = ch;
+    sb->string[sb->length + 1] = '\0';
+    sb->length += 1;
     
     return 0;
 }
@@ -154,6 +174,66 @@ int sb_append_int_rect(StringBuilder *sb, Rect2DInt value)
     ret += sb_append_int(sb, value.size.height);
     ret += sb_append_string(sb, " } )");
     return ret;
+}
+
+int sb_vfprintf(StringBuilder *sb, const char *fmt, va_list arg)
+{
+    // TODO: more robust and complete parsing
+    int int_value;
+    char char_value;
+    char *string_value;
+    double double_value;
+    char ch;
+    
+    while ((ch = *fmt++)) {
+        if ( '%' == ch ) {
+            switch (ch = *fmt++) {
+                case '%':
+                    sb_append_char(sb, '%');
+                    break;
+                    
+                case 'c':
+                    char_value = (char)va_arg(arg, int);
+                    sb_append_char(sb, char_value);
+                    break;
+                    
+                case 's':
+                    string_value = va_arg(arg, char *);
+                    sb_append_string(sb, string_value);
+                    break;
+                    
+                case 'd':
+                    int_value = va_arg(arg, int);
+                    sb_append_int(sb, int_value);
+                    break;
+                    
+                case 'x':
+                    int_value = va_arg(arg, int);
+                    sb_append_hex(sb, int_value);
+                    break;
+                    
+                case 'f':
+                    double_value = va_arg(arg, double);
+                    sb_append_float(sb, (float)double_value, 4);
+                    break;
+            }
+        }
+        else {
+            sb_append_char(sb, ch);
+        }
+    }
+    return 0;
+}
+
+int sb_append_format(StringBuilder *sb, const char *format, ...)
+{
+    va_list arg;
+    int length;
+    
+    va_start(arg, format);
+    length = sb_vfprintf(sb, format, arg);
+    va_end(arg);
+    return 0;
 }
 
 char *sb_get_string(StringBuilder *builder)

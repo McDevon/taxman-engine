@@ -34,4 +34,6 @@ int sb_append_int_point(StringBuilder *sb, Vector2DInt value);
 int sb_append_int_size(StringBuilder *sb, Size2DInt value);
 int sb_append_int_rect(StringBuilder *sb, Rect2DInt value);
 
+int sb_append_format(StringBuilder *sb, const char *, ...);
+
 #endif /* string_builder_h */
