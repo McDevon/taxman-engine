@@ -20,6 +20,7 @@ void sb_log_to_console(StringBuilder *sb);
 void sb_clear(StringBuilder *sb);
 
 int sb_append_string(StringBuilder *sb, const char *string);
+int sb_append_char(StringBuilder *sb, const char ch);
 int sb_append_line_break(StringBuilder *sb);
 int sb_append_int(StringBuilder *sb, int value);
 int sb_append_hex(StringBuilder *sb, int value);

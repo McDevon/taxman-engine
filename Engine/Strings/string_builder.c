@@ -2,7 +2,7 @@
 #include "platform_adapter.h"
 #include "engine_log.h"
 #include <string.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <stdarg.h>
 
 void string_builder_destroy(void *value)
@@ -36,10 +36,9 @@ void sb_clear(StringBuilder *sb)
     sb->string[0] = '\0';
 }
 
-int sb_append_string(StringBuilder *sb, const char *string)
+int sb_ensure_increase(StringBuilder *sb, size_t increase)
 {
-    size_t len = strlen(string);
-    while (sb->length + len >= sb->capacity) {
+    while (sb->length + increase >= sb->capacity) {
         char *buffer = sb->string;
         size_t new_capacity = sb->capacity * 2;
         char *new_buffer = platform_realloc(buffer, sizeof(char) * new_capacity);
@@ -47,6 +46,16 @@ int sb_append_string(StringBuilder *sb, const char *string)
         
         sb->capacity = new_capacity;
         sb->string = new_buffer;
+    }
+    return 0;
+}
+
+int sb_append_string(StringBuilder *sb, const char *string)
+{
+    size_t len = strlen(string);
+    int ret = sb_ensure_increase(sb, len);
+    if (ret) {
+        return ret;
     }
     
     strncpy(sb->string + sb->length, string, len + 1);
@@ -57,14 +66,9 @@ int sb_append_string(StringBuilder *sb, const char *string)
 
 int sb_append_char(StringBuilder *sb, const char ch)
 {
-    while (sb->length + 1 >= sb->capacity) {
-        char *buffer = sb->string;
-        size_t new_capacity = sb->capacity * 2;
-        char *new_buffer = platform_realloc(buffer, sizeof(char) * new_capacity);
-        if (!new_buffer) { return -1; }
-        
-        sb->capacity = new_capacity;
-        sb->string = new_buffer;
+    int ret = sb_ensure_increase(sb, 1);
+    if (ret) {
+        return ret;
     }
     
     sb->string[sb->length] = ch;
@@ -178,16 +182,16 @@ int sb_append_int_rect(StringBuilder *sb, Rect2DInt value)
 
 int sb_vfprintf(StringBuilder *sb, const char *fmt, va_list arg)
 {
-    // TODO: more robust and complete parsing
     int int_value;
     char char_value;
     char *string_value;
     double double_value;
     char ch;
     
-    while ((ch = *fmt++)) {
-        if ( '%' == ch ) {
-            switch (ch = *fmt++) {
+    for (size_t offset = 0; (ch = fmt[offset]) != '\0'; ++offset) {
+        if (ch == '%' && fmt[offset + 1] != '\0') {
+            ++offset;
+            switch (fmt[offset]) {
                 case '%':
                     sb_append_char(sb, '%');
                     break;
@@ -215,6 +219,14 @@ int sb_vfprintf(StringBuilder *sb, const char *fmt, va_list arg)
                 case 'f':
                     double_value = va_arg(arg, double);
                     sb_append_float(sb, (float)double_value, 4);
+                    break;
+                case '.':
+                    double_value = va_arg(arg, double);
+                    if (sscanf(fmt + offset, ".%df", &int_value) != 1) {
+                        break;
+                    }
+                    sb_append_float(sb, (float)double_value, int_value);
+                    for (;fmt[offset] != 'f'; ++offset);
                     break;
             }
         }
