@@ -11,7 +11,6 @@
 typedef struct ImageDataPackage {
     resource_callback_t resource_callback;
     void *context;
-    bool alpha;
     bool make_image;
 } ImageDataPackage;
 
@@ -26,7 +25,6 @@ typedef struct SpriteSheetDataPackage {
     void *context;
     char *sprite_sheet_name;
     char *sprite_sheet_data;
-    bool alpha;
 } SpriteSheetDataPackage;
 
 static HashTableEntry *image_data_table_entry[HASHSIZE];
@@ -47,40 +45,25 @@ void load_image_data_callback(const char *image_data_name, const uint32_t width,
         return;
     }
     
-    LOG("Loaded image data %s w: %d h: %d alpha: %s", image_data_name, width, height, data->alpha ? "true" : "false");
-    if (buffer) {
-        int32_t channels = data->alpha ? 2 : 1;
-        int32_t source_channels = source_has_alpha ? 2 : 1;
-        ImageData *image_data = image_data_create(platform_calloc(width * height * channels, sizeof(uint8_t)), (Size2DInt){ width, height }, data->alpha ? image_settings_alpha : 0);
-        
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-                long source_i = source_channels * (i + j * width);
-                long target_i = channels * (i + j * width);
-                image_data->buffer[target_i] = buffer[source_i];
-                if (data->alpha) {
-                    if (source_has_alpha) {
-                        image_data->buffer[target_i + 1] = buffer[source_i + 1];
-                    } else {
-                        image_data->buffer[target_i + 1] = 0xff;
-                    }
-                }
-            }
-        }
-        hashtable_put(&image_data_table, image_data_name, image_data);
-        if (data->make_image) {
-            hashtable_put(&image_slice_table, image_data_name, image_from_data(image_data));
-        }
+    LOG("Loaded image data %s w: %d h: %d alpha: %s", image_data_name, width, height, source_has_alpha ? "true" : "false");
+    int32_t channels = source_has_alpha ? 2 : 1;
+    ImageData *image_data = image_data_create(platform_calloc(width * height * channels, sizeof(uint8_t)), (Size2DInt){ width, height }, source_has_alpha ? image_settings_alpha : 0);
+    
+    for (int i = 0; i < width * height * channels; i++) {
+        image_data->buffer[i] = buffer[i];
+    }
+    hashtable_put(&image_data_table, image_data_name, image_data);
+    if (data->make_image) {
+        hashtable_put(&image_slice_table, image_data_name, image_from_data(image_data));
     }
     
     data->resource_callback(image_data_name, true, data->context);
     platform_free(data);
 }
 
-void load_image_data(const char *image_data_name, const bool alpha, const bool make_image, resource_callback_t resource_callback, void *context)
+void load_image_data(const char *image_data_name, const bool make_image, resource_callback_t resource_callback, void *context)
 {
     ImageDataPackage *data = platform_calloc(sizeof(ImageDataPackage), 1);
-    data->alpha = alpha;
     data->make_image = make_image;
     data->resource_callback = resource_callback;
     data->context = context;
@@ -113,13 +96,13 @@ void load_grid_atlas_callback(const char *image_data_name, bool success, void *c
     platform_free(data);
 }
 
-void load_grid_atlas(const char *image_data_name, const bool alpha, const Size2DInt item_size, resource_callback_t resource_callback, void *context)
+void load_grid_atlas(const char *image_data_name, const Size2DInt item_size, resource_callback_t resource_callback, void *context)
 {
     GridAtlasDataPackage *data = platform_calloc(sizeof(GridAtlasDataPackage), 1);
     data->item_size = item_size;
     data->resource_callback = resource_callback;
     data->context = context;
-    load_image_data(image_data_name, alpha, false, &load_grid_atlas_callback, data);
+    load_image_data(image_data_name, false, &load_grid_atlas_callback, data);
 }
 
 GridAtlas *get_grid_atlas(const char *atlas_name)
@@ -264,7 +247,7 @@ void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, v
         if (chr == '\n') {
             strncpy(sprite_sheet_data_name, sheet_data, row_length);
             sprite_sheet_data_name[row_length] = '\0';
-            load_image_data(sprite_sheet_data_name, data->alpha, true, &load_sprite_sheet_image_callback, data);
+            load_image_data(sprite_sheet_data_name, true, &load_sprite_sheet_image_callback, data);
             success = true;
             break;
         } else {
@@ -279,7 +262,7 @@ void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, v
     }
 }
 
-void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha, resource_callback_t resource_callback, void *context)
+void load_sprite_sheet(const char *sprite_sheet_name, resource_callback_t resource_callback, void *context)
 {
     StringBuilder *sb = sb_create();
     sb_append_string(sb, sprite_sheet_name);
@@ -288,7 +271,6 @@ void load_sprite_sheet(const char *sprite_sheet_name, const bool alpha, resource
     destroy(sb);
     
     SpriteSheetDataPackage *data = platform_calloc(sizeof(SpriteSheetDataPackage), 1);
-    data->alpha = alpha;
     data->resource_callback = resource_callback;
     data->context = context;
     data->sprite_sheet_name = strdup(sprite_sheet_name);
