@@ -69,6 +69,8 @@ void read_token_line(const char *line, int32_t row_number, bool last_line, void 
         }
         
         token_ctx->tokens_callback(token_array, (int)token_count, row_number, last_line, token_ctx->context);
+    } else {
+        token_ctx->tokens_callback(NULL, (int)0, row_number, last_line, token_ctx->context);
     }
         
     destroy(tokens);
