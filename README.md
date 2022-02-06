@@ -10,7 +10,7 @@ Some features of the engine are based on the idea of having 1-bit screen, but ad
 
 ## Demo
 
-Online demo is [available here](https://mcdevon.github.io/taxman-wasm/). It is built using the [Wasm port of the engine](https://github.com/mcdevon/taxman-wasm).
+Online demo is [available here](https://mcdevon.github.io/taxman-wasm/). It is built using the [Wasm port of the engine](https://github.com/mcdevon/taxman-wasm). The Wasm port repository contains an example of how to build a scene and add objects there, as well as how to add assets and load them.
 
 The logo animation is made using transform animations and easings, including bezier curve for the jump of the `taxman` text. After the animation, scene is changed using a fade-to-black transition.
 
