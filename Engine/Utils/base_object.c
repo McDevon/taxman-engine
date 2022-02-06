@@ -44,7 +44,7 @@ char *describe_debug(void *object)
     return debug_string;
 }
 
-void describe_deubg_to_log(void *object)
+void describe_debug_to_log(void *object)
 {
     char *debug_string = describe_debug(object);
     LOG("%s", debug_string);

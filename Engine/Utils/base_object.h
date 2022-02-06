@@ -34,6 +34,6 @@ void destroy(void *object);
 char *object_type_string(void *object);
 char *describe(void *object);
 char *describe_debug(void *object);
-void describe_deubg_to_log(void *object);
+void describe_debug_to_log(void *object);
 
 #endif /* base_object_h */
