@@ -36,5 +36,6 @@ int sb_append_int_size(StringBuilder *sb, Size2DInt value);
 int sb_append_int_rect(StringBuilder *sb, Rect2DInt value);
 
 int sb_append_format(StringBuilder *sb, const char *, ...);
+char *sb_string_with_format(const char *, ...);
 
 #endif /* string_builder_h */

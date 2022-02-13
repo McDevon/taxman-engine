@@ -188,6 +188,8 @@ int sb_vfprintf(StringBuilder *sb, const char *fmt, va_list arg)
     double double_value;
     char ch;
     
+    size_t length = sb->length;
+    
     for (size_t offset = 0; (ch = fmt[offset]) != '\0'; ++offset) {
         if (ch == '%' && fmt[offset + 1] != '\0') {
             ++offset;
@@ -234,7 +236,12 @@ int sb_vfprintf(StringBuilder *sb, const char *fmt, va_list arg)
             sb_append_char(sb, ch);
         }
     }
-    return 0;
+    return (int)(sb->length - length);
+}
+
+int sb_append_format_args(StringBuilder *sb, const char *format, va_list arg)
+{
+    return sb_vfprintf(sb, format, arg);
 }
 
 int sb_append_format(StringBuilder *sb, const char *format, ...)
@@ -243,9 +250,24 @@ int sb_append_format(StringBuilder *sb, const char *format, ...)
     int length;
     
     va_start(arg, format);
-    length = sb_vfprintf(sb, format, arg);
+    length = sb_append_format_args(sb, format, arg);
     va_end(arg);
-    return 0;
+    return length;
+}
+
+char *sb_string_with_format(const char *format, ...)
+{
+    va_list arg;
+    
+    va_start(arg, format);
+    StringBuilder *sb = sb_create();
+    sb_append_format_args(sb, format, arg);
+    va_end(arg);
+    
+    char *output = sb_get_string(sb);
+    destroy(sb);
+    
+    return output;
 }
 
 char *sb_get_string(StringBuilder *builder)
