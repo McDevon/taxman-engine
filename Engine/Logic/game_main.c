@@ -4,12 +4,12 @@
 #include "image_storage.h"
 #include "scene_manager.h"
 #include "transitions.h"
-#include "test_scene.h"
 #include <stdlib.h>
 #include "engine_log.h"
 #include "transforms.h"
 #include "platform_adapter.h"
 #include "types.h"
+#include "constants.h"
 
 #include "profiler_internal.h"
 

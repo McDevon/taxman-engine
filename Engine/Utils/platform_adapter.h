@@ -1,6 +1,7 @@
 #ifndef platform_adapter_h
 #define platform_adapter_h
 
+#include <stdlib.h>
 #include "stdbool.h"
 
 typedef uint64_t platform_time_t;
