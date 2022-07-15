@@ -376,7 +376,6 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         const size_t delimeter_count = 1;
         const char *delimeters = " ";
         
-        int token_length = 0;
         int token_start = 0;
         
         ArrayList *tokens = list_create_with_destructor(&platform_free);
@@ -394,20 +393,18 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             }
             if (!delimeter_found && i == length - 1) {
                 delimeter_found = true;
-                ++token_length;
+                ++i;
             }
             
             if (delimeter_found) {
+                const int token_length = i - token_start;
                 if (token_length > 0) {
                     char *found_token = platform_strndup(line + token_start, token_length);
                     if (found_token) {
                         list_add(tokens, found_token);
                     }
                 }
-                token_length = 0;
                 token_start = i + 1;
-            } else {
-                ++token_length;
             }
         }
         size_t token_count = list_count(tokens);
