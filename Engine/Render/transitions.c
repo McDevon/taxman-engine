@@ -33,16 +33,17 @@ void draw_ltr_first_half(int32_t fade_width, int32_t dither_width, Image *dither
     }
     
     for (int32_t i = black_width; i < right_edge; i++) {
+        int32_t grey_val = 255 - ((i - dither_left_edge) * 255 / dither_width);
+        const int32_t dither_x = (i + offset_x) % dither_tx_width;
+        
         for (int32_t j = 0; j < height; j++) {
-            int32_t grey_val = (i - dither_left_edge) * 255 / dither_width;
             int32_t index = (i + j * width) * target_channels;
             
-            const int32_t dither_x = (i + offset_x) % dither_tx_width;
             const int32_t dither_y = (j + offset_y) % dither_tx_height;
             
             const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_data_width) * dither_channels;
 
-            if (target[index] && grey_val <= dither_buffer[d_index]) {
+            if (target[index] && grey_val > dither_buffer[d_index]) {
                 target[index] = 0;
             }
         }
@@ -79,16 +80,17 @@ void draw_ltr_second_half(int32_t fade_width, int32_t dither_width, Image *dithe
     }
         
     for (int32_t i = max(left_edge, 0); i < dither_right_edge; i++) {
+        int32_t grey_val = 255 - ((dither_width - i + left_edge) * 255 / dither_width);
+        const int32_t dither_x = (i + offset_x) % dither_tx_width;
+
         for (int32_t j = 0; j < height; j++) {
-            int32_t grey_val = (dither_width - i + left_edge) * 255 / dither_width;
             int32_t index = (i + j * width) * target_channels;
             
-            const int32_t dither_x = (i + offset_x) % dither_tx_width;
             const int32_t dither_y = (j + offset_y) % dither_tx_height;
             
             const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_data_width) * dither_channels;
 
-            if (target[index] && grey_val <= dither_buffer[d_index]) {
+            if (target[index] && grey_val > dither_buffer[d_index]) {
                 target[index] = 0;
             }
         }
