@@ -160,6 +160,7 @@ void tilemap_destroy(void *object)
 {
     TileMap *tilemap = (TileMap *)object;
     destroy(tilemap->tiles);
+    destroy(tilemap->tile_dictionary);
     go_destroy(tilemap);
 }
 
@@ -198,71 +199,24 @@ struct tile_types_context {
     char *file_name;
 };
 
-void read_tile_type_line(char *tokens[], int32_t token_count, int32_t row_number, bool last_row, void *context)
-{
-    struct tile_types_context *tile_ctx = (struct tile_types_context *)context;
-
-    if (token_count != 4
-        || strlen(tokens[0]) != 1
-        || tokens[0][0] == '#'
-        || strlen(tokens[3]) != 4)
-    {
-        if (last_row) {
-            tile_ctx->file_callback(tile_ctx->file_name, false, tile_ctx->context);
-            platform_free(tile_ctx->file_name);
-            platform_free(tile_ctx);
-        }
-        return;
-    }
-        
-    char *image_base_name = strcmp(tokens[1], "$clear") == 0 ? NULL : tokens[1];
-    
-    uint8_t collision_layer = (uint8_t)atoi(tokens[2]);
-    
-    uint8_t collision_directions = 0;
-    collision_directions += tokens[3][0] == '1' ? (1 << 0) : 0;
-    collision_directions += tokens[3][1] == '1' ? (1 << 1) : 0;
-    collision_directions += tokens[3][2] == '1' ? (1 << 2) : 0;
-    collision_directions += tokens[3][3] == '1' ? (1 << 3) : 0;
-    
-    TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
-    hashtable_put(tile_ctx->w_tile_dictionary, tokens[0], base);
-    
-    if (last_row) {
-        tile_ctx->file_callback(tile_ctx->file_name, true, tile_ctx->context);
-        platform_free(tile_ctx->file_name);
-        platform_free(tile_ctx);
-    }
-}
-
-void load_tile_types(const char *type_file_name, HashTable *tile_dictionary, resource_callback_t resource_callback, void *context)
-{
-    struct tile_types_context *tile_ctx = platform_calloc(sizeof(struct tile_types_context), 1);
-    tile_ctx->context = context;
-    tile_ctx->file_callback = resource_callback;
-    tile_ctx->w_tile_dictionary = tile_dictionary;
-    tile_ctx->file_name = strdup(type_file_name);
-    file_read_lines_tokenize(type_file_name, " ", 1, &read_tile_type_line, tile_ctx);
-}
-
 typedef enum {
     tmp_none,
     tmp_size,
     tmp_map,
-    tmp_objects
+    tmp_objects,
+    tmp_tiles
 } TileMapPart;
 
 struct tm_c_context {
     TileMap *tilemap;
     void *context;
-    const HashTable *tile_dictionary;
     tilemap_callback_t tilemap_callback;
     char *file_name;
     TileMapPart current_part;
     bool valid;
 };
 
-void tilemap_set_tile_edges(TileMap *tilemap, const HashTable *tile_dictionary)
+void tilemap_set_tile_edges(TileMap *tilemap)
 {
     StringBuilder *sb = sb_create();
     for (int32_t y = 0; y < tilemap->map_size.height; ++y) {
@@ -276,7 +230,7 @@ void tilemap_set_tile_edges(TileMap *tilemap, const HashTable *tile_dictionary)
             char key[2] = "\0\0";
             key[0] = tile->type_char;
             
-            TileBase *base = hashtable_get(tile_dictionary, key);
+            TileBase *base = hashtable_get(tilemap->tile_dictionary, key);
             if (!base || !base->image_base_name) {
                 continue;
             }
@@ -336,7 +290,7 @@ void tilemap_create_finish(struct tm_c_context *ctx)
         ctx->tilemap->map_size.height * ctx->tilemap->tile_size.height
     };
     
-    tilemap_set_tile_edges(ctx->tilemap, ctx->tile_dictionary);
+    tilemap_set_tile_edges(ctx->tilemap);
     
     LOG("Tilemap tile count %llu", list_count(ctx->tilemap->tiles));
     
@@ -348,7 +302,6 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
 {
     struct tm_c_context *ctx = (struct tm_c_context *)context;
     TileMap *tilemap = ctx->tilemap;
-    const HashTable *tile_dict = ctx->tile_dictionary;
     
     const char comment_marker = '#';
     if (line[0] == comment_marker) {
@@ -368,6 +321,11 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             ctx->current_part = tmp_map;
         } else if (strcmp(line, "[OBJECTS]") == 0) {
             ctx->current_part = tmp_objects;
+        } else if (strcmp(line, "[TILES]") == 0) {
+            ctx->current_part = tmp_tiles;
+        } else {
+            LOG_ERROR("Tilemap file %s, line %d: Unknown tilemap part %s", ctx->file_name, row_number, line);
+            return;
         }
         return;
     }
@@ -384,7 +342,7 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         for (char t; (t = line[i]) != '\0'; ++i) {
             char key[2] = "\0\0";
             key[0] = t;
-            TileBase *base = hashtable_get(tile_dict, key);
+            TileBase *base = hashtable_get(tilemap->tile_dictionary, key);
             if (base) {
                 Tile *tile;
                 if (base->image_base_name == NULL) {
@@ -413,6 +371,83 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             LOG_ERROR("Tilemap row %d length is wrong", row_number);
             ctx->valid = false;
         }
+    } else if (ctx->current_part == tmp_tiles) {
+        
+        const size_t delimeter_count = 1;
+        const char *delimeters = " ";
+        
+        int token_length = 0;
+        int token_start = 0;
+        
+        ArrayList *tokens = list_create_with_destructor(&platform_free);
+        
+        size_t length = strlen(line);
+        
+        for (int32_t i = 0; i < length; ++i) {
+            char chr = line[i];
+            bool delimeter_found = false;
+            for (int32_t j = 0; j < delimeter_count; ++j) {
+                if (chr == delimeters[j]) {
+                    delimeter_found = true;
+                    break;
+                }
+            }
+            if (!delimeter_found && i == length - 1) {
+                delimeter_found = true;
+                ++token_length;
+            }
+            
+            if (delimeter_found) {
+                if (token_length > 0) {
+                    char *found_token = platform_strndup(line + token_start, token_length);
+                    if (found_token) {
+                        list_add(tokens, found_token);
+                    }
+                }
+                token_length = 0;
+                token_start = i + 1;
+            } else {
+                ++token_length;
+            }
+        }
+        size_t token_count = list_count(tokens);
+        
+        char *token_array[token_count];
+        if (token_count > 0) {
+            for (size_t i = 0; i < token_count; ++i) {
+                token_array[i] = list_get(tokens, i);
+            }
+        } else if (token_count == 0) {
+            destroy(tokens);
+            return;
+        } else {
+            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
+            destroy(tokens);
+            return;
+        }
+                    
+        if (token_count != 4
+            || strlen(token_array[0]) != 1
+            || strlen(token_array[3]) != 4)
+        {
+            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
+            destroy(tokens);
+            return;
+        }
+            
+        char *image_base_name = strcmp(token_array[1], "$clear") == 0 ? NULL : token_array[1];
+        
+        uint8_t collision_layer = (uint8_t)atoi(token_array[2]);
+        
+        uint8_t collision_directions = 0;
+        collision_directions += token_array[3][0] == '1' ? (1 << 0) : 0;
+        collision_directions += token_array[3][1] == '1' ? (1 << 1) : 0;
+        collision_directions += token_array[3][2] == '1' ? (1 << 2) : 0;
+        collision_directions += token_array[3][3] == '1' ? (1 << 3) : 0;
+        
+        TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
+        hashtable_put(tilemap->tile_dictionary, token_array[0], base);
+        destroy(tokens);
     }
     
     if (last_row) {
@@ -420,12 +455,13 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
     }
 }
 
-void tilemap_create(const char *tilemap_file_name, const HashTable *tile_dictionary, tilemap_callback_t tilemap_callback, void *context)
+void tilemap_create(const char *tilemap_file_name, tilemap_callback_t tilemap_callback, void *context)
 {
     GameObject *go = go_alloc(sizeof(TileMap));
     TileMap *tilemap = (TileMap *)go;
     tilemap->w_type = &TileMapType;
     tilemap->tiles = list_create();
+    tilemap->tile_dictionary = hashtable_create();
     tilemap->rotate_and_scale = false;
     
     struct tm_c_context *ctx = platform_calloc(1, sizeof(struct tm_c_context));
@@ -433,7 +469,6 @@ void tilemap_create(const char *tilemap_file_name, const HashTable *tile_diction
     ctx->tilemap = tilemap;
     ctx->tilemap_callback = tilemap_callback;
     ctx->file_name = platform_strdup(tilemap_file_name);
-    ctx->tile_dictionary = tile_dictionary;
     ctx->current_part = tmp_none;
     ctx->valid = true;
     
