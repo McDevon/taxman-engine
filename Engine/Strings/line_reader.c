@@ -18,21 +18,16 @@ struct line_reader_context {
     line_callback_t line_callback;
 };
 
-void read_token_line(const char *line, int32_t row_number, bool last_line, void *context)
+ArrayList * string_tokenize(const char *string, const char delimeters[], const size_t delimeter_count)
 {
-    struct token_reader_context *token_ctx = (struct token_reader_context *)context;
-    
-    const size_t delimeter_count = token_ctx->delimeter_count;
-    const char *delimeters = token_ctx->delimeters;
-    
     int token_start = 0;
     
     ArrayList *tokens = list_create_with_destructor(&platform_free);
     
-    size_t length = strlen(line);
+    size_t length = strlen(string);
     
     for (int32_t i = 0; i < length; ++i) {
-        char chr = line[i];
+        char chr = string[i];
         bool delimeter_found = false;
         for (int32_t j = 0; j < delimeter_count; ++j) {
             if (chr == delimeters[j]) {
@@ -48,7 +43,7 @@ void read_token_line(const char *line, int32_t row_number, bool last_line, void 
         if (delimeter_found) {
             const int token_length = i - token_start;
             if (token_length > 0) {
-                char *found_token = platform_strndup(line + token_start, token_length);
+                char *found_token = platform_strndup(string + token_start, token_length);
                 if (found_token) {
                     list_add(tokens, found_token);
                 }
@@ -56,6 +51,15 @@ void read_token_line(const char *line, int32_t row_number, bool last_line, void 
             token_start = i + 1;
         }
     }
+    return tokens;
+}
+
+void read_token_line(const char *line, int32_t row_number, bool last_line, void *context)
+{
+    struct token_reader_context *token_ctx = (struct token_reader_context *)context;
+    
+    ArrayList *tokens = string_tokenize(line, token_ctx->delimeters, token_ctx->delimeter_count);
+    
     size_t token_count = list_count(tokens);
     
     if (token_count > 0) {
@@ -79,16 +83,6 @@ void read_token_line(const char *line, int32_t row_number, bool last_line, void 
         }
         platform_free(token_ctx);
     }
-}
-
-void string_tokenize(const char *string, const char delimeters[], const size_t delimeter_count, tokens_callback_t tokens_callback, void *context)
-{
-    struct token_reader_context *token_ctx = platform_calloc(sizeof(struct token_reader_context), 1);
-    token_ctx->context = context;
-    token_ctx->tokens_callback = tokens_callback;
-    token_ctx->delimeters = platform_strdup(delimeters);
-    token_ctx->delimeter_count = delimeter_count;
-    read_token_line(string, 0, true, context);
 }
 
 void file_read_lines_tokenize(const char *file_name, const char delimeters[], const size_t delimeter_count, tokens_callback_t tokens_callback, void *context)

@@ -296,6 +296,7 @@ void tilemap_create_finish(struct tm_c_context *ctx)
     
     ctx->tilemap_callback(ctx->file_name, ctx->tilemap, ctx->context);
     platform_free(ctx->file_name);
+    platform_free(ctx);
 }
 
 void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void *context)
@@ -372,78 +373,44 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             ctx->valid = false;
         }
     } else if (ctx->current_part == tmp_tiles) {
-        
-        const size_t delimeter_count = 1;
-        const char *delimeters = " ";
-        
-        int token_start = 0;
-        
-        ArrayList *tokens = list_create_with_destructor(&platform_free);
-        
-        size_t length = strlen(line);
-        
-        for (int32_t i = 0; i < length; ++i) {
-            char chr = line[i];
-            bool delimeter_found = false;
-            for (int32_t j = 0; j < delimeter_count; ++j) {
-                if (chr == delimeters[j]) {
-                    delimeter_found = true;
-                    break;
-                }
-            }
-            if (!delimeter_found && i == length - 1) {
-                delimeter_found = true;
-                ++i;
-            }
-            
-            if (delimeter_found) {
-                const int token_length = i - token_start;
-                if (token_length > 0) {
-                    char *found_token = platform_strndup(line + token_start, token_length);
-                    if (found_token) {
-                        list_add(tokens, found_token);
-                    }
-                }
-                token_start = i + 1;
-            }
-        }
+        ArrayList *tokens = string_tokenize(line, " ", 1);
         size_t token_count = list_count(tokens);
         
-        char *token_array[token_count];
-        if (token_count > 0) {
-            for (size_t i = 0; i < token_count; ++i) {
-                token_array[i] = list_get(tokens, i);
-            }
-        } else if (token_count == 0) {
-            destroy(tokens);
-            return;
-        } else {
-            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
+        if (token_count == 0) {
             destroy(tokens);
             return;
         }
-                    
-        if (token_count != 4
-            || strlen(token_array[0]) != 1
-            || strlen(token_array[3]) != 4)
-        {
-            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
-            destroy(tokens);
-            return;
-        }
-            
-        char *image_base_name = strcmp(token_array[1], "$clear") == 0 ? NULL : token_array[1];
         
-        uint8_t collision_layer = (uint8_t)atoi(token_array[2]);
+        if (token_count != 4) {
+            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
+            destroy(tokens);
+            return;
+        }
+        
+        const char *tile_char = list_get(tokens, 0);
+        const char *image_name = list_get(tokens, 1);
+        const char *collision_str = list_get(tokens, 2);
+        const char *collision_dir_str = list_get(tokens, 3);
+
+        if (strlen(tile_char) != 1
+            || strlen(collision_dir_str) != 4) {
+            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
+            destroy(tokens);
+            return;
+        }
+        
+        const char *image_base_name = strcmp(image_name, "$clear") == 0 ? NULL : image_name;
+        
+        uint8_t collision_layer = (uint8_t)atoi(collision_str);
         
         uint8_t collision_directions = 0;
-        collision_directions += token_array[3][0] == '1' ? (1 << 0) : 0;
-        collision_directions += token_array[3][1] == '1' ? (1 << 1) : 0;
-        collision_directions += token_array[3][2] == '1' ? (1 << 2) : 0;
-        collision_directions += token_array[3][3] == '1' ? (1 << 3) : 0;
+        collision_directions += collision_dir_str[0] == '1' ? (1 << 0) : 0;
+        collision_directions += collision_dir_str[1] == '1' ? (1 << 1) : 0;
+        collision_directions += collision_dir_str[2] == '1' ? (1 << 2) : 0;
+        collision_directions += collision_dir_str[3] == '1' ? (1 << 3) : 0;
         
         TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
-        hashtable_put(tilemap->tile_dictionary, token_array[0], base);
+        hashtable_put(tilemap->tile_dictionary, tile_char, base);
         destroy(tokens);
     }
     
