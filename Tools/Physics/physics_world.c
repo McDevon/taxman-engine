@@ -1,24 +1,24 @@
 #include "physics_world.h"
 #include "physics_body.h"
 
-uint16_t *world_collision_masks(uint8_t row1[16],
-                                uint8_t row2[15],
-                                uint8_t row3[14],
-                                uint8_t row4[13],
-                                uint8_t row5[12],
-                                uint8_t row6[11],
-                                uint8_t row7[10],
-                                uint8_t row8[9],
-                                uint8_t row9[8],
-                                uint8_t row10[7],
-                                uint8_t row11[6],
-                                uint8_t row12[5],
-                                uint8_t row13[4],
-                                uint8_t row14[3],
-                                uint8_t row15[2],
-                                uint8_t row16[1])
+void set_collision_masks(uint16_t *masks,
+                         uint8_t row1[16],
+                         uint8_t row2[15],
+                         uint8_t row3[14],
+                         uint8_t row4[13],
+                         uint8_t row5[12],
+                         uint8_t row6[11],
+                         uint8_t row7[10],
+                         uint8_t row8[9],
+                         uint8_t row9[8],
+                         uint8_t row10[7],
+                         uint8_t row11[6],
+                         uint8_t row12[5],
+                         uint8_t row13[4],
+                         uint8_t row14[3],
+                         uint8_t row15[2],
+                         uint8_t row16[1])
 {
-    uint16_t *masks = calloc(16, sizeof(uint16_t));
     uint8_t *rows[] = {
         row1, row2, row3, row4, row5, row6, row7, row8,
         row9, row10, row11, row12, row13, row14, row15, row16
@@ -46,8 +46,6 @@ uint16_t *world_collision_masks(uint8_t row1[16],
     
     sb_debug_log_to_console(sb);
     destroy(sb);
-    
-    return masks;
 }
 
 struct PhysicsWorld {
