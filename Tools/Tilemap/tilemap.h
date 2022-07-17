@@ -3,6 +3,13 @@
 
 #include "engine.h"
 
+typedef enum {
+    tbo_dither,
+    tbo_invert,
+    tbo_flip_x,
+    tbo_flip_y
+} TileDrawOption;
+
 typedef struct Tile {
     BASE_OBJECT;
     Image *w_image;
