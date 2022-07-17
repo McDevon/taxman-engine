@@ -13,5 +13,6 @@ ImageData *get_image_data(const char *image_data_name);
 GridAtlas *get_grid_atlas(const char *atlas_name);
 Image *image_slice_create_and_store(const char *image_data_name, const char *image_name, const Rect2DInt rect, const Size2DInt original, const Vector2DInt offset);
 Image *get_image(const char *image_name);
+bool image_exists(const char *image_name);
 
 #endif /* file_loader_h */

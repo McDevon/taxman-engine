@@ -7,11 +7,18 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef enum {
+    tbo_dither,
+    tbo_flip_x,
+    tbo_flip_y
+} TileBaseOption;
+
 typedef struct TileBase {
     BASE_OBJECT;
     char *image_base_name;
     uint8_t collision_layer;
     uint8_t collision_directions;
+    uint8_t options;
 } TileBase;
 
 void tile_base_destroy(void *object)
@@ -38,7 +45,7 @@ char *tile_base_describe(void *object)
 
 BaseType TileBaseType = { "TileBase", &tile_base_destroy, &tile_base_describe };
 
-TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer, uint8_t collision_directions)
+TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer, uint8_t collision_directions, uint8_t options)
 {
     TileBase *base = platform_calloc(1, sizeof(TileBase));
     if (image_base_name) {
@@ -48,6 +55,7 @@ TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer,
     }
     base->collision_layer = collision_layer;
     base->collision_directions = collision_directions;
+    base->options = options;
     base->w_type = &TileBaseType;
     
     return base;
@@ -108,7 +116,7 @@ char *tile_describe(void *object)
 BaseType TileType = { "Tile", &tile_destroy, &tile_describe };
 
 
-Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer, uint8_t collision_directions, char type_char)
+Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer, uint8_t collision_directions, uint8_t options, char type_char)
 {
     Image *image = NULL;
     if (image_name) {
@@ -122,15 +130,16 @@ Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer
     tile->w_type = &TileType;
     tile->collision_layer = collision_layer;
     tile->collision_directions = collision_directions;
+    tile->options = options;
     tile->w_image = image;
     tile->type_char = type_char;
     
     return tile;
 }
 
-Tile *tile_create(const char *image_name, uint8_t collision_layer, uint8_t collision_directions)
+Tile *tile_create(const char *image_name, uint8_t collision_layer, uint8_t collision_directions, uint8_t options)
 {
-    return tile_create_with_type_char(image_name, collision_layer, collision_directions, '\0');
+    return tile_create_with_type_char(image_name, collision_layer, collision_directions, options, '\0');
 }
 
 void tilemap_render(GameObject *obj, RenderContext *ctx)
@@ -192,6 +201,7 @@ void tilemap_destroy(void *object)
 {
     TileMap *tilemap = (TileMap *)object;
     destroy(tilemap->tile_dictionary);
+    destroy(tilemap->data_strings);
     destroy(tilemap->objects);
     destroy(tilemap->tiles);
     go_destroy(tilemap);
@@ -225,19 +235,13 @@ int32_t hex_char_to_int(char hex_char) {
     return 0;
 }
 
-struct tile_types_context {
-    void *context;
-    resource_callback_t file_callback;
-    HashTable *w_tile_dictionary;
-    char *file_name;
-};
-
 typedef enum {
     tmp_none,
     tmp_size,
     tmp_map,
     tmp_objects,
-    tmp_tiles
+    tmp_tiles,
+    tmp_data
 } TileMapPart;
 
 struct tm_c_context {
@@ -292,14 +296,13 @@ void tilemap_set_tile_edges(TileMap *tilemap)
             char *image_name = sb_get_string(sb);
             
             Image *image = NULL;
-            if (image_name) {
+            if (image_name && image_exists(image_name)) {
                 image = get_image(image_name);
-                if (!image) {
-                    image = get_image(base->image_base_name);
-                }
-                if (image) {
-                    tile->w_image = image;
-                }
+            } else {
+                image = get_image(base->image_base_name);
+            }
+            if (image) {
+                tile->w_image = image;
             }
             
             platform_free(image_name);
@@ -357,8 +360,11 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             ctx->current_part = tmp_objects;
         } else if (strcmp(line, "[TILES]") == 0) {
             ctx->current_part = tmp_tiles;
+        } else if (strcmp(line, "[DATA]") == 0) {
+            ctx->current_part = tmp_data;
         } else {
             LOG_ERROR("Tilemap file %s, line %d: Unknown tilemap part %s", ctx->file_name, row_number, line);
+            ctx->current_part = tmp_none;
             return;
         }
         return;
@@ -380,9 +386,9 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             if (base) {
                 Tile *tile;
                 if (base->image_base_name == NULL) {
-                    tile = tile_create_with_type_char(NULL, 0, 0, t);
+                    tile = tile_create_with_type_char(NULL, 0, 0, 0, t);
                 } else {
-                    tile = tile_create_with_type_char(base->image_base_name, base->collision_layer, base->collision_directions, t);
+                    tile = tile_create_with_type_char(base->image_base_name, base->collision_layer, base->collision_directions, base->options, t);
                     
                     if (tilemap->tile_size.width == 0 || tilemap->tile_size.height == 0) {
                         tilemap->tile_size = (Size2D){
@@ -401,7 +407,7 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
                 ctx->valid = false;
             }
         }
-        if (i != tilemap->map_size.width) {
+        if (i > 0 && i != tilemap->map_size.width) {
             LOG_ERROR("Tilemap row %d length is wrong", row_number);
             ctx->valid = false;
         }
@@ -414,7 +420,7 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             return;
         }
         
-        if (token_count != 4) {
+        if (token_count < 4) {
             LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap type %s", ctx->file_name, row_number, line);
             destroy(tokens);
             return;
@@ -432,6 +438,21 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             return;
         }
         
+        uint8_t options = 0;
+        
+        for (size_t i = 4; i < token_count; ++i) {
+            const char *option = list_get(tokens, i);
+            if (strcmp(option, "dither") == 0) {
+                options |= 1 << tbo_dither;
+            } else if (strcmp(option, "flip_x") == 0) {
+                options |= 1 << tbo_flip_x;
+            } else if (strcmp(option, "flip_y") == 0) {
+                options |= 1 << tbo_flip_y;
+            } else {
+                LOG_ERROR("Tilemap file %s, line %d: Unknown tile option %s", ctx->file_name, row_number, option);
+            }
+        }
+        
         const char *image_base_name = strcmp(image_name, "$clear") == 0 ? NULL : image_name;
         
         uint8_t collision_layer = (uint8_t)atoi(collision_str);
@@ -442,7 +463,7 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         collision_directions += collision_dir_str[2] == '1' ? (1 << 2) : 0;
         collision_directions += collision_dir_str[3] == '1' ? (1 << 3) : 0;
         
-        TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
+        TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions, options);
         hashtable_put(tilemap->tile_dictionary, tile_char, base);
         destroy(tokens);
     } else if (ctx->current_part == tmp_objects) {
@@ -484,6 +505,10 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         destroy(tokens);
         
         list_add(ctx->tilemap->objects, obj);
+    } else if (ctx->current_part == tmp_data) {
+        if (strlen(line) > 0) {
+            list_add(ctx->tilemap->data_strings, platform_strdup(line));
+        }
     }
     
     if (last_row) {
@@ -498,6 +523,7 @@ void tilemap_create(const char *tilemap_file_name, tilemap_callback_t tilemap_ca
     tilemap->w_type = &TileMapType;
     tilemap->tiles = list_create();
     tilemap->objects = list_create();
+    tilemap->data_strings = list_create_with_destructor(&platform_free);
     tilemap->tile_dictionary = hashtable_create();
     tilemap->rotate_and_scale = false;
     

@@ -144,6 +144,12 @@ Image *get_image(const char *image_name)
     return entry;
 }
 
+bool image_exists(const char *image_name)
+{
+    Image *entry = hashtable_get(&image_slice_table, image_name);
+    return entry != NULL;
+}
+
 void load_sprite_sheet_image_callback(const char *image_data_name, bool success, void *context)
 {
     SpriteSheetDataPackage *data = (SpriteSheetDataPackage*)context;
