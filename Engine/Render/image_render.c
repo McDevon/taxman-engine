@@ -32,7 +32,7 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x,
-        flip_y ? image->offset.y : image->original.height - (image->offset.y + source_height),
+        flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y,
     };
     
     if (position.x + draw_offset.x > target_width
@@ -97,7 +97,7 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
                 const int32_t x = flip_x * (source_width - i) + !flip_x * i;
                 
                 int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
-                int32_t t_index = min((ctx_x + y_t_index) * target_channels, target_width * target_height - 1);
+                int32_t t_index = (ctx_x + y_t_index) * target_channels;
                 
                 target[t_index] = colors[image_buffer[i_index] > 127];
             }
@@ -164,7 +164,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     
     const Vector2DInt draw_offset_int = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height)
+        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y
     };
     const Vector2D draw_offset = (Vector2D){
         nb_from_int(draw_offset_int.x),
@@ -312,7 +312,7 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height),
+        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y,
     };
     
     if (position.x + draw_offset.x > target_width
