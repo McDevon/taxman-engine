@@ -53,6 +53,38 @@ TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer,
     return base;
 }
 
+void tile_map_object_destroy(void *object)
+{
+    TileMapObject *to = (TileMapObject *)object;
+    destroy(to->attribute_strings);
+    platform_free(to->name);
+}
+
+char *tile_map_object_describe(void *object)
+{
+    TileMapObject *to = (TileMapObject *)object;
+
+    return sb_string_with_format("name: %s, position: %d, %d, attribute count: %d", to->name, to->position.x, to->position.y, list_count(to->attribute_strings));
+}
+
+BaseType TileMapObjectType = { "TileMapObject", &tile_map_object_destroy, &tile_map_object_describe };
+
+TileMapObject *tile_map_object_create(const char *name, Vector2DInt position, ArrayList *attribute_strings)
+{
+    TileMapObject *to = platform_calloc(1, sizeof(TileMapObject));
+    to->w_type = &TileMapObjectType;
+    to->name = platform_strdup(name);
+    to->position = position;
+    to->attribute_strings = list_create_with_destructor(&platform_free);
+    
+    size_t count = list_count(attribute_strings);
+    for (size_t i = 0; i < count; ++i) {
+        list_add(to->attribute_strings, platform_strdup(list_get(attribute_strings, i)));
+    }
+    
+    return to;
+}
+
 void tile_destroy(void *object)
 {
 }
@@ -159,8 +191,9 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
 void tilemap_destroy(void *object)
 {
     TileMap *tilemap = (TileMap *)object;
-    destroy(tilemap->tiles);
     destroy(tilemap->tile_dictionary);
+    destroy(tilemap->objects);
+    destroy(tilemap->tiles);
     go_destroy(tilemap);
 }
 
@@ -412,6 +445,45 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions);
         hashtable_put(tilemap->tile_dictionary, tile_char, base);
         destroy(tokens);
+    } else if (ctx->current_part == tmp_objects) {
+        ArrayList *tokens = string_tokenize(line, " ,", 2);
+        size_t token_count = list_count(tokens);
+        
+        if (token_count == 0) {
+            destroy(tokens);
+            if (last_row) {
+                tilemap_create_finish(ctx);
+            }
+            return;
+        }
+        
+        if (token_count < 3) {
+            LOG_ERROR("Tilemap file %s, line %d: Cannot read tilemap object %s", ctx->file_name, row_number, line);
+            destroy(tokens);
+            if (last_row) {
+                tilemap_create_finish(ctx);
+            }
+            return;
+        }
+                
+        const char *str_object_name = list_get(tokens, 0);
+        const char *str_pos_x = list_get(tokens, 1);
+        const char *str_pos_y = list_get(tokens, 2);
+        
+        int32_t pos_x = atoi(str_pos_x);
+        int32_t pos_y = atoi(str_pos_y);
+        
+        ArrayList *attributes = list_create_with_weak_references();
+        for (int i = 3; i < token_count; ++i) {
+            list_add(attributes, list_get(tokens, i));
+        }
+
+        TileMapObject *obj = tile_map_object_create(str_object_name, (Vector2DInt){pos_x, pos_y}, attributes);
+        
+        destroy(attributes);
+        destroy(tokens);
+        
+        list_add(ctx->tilemap->objects, obj);
     }
     
     if (last_row) {
@@ -425,6 +497,7 @@ void tilemap_create(const char *tilemap_file_name, tilemap_callback_t tilemap_ca
     TileMap *tilemap = (TileMap *)go;
     tilemap->w_type = &TileMapType;
     tilemap->tiles = list_create();
+    tilemap->objects = list_create();
     tilemap->tile_dictionary = hashtable_create();
     tilemap->rotate_and_scale = false;
     

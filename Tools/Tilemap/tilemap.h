@@ -14,11 +14,19 @@ typedef struct Tile {
 typedef struct TileMap {
     GAME_OBJECT;
     ArrayList *tiles;
+    ArrayList *objects;
     HashTable *tile_dictionary;
     Size2DInt map_size;
     Size2D tile_size;
     bool rotate_and_scale;
 } TileMap;
+
+typedef struct TileMapObject {
+    BASE_OBJECT;
+    char *name;
+    ArrayList *attribute_strings;
+    Vector2DInt position;
+} TileMapObject;
 
 extern GameObjectType TileMapType;
 
