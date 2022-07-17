@@ -30,6 +30,16 @@ void set_collision_masks(uint16_t *masks,
                          uint8_t row15[2],
                          uint8_t row16[1]);
 
+void set_collision_masks_8(uint16_t *masks,
+                           uint8_t row9[8],
+                           uint8_t row10[7],
+                           uint8_t row11[6],
+                           uint8_t row12[5],
+                           uint8_t row13[4],
+                           uint8_t row14[3],
+                           uint8_t row15[2],
+                           uint8_t row16[1]);
+
 PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger_collision, uint16_t collision_masks[16]);
 
 void world_add_child(PhysicsWorld *world, void *child);
