@@ -4,6 +4,7 @@
 #ifdef DEBUG
 
 void log_print(const char *, ...);
+void log_print_warning(const char *, ...);
 void log_print_error(const char *, ...);
 
 #pragma clang diagnostic push
@@ -11,6 +12,9 @@ void log_print_error(const char *, ...);
 
 #define __ENGINE_LOG(s, ...) \
 log_print(s, ##__VA_ARGS__)
+
+#define __ENGINE_WARNING_LOG(s, ...) \
+log_print_warning(s, ##__VA_ARGS__)
 
 #define __ENGINE_ERROR_LOG(s, ...) \
 log_print_error(s, ##__VA_ARGS__)
@@ -24,9 +28,11 @@ log_print_error(s, ##__VA_ARGS__)
 
 #ifdef ENABLE_ENGINELOG
 #   define LOG(...) __ENGINE_LOG(__VA_ARGS__)
+#   define LOG_WARNING(...) __ENGINE_WARNING_LOG(__VA_ARGS__)
 #   define LOG_ERROR(...) __ENGINE_ERROR_LOG(__VA_ARGS__)
 #else
 #   define LOG(...) do {} while (0)
+#   define LOG_WARNING(...) do {} while (0)
 #   define LOG_ERROR(...) do {} while (0)
 #endif
 

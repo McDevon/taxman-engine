@@ -26,6 +26,27 @@ void log_print(const char *format, ...)
     platform_free(string);
 }
 
+void log_print_warning(const char *format, ...)
+{
+    StringBuilder *sb = sb_create();
+
+    sb_append_string(sb, "[warning] ");
+    
+    va_list arg;
+    int done;
+    va_start (arg, format);
+    done = sb_vfprintf(sb, format, arg);
+    va_end (arg);
+    
+    sb_append_line_break(sb);
+    
+    char *string = sb_get_string(sb);
+    destroy(sb);
+    
+    platform_print(string);
+    platform_free(string);
+}
+
 void log_print_error(const char *format, ...)
 {
     StringBuilder *sb = sb_create();
