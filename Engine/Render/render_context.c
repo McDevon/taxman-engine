@@ -3,6 +3,7 @@
 #include "platform_adapter.h"
 #include "string_builder.h"
 #include "engine_log.h"
+#include "transforms.h"
 #include <string.h>
 
 void render_context_destroy(void *value)
@@ -309,3 +310,34 @@ void context_clean_union_of_rendered_rects(RenderContext *ctx, ArrayList *render
 }
 
 BaseType RenderContextType = { "RenderContext", &render_context_destroy, &render_context_describe };
+
+RenderContext *render_context_create(ImageData *target_buffer, bool background_enabled)
+{
+    RenderContext *ctx = platform_calloc(1, sizeof(RenderContext));
+    ctx->w_type = &RenderContextType;
+    ctx->w_target_buffer = target_buffer;
+    ctx->camera_matrix = af_identity();
+    
+    ctx->background_enabled = background_enabled;
+    if (background_enabled) {
+        ctx->rendered_rects = list_create();
+        ctx->rect_pool = list_create();
+        ctx->active_rects = list_create();
+        ctx->merge_rects = list_create_with_weak_references();
+        ctx->end_rects = list_create_with_weak_references();
+    }
+    
+    return ctx;
+}
+
+
+/*
+ const ImageData *target_buffer;
+ ArrayList *rendered_rects;
+ ArrayList *rect_pool;
+ ArrayList *active_rects;
+ ArrayList *end_rects;
+ ArrayList *merge_rects;
+ AffineTransform camera_matrix;
+ bool background_enabled;
+ */

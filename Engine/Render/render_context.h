@@ -11,7 +11,7 @@ extern BaseType RenderContextType;
 
 typedef struct RenderContext {
     BASE_OBJECT;
-    const ImageData *target_buffer;
+    const ImageData *w_target_buffer;
     ArrayList *rendered_rects;
     ArrayList *rect_pool;
     ArrayList *active_rects;
@@ -26,5 +26,7 @@ void context_background_rendered(RenderContext *ctx);
 void context_release_render_rect(RenderContext *ctx, RenderRect *rect);
 void clean_union_of_rendered_rects(ArrayList *rendered_rects, ArrayList *result);
 void context_clean_union_of_rendered_rects(RenderContext *ctx, ArrayList *rendered_rects, ArrayList *result);
+
+RenderContext *render_context_create(ImageData *target_buffer, bool background_enabled);
 
 #endif /* render_context_h */

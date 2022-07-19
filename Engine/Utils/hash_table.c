@@ -155,14 +155,19 @@ char *hashtable_describe(void *object)
         if (table->entries[i] == NULL) {
             continue;
         }
-        sb_append_int(sb, (int)i);
-        sb_append_string(sb, ":");
+        sb_append_format(sb, " (%d)\n", i);
         for (HashTableEntry *entry = table->entries[i]; entry != NULL; entry = entry->next) {
-            sb_append_string(sb, entry->key);
+            if (entry->value) {
+                char *description = describe(entry->value);
+                sb_append_format(sb, "%s: %s", entry->key, description);
+                platform_free(description);
+            } else {
+                sb_append_format(sb, "%s: (NULL)", entry->key);
+            }
+            sb_append_line_break(sb);
             if (entry->next) {
                 sb_append_string(sb, " -> ");
             } else {
-                sb_append_line_break(sb);
             }
         }
     }

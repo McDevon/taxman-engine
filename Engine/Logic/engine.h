@@ -13,6 +13,7 @@
 #include "sprite_animator.h"
 #include "label.h"
 #include "image.h"
+#include "render_texture.h"
 #include "utils.h"
 #include "array_list.h"
 #include "hash_table.h"
