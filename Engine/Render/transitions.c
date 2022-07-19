@@ -10,10 +10,10 @@ void draw_ltr_first_half(int32_t fade_width, int32_t dither_width, Image *dither
 
     const int32_t black_width = max(fade_width - dither_width, 0);
     const int32_t dither_left_edge = fade_width - dither_width;
-    const int32_t right_edge = min(fade_width, ctx->target_buffer->size.width);
-    const int32_t height = ctx->target_buffer->size.height;
-    const int32_t width = ctx->target_buffer->size.width;
-    const uint32_t target_channels = image_data_channel_count(ctx->target_buffer);
+    const int32_t right_edge = min(fade_width, ctx->w_target_buffer->size.width);
+    const int32_t height = ctx->w_target_buffer->size.height;
+    const int32_t width = ctx->w_target_buffer->size.width;
+    const uint32_t target_channels = image_data_channel_count(ctx->w_target_buffer);
 
     const uint32_t dither_tx_width = dither->rect.size.width;
     const uint32_t dither_tx_height = dither->rect.size.height;
@@ -22,7 +22,7 @@ void draw_ltr_first_half(int32_t fade_width, int32_t dither_width, Image *dither
     const uint32_t dither_origin_x = dither->rect.origin.x;
     const uint32_t dither_origin_y = dither->rect.origin.y;
 
-    ImageBuffer *target = ctx->target_buffer->buffer;
+    ImageBuffer *target = ctx->w_target_buffer->buffer;
     ImageBuffer *dither_buffer = dither->w_image_data->buffer;
     
     for (int32_t i = 0; i < black_width; i++) {
@@ -55,12 +55,12 @@ void draw_ltr_second_half(int32_t fade_width, int32_t dither_width, Image *dithe
     const int offset_x = 0;
     const int offset_y = 0;
 
-    const int32_t height = ctx->target_buffer->size.height;
-    const int32_t width = ctx->target_buffer->size.width;
+    const int32_t height = ctx->w_target_buffer->size.height;
+    const int32_t width = ctx->w_target_buffer->size.width;
     const int32_t black_width = max(fade_width - dither_width, 0);
     const int32_t dither_right_edge = min(width - black_width, width);
     const int32_t left_edge = min(width - fade_width, width);
-    const uint32_t target_channels = image_data_channel_count(ctx->target_buffer);
+    const uint32_t target_channels = image_data_channel_count(ctx->w_target_buffer);
 
     const uint32_t dither_tx_width = dither->rect.size.width;
     const uint32_t dither_tx_height = dither->rect.size.height;
@@ -69,7 +69,7 @@ void draw_ltr_second_half(int32_t fade_width, int32_t dither_width, Image *dithe
     const uint32_t dither_origin_x = dither->rect.origin.x;
     const uint32_t dither_origin_y = dither->rect.origin.y;
     
-    ImageBuffer *target = ctx->target_buffer->buffer;
+    ImageBuffer *target = ctx->w_target_buffer->buffer;
     ImageBuffer *dither_buffer = dither->w_image_data->buffer;
     
     for (int32_t i = dither_right_edge; i < width; i++) {
@@ -117,9 +117,9 @@ void draw_fade_black(int32_t fade, Image *dither, RenderContext *ctx)
     const int offset_x = 0;
     const int offset_y = 0;
 
-    const int32_t width = ctx->target_buffer->size.width;
-    const int32_t height = ctx->target_buffer->size.height;
-    const uint32_t target_channels = image_data_channel_count(ctx->target_buffer);
+    const int32_t width = ctx->w_target_buffer->size.width;
+    const int32_t height = ctx->w_target_buffer->size.height;
+    const uint32_t target_channels = image_data_channel_count(ctx->w_target_buffer);
 
     const uint32_t dither_tx_width = dither->rect.size.width;
     const uint32_t dither_tx_height = dither->rect.size.height;
@@ -128,7 +128,7 @@ void draw_fade_black(int32_t fade, Image *dither, RenderContext *ctx)
     const uint32_t dither_origin_x = dither->rect.origin.x;
     const uint32_t dither_origin_y = dither->rect.origin.y;
     
-    ImageBuffer *target = ctx->target_buffer->buffer;
+    ImageBuffer *target = ctx->w_target_buffer->buffer;
     ImageBuffer *dither_buffer = dither->w_image_data->buffer;
 
     for (int32_t i = 0; i < width; i++) {

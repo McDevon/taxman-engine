@@ -2,7 +2,6 @@
 #include "hash_table.h"
 #include "image_storage.h"
 #include "platform_adapter.h"
-#include <string.h>
 
 void anim_frame_destroy(void *value)
 {

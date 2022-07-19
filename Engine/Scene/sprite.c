@@ -31,7 +31,7 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, obj->position);
         pos = af_af_multiply(ctx->camera_matrix, pos);
 
-        image_render(ctx, self->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate), nb_to_int(pos.i23 + anchor_y_translate) }, flip_flags, self->invert);
+        context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate), nb_to_int(pos.i23 + anchor_y_translate) }, flip_flags, self->invert);
     }
 }
 

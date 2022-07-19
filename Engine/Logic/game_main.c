@@ -26,7 +26,7 @@ void game_init(void *first_scene)
 
     _screen.buffer = screenBuffer;
     
-    _ctx.target_buffer = &_screen;
+    _ctx.w_target_buffer = &_screen;
     _ctx.rendered_rects = list_create();
     _ctx.rect_pool = list_create();
     _ctx.active_rects = list_create();

@@ -21,12 +21,37 @@ void scene_change(SceneManager *scene_manager, GameObject *next_scene, SceneTran
     scene_manager->w_transition_dither = get_image("dither_blue");
 }
 
-void scenemanager_destroy(void *table)
+void scenemanager_destroy(void *object)
 {
+    SceneManager *self = (SceneManager *)object;
     
+    destroy(self->destroy_queue);
+    self->destroy_queue = NULL;
+    
+    if (self->next_scene) {
+        destroy(self->next_scene);
+        self->next_scene = NULL;
+    }
+    if (self->current_scene) {
+        destroy(self->current_scene);
+        self->current_scene = NULL;
+    }
 }
 
-char *scenemanager_describe(void *table)
+char *scenemanager_describe(void *object)
 {
     return platform_strdup("{}");
+}
+
+SceneManager *scene_manager_create()
+{
+    SceneManager *manager = platform_calloc(1, sizeof(SceneManager));
+    manager->w_type = &SceneManagerType;
+    
+    manager->current_scene = NULL;
+    manager->next_scene = NULL;
+    manager->destroy_queue = list_create_with_weak_references();
+    manager->data = NULL;
+    
+    return manager;
 }

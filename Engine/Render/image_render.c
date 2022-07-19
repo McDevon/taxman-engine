@@ -7,25 +7,18 @@
 #include "constants.h"
 #include "profiler.h"
 
-void image_render(RenderContext *context, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert)
+void context_render_rect_image(RenderContext *context, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert)
 {
     if (!context || !image) { return; }
     
 #ifdef ENABLE_PROFILER
-    profiler_start_segment("Prepare image_render");
+    profiler_start_segment("Prepare context_render_rect_image");
 #endif
 
     const int32_t source_width = image->rect.size.width;
     const int32_t source_height = image->rect.size.height;
-    const int32_t source_data_width = image->w_image_data->size.width;
-    const ImageBuffer *image_buffer = image->w_image_data->buffer;
-    const int32_t target_width = context->target_buffer->size.width;
-    const int32_t target_height = context->target_buffer->size.height;
-    const int32_t target_channels = image_data_channel_count(context->target_buffer);
-    const int32_t source_channels = image_channel_count(image);
-    const int32_t source_origin_x = image->rect.origin.x;
-    const int32_t source_origin_y = image->rect.origin.y;
-    ImageBuffer *target = context->target_buffer->buffer;
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
     
     const bool flip_x = flip_flags_xy & (1 << 0);
     const bool flip_y = flip_flags_xy & (1 << 1);
@@ -45,6 +38,15 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
         return;
     }
     
+    const int32_t source_data_width = image->w_image_data->size.width;
+    const ImageBuffer *image_buffer = image->w_image_data->buffer;
+
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
+    ImageBuffer *target = context->w_target_buffer->buffer;
+    
     const int32_t start_x = max(0, -position.x - draw_offset.x);
     const int32_t end_x = min(source_width, target_width - position.x - draw_offset.x);
     const int32_t start_y = max(0, -position.y - draw_offset.y);
@@ -53,15 +55,9 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     
-    uint8_t colors[2] = {0, 255};
-    if (invert) {
-        colors[0] = 255;
-        colors[1] = 0;
-    }
-    
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
-    profiler_start_segment("Fill image_render");
+    profiler_start_segment("Fill context_render_rect_image");
 #endif
     
     if (source_has_alpha) {
@@ -82,7 +78,7 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
                 
                 int32_t t_index = (ctx_x + y_t_index) * target_channels;
                 
-                target[t_index] = colors[image_buffer[i_index] > 127];
+                target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
             }
         }
     } else {
@@ -99,7 +95,7 @@ void image_render(RenderContext *context, const Image *image, const Vector2DInt 
                 int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                 int32_t t_index = (ctx_x + y_t_index) * target_channels;
                 
-                target[t_index] = colors[image_buffer[i_index] > 127];
+                target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
             }
         }
     }
@@ -115,10 +111,10 @@ void context_fill(RenderContext *context, uint8_t color)
 {
     if (!context) { return; }
 
-    const int32_t target_width = context->target_buffer->size.width;
-    const int32_t target_height = context->target_buffer->size.height;
-    const int32_t target_channels = image_data_channel_count(context->target_buffer);
-    ImageBuffer *target = context->target_buffer->buffer;
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    ImageBuffer *target = context->w_target_buffer->buffer;
 
     for (int32_t i = 0; i < target_width; i++) {
         for (int32_t j = 0; j < target_height; j++) {
@@ -148,16 +144,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     
     const int32_t source_width = image->rect.size.width;
     const int32_t source_height = image->rect.size.height;
-    const int32_t source_data_width = image->w_image_data->size.width;
-    const ImageBuffer *image_buffer = image->w_image_data->buffer;
-    const int32_t target_width = context->target_buffer->size.width;
-    const int32_t target_height = context->target_buffer->size.height;
-    const int32_t target_channels = image_data_channel_count(context->target_buffer);
-    const int32_t source_channels = image_channel_count(image);
-    ImageBuffer *target = context->target_buffer->buffer;
-    
-    const bool source_has_alpha = image_has_alpha(image);
-    const int32_t source_alpha_offset = image_alpha_offset(image);
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
     
     const bool flip_x = flip_flags_xy & (1 << 0);
     const bool flip_y = flip_flags_xy & (1 << 1);
@@ -211,6 +199,15 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
         return;
     }
     
+    const int32_t source_data_width = image->w_image_data->size.width;
+    const ImageBuffer *image_buffer = image->w_image_data->buffer;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    ImageBuffer *target = context->w_target_buffer->buffer;
+    
+    const bool source_has_alpha = image_has_alpha(image);
+    const int32_t source_alpha_offset = image_alpha_offset(image);
+    
     AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->camera_matrix));
         
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
@@ -219,12 +216,6 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     int32_t i_top = max(nb_to_int(nb_round(top)), 0);
     const int32_t source_origin_x = image->rect.origin.x;
     const int32_t source_origin_y = image->rect.origin.y;
-    
-    uint8_t colors[2] = {0, 255};
-    if (invert) {
-        colors[0] = 255;
-        colors[1] = 0;
-    }
 
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -250,7 +241,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
                 }
                 
                 int32_t t_index = (i + y_t_index) * target_channels;
-                target[t_index] = colors[image_buffer[i_index] > 127];
+                target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
             }
         }
     } else {
@@ -269,7 +260,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
                 int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
                 int32_t t_index = (i + y_t_index) * target_channels;
                 
-                target[t_index] = colors[image_buffer[i_index] > 127];
+                target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
             }
         }
     }
@@ -281,7 +272,7 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
 #endif
 }
 
-void image_render_dither(RenderContext *context, const Image *image, const Image *dither_texture, const Vector2DInt position, const Vector2DInt offset, const int flip_flags_xy)
+void context_render_rect_dither(RenderContext *context, const Image *image, const Image *dither_texture, const Vector2DInt position, const Vector2DInt offset, const int flip_flags_xy)
 {
     if (!context || !dither_texture) { return; }
     
@@ -291,21 +282,8 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
 
     const int32_t source_width = image->rect.size.width;
     const int32_t source_height = image->rect.size.height;
-    const int32_t source_data_width = image->w_image_data->size.width;
-    const ImageBuffer *image_buffer = image->w_image_data->buffer;
-    const int32_t target_width = context->target_buffer->size.width;
-    const int32_t target_height = context->target_buffer->size.height;
-    const ImageBuffer *dither_buffer = dither_texture->w_image_data->buffer;
-    const int32_t dither_width = dither_texture->rect.size.width;
-    const int32_t dither_height = dither_texture->rect.size.height;
-    const int32_t target_channels = image_data_channel_count(context->target_buffer);
-    const int32_t source_channels = image_channel_count(image);
-    const int32_t dither_channels = image_channel_count(dither_texture);
-    const int32_t source_origin_x = image->rect.origin.x;
-    const int32_t source_origin_y = image->rect.origin.y;
-    const int32_t dither_origin_x = dither_texture->rect.origin.x;
-    const int32_t dither_origin_y = dither_texture->rect.origin.y;
-    ImageBuffer *target = context->target_buffer->buffer;
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
     
     const bool flip_x = flip_flags_xy & (1 << 0);
     const bool flip_y = flip_flags_xy & (1 << 1);
@@ -324,7 +302,21 @@ void image_render_dither(RenderContext *context, const Image *image, const Image
 #endif
         return;
     }
-    
+
+    const int32_t source_data_width = image->w_image_data->size.width;
+    const ImageBuffer *image_buffer = image->w_image_data->buffer;
+    const ImageBuffer *dither_buffer = dither_texture->w_image_data->buffer;
+    const int32_t dither_width = dither_texture->rect.size.width;
+    const int32_t dither_height = dither_texture->rect.size.height;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    const int32_t dither_channels = image_channel_count(dither_texture);
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
+    const int32_t dither_origin_x = dither_texture->rect.origin.x;
+    const int32_t dither_origin_y = dither_texture->rect.origin.y;
+    ImageBuffer *target = context->w_target_buffer->buffer;
+
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
     

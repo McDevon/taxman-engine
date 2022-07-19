@@ -66,10 +66,10 @@ void debugdraw_render(GameObject *obj, RenderContext *ctx)
 {
     DebugDraw *self = (DebugDraw *)obj;
     
-    const int32_t target_channels = image_data_channel_count(ctx->target_buffer);
-    const int32_t target_width = ctx->target_buffer->size.width;
-    const int32_t target_height = ctx->target_buffer->size.height;
-    ImageBuffer *target = ctx->target_buffer->buffer;
+    const int32_t target_channels = image_data_channel_count(ctx->w_target_buffer);
+    const int32_t target_width = ctx->w_target_buffer->size.width;
+    const int32_t target_height = ctx->w_target_buffer->size.height;
+    ImageBuffer *target = ctx->w_target_buffer->buffer;
 
     const size_t count = list_count(self->lines);
     for (size_t i = 0; i < count; ++i) {
