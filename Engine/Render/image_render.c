@@ -274,10 +274,10 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
 
 void context_render_rect_dither(RenderContext *context, const Image *image, const Image *dither_texture, const Vector2DInt position, const Vector2DInt offset, const int flip_flags_xy)
 {
-    if (!context || !dither_texture) { return; }
+    if (!context || !dither_texture || !image) { return; }
     
 #ifdef ENABLE_PROFILER
-    profiler_start_segment("Prepare image_render_dither");
+    profiler_start_segment("Prepare context_render_rect_dither");
 #endif
 
     const int32_t source_width = image->rect.size.width;
@@ -327,42 +327,137 @@ void context_render_rect_dither(RenderContext *context, const Image *image, cons
     
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
-    profiler_start_segment("Fill image_render_dither");
+    profiler_start_segment("Fill context_render_rect_dither");
 #endif
     
     if (source_has_alpha) {
         for (int32_t j = start_y; j < end_y; j++) {
+            const int32_t ctx_y = j + position.y + draw_offset.y;
+            const int32_t dither_y = (j + offset.y) % dither_height;
+            const int32_t y_i_index = (j + source_origin_y) * source_data_width;
+            const int32_t y_t_index = ctx_y * target_width;
+            const int32_t y_d_index = (dither_y + dither_origin_y) * dither_width;
             for (int32_t i = start_x; i < end_x; i++) {
                 const int32_t ctx_x = i + position.x + draw_offset.x;
-                const int32_t ctx_y = j + position.y + draw_offset.y;
 
                 const int32_t dither_x = (i + offset.x) % dither_width;
-                const int32_t dither_y = (j + offset.y) % dither_height;
                 
-                const uint32_t i_index = (i + source_origin_x + (j + source_origin_y) * source_data_width) * source_channels;
+                const uint32_t i_index = (i + source_origin_x + y_i_index) * source_channels;
                 
                 if (image_buffer[i_index + source_alpha_offset] < 128) {
                     continue;
                 }
                 
-                const uint32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
-                const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_width) * dither_channels;
-                target[t_index] = (image_buffer[i_index] > dither_buffer[d_index]) * 255;
+                const uint32_t t_index = (ctx_x + y_t_index) * target_channels;
+                const uint32_t d_index = (dither_x + dither_origin_x + y_d_index) * dither_channels;
+                target[t_index] = (255 - image_buffer[i_index] < dither_buffer[d_index]) * 255;
             }
         }
     } else {
         for (int32_t j = start_y; j < end_y; j++) {
+            const int32_t ctx_y = j + position.y + draw_offset.y;
+            const int32_t dither_y = (j + offset.y) % dither_height;
+            const int32_t y_i_index = (j + source_origin_y) * source_data_width;
+            const int32_t y_t_index = ctx_y * target_width;
+            const int32_t y_d_index = (dither_y + dither_origin_y) * dither_width;
             for (int32_t i = start_x; i < end_x; i++) {
                 const int32_t ctx_x = i + position.x + draw_offset.x;
-                const int32_t ctx_y = j + position.y + draw_offset.y;
 
                 const int32_t dither_x = (i + offset.x) % dither_width;
-                const int32_t dither_y = (j + offset.y) % dither_height;
                 
-                const uint32_t i_index = (i + source_origin_x + (j + source_origin_y) * source_data_width) * source_channels;
-                const uint32_t t_index = (ctx_x + ctx_y * target_width) * target_channels;
-                const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_width) * dither_channels;
-                target[t_index] = (image_buffer[i_index] > dither_buffer[d_index]) * 255;
+                const uint32_t i_index = (i + source_origin_x + y_i_index) * source_channels;
+                const uint32_t t_index = (ctx_x + y_t_index) * target_channels;
+                const uint32_t d_index = (dither_x + dither_origin_x + y_d_index) * dither_channels;
+                target[t_index] = (255 - image_buffer[i_index] < dither_buffer[d_index]) * 255;
+            }
+        }
+    }
+
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+}
+
+void context_render_rect_dither_threshold(RenderContext *context, const uint8_t threshold, const Image *image, const Vector2DInt position, const int flip_flags_xy)
+{
+    if (!context || !image) { return; }
+    
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Prepare context_render_rect_dither_threshold");
+#endif
+
+    const int32_t source_width = image->rect.size.width;
+    const int32_t source_height = image->rect.size.height;
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
+    
+    const bool flip_x = flip_flags_xy & (1 << 0);
+    const bool flip_y = flip_flags_xy & (1 << 1);
+    
+    if (position.x > target_width
+        || position.x + source_width < 0
+        || position.y > target_height
+        || position.y + source_height < 0) {
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+        return;
+    }
+
+    const int32_t source_data_width = image->w_image_data->size.width;
+    const ImageBuffer *dither_buffer = image->w_image_data->buffer;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
+    ImageBuffer *target = context->w_target_buffer->buffer;
+
+    const bool source_has_alpha = image_has_alpha(image);
+    const int32_t source_alpha_offset = image_alpha_offset(image);
+    
+    const int32_t start_x = max(0, -position.x);
+    const int32_t end_x = min(source_width, target_width - position.x);
+    const int32_t start_y = max(0, -position.y);
+    const int32_t end_y = min(source_height, target_height - position.y);
+    
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+    profiler_start_segment("Fill context_render_rect_dither_threshold");
+#endif
+    
+    if (source_has_alpha) {
+        for (int32_t j = start_y; j < end_y; j++) {
+            const int32_t ctx_y = j + position.y;
+            const int32_t y = flip_y * (source_height - j) + !flip_y * j;
+            const int32_t y_i_index = (y + source_origin_y) * source_data_width;
+            const int32_t y_t_index = ctx_y * target_width;
+            for (int32_t i = start_x; i < end_x; i++) {
+                const int32_t ctx_x = i + position.x;
+                
+                const int32_t x = flip_x * (source_width - i) + !flip_x * i;
+                const uint32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
+                
+                if (dither_buffer[i_index + source_alpha_offset] < 128) {
+                    continue;
+                }
+                
+                const uint32_t t_index = (ctx_x + y_t_index) * target_channels;
+                target[t_index] = (dither_buffer[i_index] > threshold) * 255;
+            }
+        }
+    } else {
+        for (int32_t j = start_y; j < end_y; j++) {
+            const int32_t ctx_y = j + position.y;
+            const int32_t y = flip_y * (source_height - j) + !flip_y * j;
+            const int32_t y_i_index = (y + source_origin_y) * source_data_width;
+            const int32_t y_t_index = ctx_y * target_width;
+            for (int32_t i = start_x; i < end_x; i++) {
+                const int32_t ctx_x = i + position.x;
+                const int32_t x = flip_x * (source_width - i) + !flip_x * i;
+
+                const uint32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
+                const uint32_t t_index = (ctx_x + y_t_index) * target_channels;
+                target[t_index] = (dither_buffer[i_index] > threshold) * 255;
             }
         }
     }

@@ -25,9 +25,12 @@ typedef struct TileMap {
     ArrayList *objects;
     ArrayList *data_strings;
     HashTable *tile_dictionary;
+    ImageData *w_dither_mask;
+    Vector2D dither_mask_position;
     Size2DInt map_size;
     Size2D tile_size;
     bool rotate_and_scale;
+    uint8_t dither_mask_threshold_color;
 } TileMap;
 
 typedef struct TileMapObject {

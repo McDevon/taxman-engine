@@ -27,7 +27,7 @@ char *tile_base_describe(void *object)
     
     StringBuilder *sb = sb_create();
     sb_append_string(sb, "image base name: ");
-    sb_append_string(sb, base->image_base_name);
+    sb_append_string(sb, base->image_base_name ? base->image_base_name : "(NULL)");
     sb_append_string(sb, ", layer: ");
     sb_append_int(sb, (int)base->collision_layer);
     char *description = sb_get_string(sb);
@@ -155,10 +155,14 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
         AffineTransform tile_pos;
         
         const Size2D tile_size = self->tile_size;
+        
+        if (self->w_dither_mask) {
+            LOG_WARNING("Tilemap dither not supported when rotate and scale enabled");
+        }
 
         for (int32_t y = 0; y < self->map_size.height; ++y) {
             for (int32_t x = 0; x < self->map_size.width; ++x) {
-                int32_t index = x + y * self->map_size.width;
+                const int32_t index = x + y * self->map_size.width;
                 tile_pos = af_translate(af_identity(), (Vector2D){
                     tile_size.width * x,
                     tile_size.height * y
@@ -166,8 +170,9 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 tile_pos = af_af_multiply(pos, tile_pos);
                 ctx->camera_matrix = tile_pos;
                 
-                Tile *tile = (Tile *)list_get(self->tiles, index);
-                context_render(ctx, tile->w_image, 0, tile->options & (1 << tbo_invert));
+                const Tile *tile = (Tile *)list_get(self->tiles, index);
+                const uint8_t flip_flags = ((tile->options) << tbo_flip_x) & 0x3;
+                context_render(ctx, tile->w_image, flip_flags, tile->options & (1 << tbo_invert));
             }
         }
     } else {
@@ -177,14 +182,45 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
         pos = af_af_multiply(ctx->camera_matrix, pos);
 
         const Size2D tile_size = self->tile_size;
+        const Size2DInt tile_size_int = (Size2DInt){nb_to_int(tile_size.width), nb_to_int(tile_size.height)};
+        
+        const Number dither_mask_start_x = self->dither_mask_position.x;
+        const Number dither_mask_end_x = self->w_dither_mask ? dither_mask_start_x + self->w_dither_mask->size.width : nb_zero;
+        const Number dither_mask_start_y = self->dither_mask_position.y;
+        const Number dither_mask_end_y = self->w_dither_mask ? dither_mask_start_y + self->w_dither_mask->size.height : nb_zero;
+
+        Image *dither_slice = NULL;
+        if (self->w_dither_mask) {
+            dither_slice = image_create_trimmed(self->w_dither_mask, (Rect2DInt){{0, 0}, tile_size_int}, tile_size_int, (Vector2DInt){0, 0});
+        }
 
         for (int32_t y = 0; y < self->map_size.height; ++y) {
             for (int32_t x = 0; x < self->map_size.width; ++x) {
                 
-                int32_t index = x + y * self->map_size.width;
-                Tile *tile = (Tile *)list_get(self->tiles, index);
+                const int32_t index = x + y * self->map_size.width;
+                const Tile *tile = (Tile *)list_get(self->tiles, index);
+                const uint8_t flip_flags = ((tile->options) >> tbo_flip_x) & 0x3;
                 
-                image_render(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, 0, tile->options & (1 << tbo_invert));
+                if (tile->options & (1 << tbo_dither)) {
+                    Number start_x = nb_mul(nb_from_int(x), tile_size.width);
+                    Number end_x = start_x + tile_size.width;
+                    Number start_y = nb_mul(nb_from_int(y), tile_size.height);
+                    Number end_y = start_y + tile_size.height;
+                    if (!self->w_dither_mask
+                        || start_x < dither_mask_start_x
+                        || end_x > dither_mask_end_x
+                        || start_y < dither_mask_start_y
+                        || end_y > dither_mask_end_y) {
+                        
+                        context_render_rect_dither_threshold(ctx, self->dither_mask_threshold_color, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, flip_flags);
+                    } else {
+                        dither_slice->rect = (Rect2DInt){{nb_to_int(start_x - dither_mask_start_x), nb_to_int(start_y - dither_mask_start_y)}, tile_size_int};
+                        context_render_rect_dither(ctx, dither_slice, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, (Vector2DInt){0, 0}, flip_flags);
+                    }
+                } else {
+                    context_render_rect_image(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, flip_flags, tile->options & (1 << tbo_invert));
+                }
+                
             }
         }
         
@@ -522,6 +558,9 @@ void tilemap_create(const char *tilemap_file_name, tilemap_callback_t tilemap_ca
     tilemap->data_strings = list_create_with_destructor(&platform_free);
     tilemap->tile_dictionary = hashtable_create();
     tilemap->rotate_and_scale = false;
+    tilemap->w_dither_mask = NULL;
+    tilemap->dither_mask_position = vec_zero();
+    tilemap->dither_mask_threshold_color = 128;
     
     struct tm_c_context *ctx = platform_calloc(1, sizeof(struct tm_c_context));
     ctx->context = context;
