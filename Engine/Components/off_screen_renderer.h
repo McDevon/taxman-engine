@@ -4,6 +4,7 @@
 #include "game_object_component.h"
 #include "render_texture.h"
 #include "scene_manager.h"
+#include "image_render.h"
 #include "sprite.h"
 
 typedef struct OffScreenRenderer {
@@ -18,6 +19,6 @@ extern GameObjectComponentType OffScreenRendererType;
 OffScreenRenderer *off_screen_renderer_create(Size2DInt size, int32_t channels);
 
 void off_screen_renderer_add_go(OffScreenRenderer *off_screen_renderer, void *go);
-void off_screen_renderer_render_rect_image(OffScreenRenderer *off_screen_renderer, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert);
+void off_screen_renderer_render_rect_image(OffScreenRenderer *off_screen_renderer, const Image *image, const Vector2DInt position, const RenderOptions render_options);
 
 #endif /* off_screen_renderer_h */

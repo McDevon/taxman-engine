@@ -171,8 +171,11 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 ctx->camera_matrix = tile_pos;
                 
                 const Tile *tile = (Tile *)list_get(self->tiles, index);
-                const uint8_t flip_flags = ((tile->options) << tbo_flip_x) & 0x3;
-                context_render(ctx, tile->w_image, flip_flags, tile->options & (1 << tbo_invert));
+                const RenderOptions render_options = render_options_make((tile->options & tile_draw_option_flip_x) > 0,
+                                                                         (tile->options & tile_draw_option_flip_y) > 0,
+                                                                         (tile->options & tile_draw_option_invert) > 0,
+                                                                         0, 0);
+                context_render(ctx, tile->w_image, render_options);
             }
         }
     } else {
@@ -199,13 +202,19 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 
                 const int32_t index = x + y * self->map_size.width;
                 const Tile *tile = (Tile *)list_get(self->tiles, index);
-                const uint8_t flip_flags = ((tile->options) >> tbo_flip_x) & 0x3;
                 
-                if (tile->options & (1 << tbo_dither)) {
+                const RenderOptions render_options = render_options_make((tile->options & tile_draw_option_flip_x) > 0,
+                                                                         (tile->options & tile_draw_option_flip_y) > 0,
+                                                                         (tile->options & tile_draw_option_invert) > 0,
+                                                                         0, 0);
+                
+                if (tile->options & tile_draw_option_dither) {
                     Number start_x = nb_mul(nb_from_int(x), tile_size.width);
                     Number end_x = start_x + tile_size.width;
                     Number start_y = nb_mul(nb_from_int(y), tile_size.height);
                     Number end_y = start_y + tile_size.height;
+                    const uint8_t flip_flags = (render_options.flip_x ? 0x01 : 0) | (render_options.flip_y ? 0x02 : 0);
+
                     if (!self->w_dither_mask
                         || start_x < dither_mask_start_x
                         || end_x > dither_mask_end_x
@@ -218,7 +227,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                         context_render_rect_dither(ctx, dither_slice, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, (Vector2DInt){0, 0}, flip_flags);
                     }
                 } else {
-                    context_render_rect_image(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, flip_flags, tile->options & (1 << tbo_invert));
+                    context_render_rect_image(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, render_options);
                 }
                 
             }
@@ -473,13 +482,13 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         for (size_t i = 4; i < token_count; ++i) {
             const char *option = list_get(tokens, i);
             if (strcmp(option, "dither") == 0) {
-                options |= 1 << tbo_dither;
+                options |= tile_draw_option_dither;
             } else if (strcmp(option, "invert") == 0) {
-                options |= 1 << tbo_invert;
+                options |= tile_draw_option_invert;
             } else if (strcmp(option, "flip_x") == 0) {
-                options |= 1 << tbo_flip_x;
+                options |= tile_draw_option_flip_x;
             } else if (strcmp(option, "flip_y") == 0) {
-                options |= 1 << tbo_flip_y;
+                options |= tile_draw_option_flip_y;
             } else {
                 LOG_ERROR("Tilemap file %s, line %d: Unknown tile option %s", ctx->file_name, row_number, option);
             }

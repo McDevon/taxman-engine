@@ -1,5 +1,4 @@
 #include "off_screen_renderer.h"
-#include "image_render.h"
 
 void off_screen_renderer_destroy(void *comp)
 {
@@ -80,7 +79,7 @@ void off_screen_renderer_add_go(OffScreenRenderer *self, void *child)
     go_add_child(self->root_object, child);
 }
 
-void off_screen_renderer_render_rect_image(OffScreenRenderer *self, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert)
+void off_screen_renderer_render_rect_image(OffScreenRenderer *self, const Image *image, const Vector2DInt position, const RenderOptions render_options)
 {
-    context_render_rect_image(self->render_texture->render_context, image, position, flip_flags_xy, invert);
+    context_render_rect_image(self->render_texture->render_context, image, position, render_options);
 }

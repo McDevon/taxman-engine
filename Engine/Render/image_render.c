@@ -7,7 +7,7 @@
 #include "constants.h"
 #include "profiler.h"
 
-void context_render_rect_image(RenderContext *context, const Image *image, const Vector2DInt position, const uint8_t flip_flags_xy, const bool invert)
+void context_render_rect_image(RenderContext *context, const Image *image, const Vector2DInt position, const RenderOptions render_options)
 {
     if (!context || !image) { return; }
     
@@ -20,8 +20,8 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
     const int32_t target_width = context->w_target_buffer->size.width;
     const int32_t target_height = context->w_target_buffer->size.height;
     
-    const bool flip_x = flip_flags_xy & (1 << 0);
-    const bool flip_y = flip_flags_xy & (1 << 1);
+    const bool flip_x = render_options.flip_x;
+    const bool flip_y = render_options.flip_y;
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x,
@@ -54,6 +54,7 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
     
     const bool source_has_alpha = image_has_alpha(image);
     const int32_t source_alpha_offset = image_alpha_offset(image);
+    const bool invert = render_options.invert;
     
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -134,7 +135,7 @@ void context_clear_black(RenderContext *context)
     context_fill(context, 0x00);
 }
 
-void context_render(RenderContext *context, const Image *image, const uint8_t flip_flags_xy, const bool invert)
+void context_render(RenderContext *context, const Image *image, const RenderOptions render_options)
 {
     if (!context || !image) { return; }
     
@@ -147,8 +148,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     const int32_t target_width = context->w_target_buffer->size.width;
     const int32_t target_height = context->w_target_buffer->size.height;
     
-    const bool flip_x = flip_flags_xy & (1 << 0);
-    const bool flip_y = flip_flags_xy & (1 << 1);
+    const bool flip_x = render_options.flip_x;
+    const bool flip_y = render_options.flip_y;
     
     const Vector2DInt draw_offset_int = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
@@ -217,6 +218,8 @@ void context_render(RenderContext *context, const Image *image, const uint8_t fl
     const int32_t source_origin_x = image->rect.origin.x;
     const int32_t source_origin_y = image->rect.origin.y;
 
+    const bool invert = render_options.invert;
+    
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
     profiler_start_segment("Fill context_render");

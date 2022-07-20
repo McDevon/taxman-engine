@@ -13,8 +13,6 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
 
     AffineTransform pos = af_identity();
     
-    uint8_t flip_flags = self->flip_x + 2 * self->flip_y;
-
     if (self->rotate_and_scale) {
         pos = af_scale(pos, obj->scale);
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
@@ -24,7 +22,7 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         
         ctx->camera_matrix = pos;
 
-        context_render(ctx, self->w_image, flip_flags, self->invert);
+        context_render(ctx, self->w_image, render_options_make(self->flip_x, self->flip_y, self->invert, false, 0));
     } else {
         pos = af_scale(pos, obj->scale);
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
@@ -32,7 +30,7 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, obj->position);
         pos = af_af_multiply(ctx->camera_matrix, pos);
 
-        context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(pos.i13), nb_to_int(pos.i23) }, flip_flags, self->invert);
+        context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(pos.i13), nb_to_int(pos.i23) }, render_options_make(self->flip_x, self->flip_y, self->invert, false, 0));
     }
 }
 

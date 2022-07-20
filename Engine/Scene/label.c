@@ -45,7 +45,7 @@ void label_render(GameObject *obj, RenderContext *ctx)
             Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
             
             ctx->camera_matrix = pos;
-            context_render(ctx, img, 0, self->invert);
+            context_render(ctx, img, render_options_make(false, false, self->invert, false, 0));
             AffineTransform offset = af_translate(af_identity(), (Vector2D){ x_offset, nb_zero });
             pos = af_af_multiply(pos, offset);
         }
@@ -74,7 +74,7 @@ void label_render(GameObject *obj, RenderContext *ctx)
             
             Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
             
-            context_render_rect_image(ctx, img, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate) + col * x_offset, nb_to_int(pos.i23 + anchor_y_translate) + row * y_offset }, 0, self->invert);
+            context_render_rect_image(ctx, img, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate) + col * x_offset, nb_to_int(pos.i23 + anchor_y_translate) + row * y_offset }, render_options_make(false, false, self->invert, false, 0));
             ++col;
         }
     }
