@@ -31,6 +31,7 @@ GameObject *go_alloc(size_t type_size)
     object->go_private->z_order_dirty = false;
     object->go_private->start_called = false;
     object->active = true;
+    object->ignore_camera = false;
     object->scale = (Vector2D){ nb_one, nb_one };
     
     return object;
@@ -181,7 +182,7 @@ void go_render(GameObject *object, RenderContext *ctx)
     size_t count = list_count(list);
     size_t i = 0;
     
-    AffineTransform transform = ctx->camera_matrix;
+    AffineTransform transform = object->ignore_camera ? af_identity() : ctx->render_transform;
     
     AffineTransform position = af_scale(af_identity(), object->scale);
     position = af_rotate(position, object->rotation);
@@ -193,17 +194,17 @@ void go_render(GameObject *object, RenderContext *ctx)
         if (child->go_private->z_order >= 0) {
             break;
         }
-        ctx->camera_matrix = position;
+        ctx->render_transform = position;
         go_render(child, ctx);
     }
     
     if (type->render) {
-        ctx->camera_matrix = transform;
+        ctx->render_transform = transform;
         type->render(object, ctx);        
     }
     
     for (; i < count; ++i) {
-        ctx->camera_matrix = position;
+        ctx->render_transform = position;
         go_render((GameObject *)list_get(list, i), ctx);
     }
 }

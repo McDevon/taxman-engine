@@ -22,7 +22,7 @@ void label_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->camera_matrix, pos);
+        pos = af_af_multiply(ctx->render_transform, pos);
         
         Number x_offset = nb_from_int(self->w_font_atlas->item_size.width);
         Number y_offset = nb_from_int(self->w_font_atlas->item_size.height);
@@ -44,7 +44,7 @@ void label_render(GameObject *obj, RenderContext *ctx)
             
             Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
             
-            ctx->camera_matrix = pos;
+            ctx->render_transform = pos;
             context_render(ctx, img, render_options_make(false, false, self->invert, false, 0));
             AffineTransform offset = af_translate(af_identity(), (Vector2D){ x_offset, nb_zero });
             pos = af_af_multiply(pos, offset);
@@ -53,7 +53,7 @@ void label_render(GameObject *obj, RenderContext *ctx)
         pos = af_scale(pos, obj->scale);
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->camera_matrix, pos);
+        pos = af_af_multiply(ctx->render_transform, pos);
 
         int32_t x_offset = self->w_font_atlas->item_size.width;
         int32_t y_offset = self->w_font_atlas->item_size.height;

@@ -218,7 +218,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
         AffineTransform transform = af_identity();
         transform = af_translate(transform, corner);
         
-        transform = af_af_multiply(context->camera_matrix, transform);
+        transform = af_af_multiply(context->render_transform, transform);
         
         if (transform.i13 < left) {
             left = transform.i13;
@@ -249,7 +249,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
     
     const bool source_has_alpha = image_has_alpha(image);
     
-    AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->camera_matrix));
+    AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->render_transform));
         
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
     int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);

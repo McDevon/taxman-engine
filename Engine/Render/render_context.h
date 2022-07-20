@@ -6,18 +6,20 @@
 #include "types.h"
 #include "array_list.h"
 #include "render_rect.h"
+#include "render_camera.h"
 
 extern BaseType RenderContextType;
 
 typedef struct RenderContext {
     BASE_OBJECT;
     const ImageData *w_target_buffer;
+    RenderCamera *render_camera;
     ArrayList *rendered_rects;
     ArrayList *rect_pool;
     ArrayList *active_rects;
     ArrayList *end_rects;
     ArrayList *merge_rects;
-    AffineTransform camera_matrix;
+    AffineTransform render_transform;
     bool background_enabled;
 } RenderContext;
 

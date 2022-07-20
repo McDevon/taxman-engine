@@ -37,6 +37,6 @@ RenderTexture *render_texture_create(Size2DInt size, int32_t channels)
 
 void render_texture_render_go(RenderTexture *self, GameObject *object)
 {
-    self->render_context->camera_matrix = af_identity();
+    self->render_context->render_transform = render_camera_get_transform(self->render_context->render_camera);
     go_render(object, self->render_context);
 }

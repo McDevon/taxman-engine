@@ -18,9 +18,9 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->camera_matrix, pos);
+        pos = af_af_multiply(ctx->render_transform, pos);
         
-        ctx->camera_matrix = pos;
+        ctx->render_transform = pos;
 
         context_render(ctx, self->w_image, render_options_make(self->flip_x, self->flip_y, self->invert, self->stamp, self->stamp_color));
     } else {
@@ -28,7 +28,7 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->camera_matrix, pos);
+        pos = af_af_multiply(ctx->render_transform, pos);
 
         context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(pos.i13), nb_to_int(pos.i23) }, render_options_make(self->flip_x, self->flip_y, self->invert, self->stamp, self->stamp_color));
     }

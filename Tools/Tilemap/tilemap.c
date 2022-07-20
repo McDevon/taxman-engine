@@ -150,7 +150,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->camera_matrix, pos);
+        pos = af_af_multiply(ctx->render_transform, pos);
         
         AffineTransform tile_pos;
         
@@ -158,6 +158,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
         
         if (self->w_dither_mask) {
             LOG_WARNING("Tilemap dither not supported when rotate and scale enabled");
+            self->w_dither_mask = NULL;
         }
 
         for (int32_t y = 0; y < self->map_size.height; ++y) {
@@ -168,7 +169,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                     tile_size.height * y
                 });
                 tile_pos = af_af_multiply(pos, tile_pos);
-                ctx->camera_matrix = tile_pos;
+                ctx->render_transform = tile_pos;
                 
                 const Tile *tile = (Tile *)list_get(self->tiles, index);
                 const RenderOptions render_options = render_options_make((tile->options & tile_draw_option_flip_x) > 0,
@@ -182,7 +183,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
         pos = af_scale(pos, obj->scale);
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->camera_matrix, pos);
+        pos = af_af_multiply(ctx->render_transform, pos);
 
         const Size2D tile_size = self->tile_size;
         const Size2DInt tile_size_int = (Size2DInt){nb_to_int(tile_size.width), nb_to_int(tile_size.height)};

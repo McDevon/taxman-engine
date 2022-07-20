@@ -106,7 +106,7 @@ void transition_swipe_ltr_step(SceneManager *scene_manager, RenderContext *ctx)
     if (scene_manager->transition_step < half_time) {
         draw_ltr_first_half(nb_to_int(nb_mul(nb_from_int(full_width), nb_div(scene_manager->transition_step, half_time))), dither_width, scene_manager->w_transition_dither, ctx);
     } else {
-        ctx->camera_matrix = af_identity();
+        ctx->render_transform = render_camera_get_transform(ctx->render_camera);
         go_render(scene_manager->current_scene, ctx);
         draw_ltr_second_half(nb_to_int(nb_mul(nb_from_int(full_width), nb_div((scene_manager->transition_length - scene_manager->transition_step), half_time))), dither_width, scene_manager->w_transition_dither, ctx);
     }
@@ -153,7 +153,7 @@ void transition_fade_black_step(SceneManager *scene_manager, RenderContext *ctx)
     if (scene_manager->transition_step < half_time) {
         draw_fade_black(255 - nb_to_int(nb_div(nb_mul(scene_manager->transition_step, nb_from_int(255)), half_time)), scene_manager->w_transition_dither, ctx);
     } else {
-        ctx->camera_matrix = af_identity();
+        ctx->render_transform = render_camera_get_transform(ctx->render_camera);
         go_render(scene_manager->current_scene, ctx);
         draw_fade_black(255 - nb_to_int(nb_div(nb_mul((scene_manager->transition_length - scene_manager->transition_step), nb_from_int(255)), half_time)), scene_manager->w_transition_dither, ctx);
     }

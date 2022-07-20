@@ -31,7 +31,8 @@ typedef struct GameObjectType {
     Size2D size; \
     Number rotation; \
     int32_t tag; \
-    bool active
+    bool active; \
+    bool ignore_camera
 
 typedef struct GameObject {
     GO_CONTENTS;

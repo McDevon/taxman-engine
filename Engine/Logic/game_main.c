@@ -14,10 +14,15 @@
 #include "profiler_internal.h"
 
 static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0 /*image_settings_alpha | image_settings_rgb*/ };
-static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false };
+static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false };
 
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
 static Number _fixed_dt_counter = 0;
+
+RenderContext *get_main_render_context()
+{
+    return &_ctx;
+}
 
 void game_init(void *first_scene)
 {
@@ -27,6 +32,7 @@ void game_init(void *first_scene)
     _screen.buffer = screenBuffer;
     
     _ctx.w_target_buffer = &_screen;
+    _ctx.render_camera = render_camera_create((Size2DInt){ SCREEN_WIDTH, SCREEN_HEIGHT });
     _ctx.rendered_rects = list_create();
     _ctx.rect_pool = list_create();
     _ctx.active_rects = list_create();
@@ -44,6 +50,7 @@ void switch_scene(void)
     list_clear(_scene_manager.destroy_queue);
     _scene_manager.current_scene = _scene_manager.next_scene;
     _scene_manager.next_scene = NULL;
+    render_camera_reset(_ctx.render_camera);
     go_initialize(_scene_manager.current_scene, &_scene_manager);
     go_start(_scene_manager.current_scene);
 }
@@ -205,7 +212,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Render");
 #endif
-    _ctx.camera_matrix = af_identity();
+    _ctx.render_transform = render_camera_get_transform(_ctx.render_camera);
     go_render(_scene_manager.current_scene, &_ctx);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();

@@ -9,6 +9,9 @@
 void render_context_destroy(void *value)
 {
     RenderContext *self = (RenderContext *)value;
+    destroy(self->render_camera);
+    self->render_camera = NULL;
+    
     if (self->rendered_rects) {
         destroy(self->rendered_rects);
         self->rendered_rects = NULL;
@@ -316,7 +319,8 @@ RenderContext *render_context_create(ImageData *target_buffer, bool background_e
     RenderContext *ctx = platform_calloc(1, sizeof(RenderContext));
     ctx->w_type = &RenderContextType;
     ctx->w_target_buffer = target_buffer;
-    ctx->camera_matrix = af_identity();
+    ctx->render_transform = af_identity();
+    ctx->render_camera = render_camera_create(target_buffer->size);
     
     ctx->background_enabled = background_enabled;
     if (background_enabled) {
