@@ -8,6 +8,11 @@ Taxman Engine implements a simple Entity-Component structure and scene managemen
 
 Some features of the engine are based on the idea of having 1-bit screen, but adding support for more colors is entirely possible.
 
+To run the engine, a platform adapter is needed. Currently there are two publicly available platform adapters:
+
+- [Wasm adapter](https://github.com/mcdevon/taxman-wasm) for running the engine in a browser
+- [Playdate adapter (WIP)](https://github.com/mcdevon/taxman-playdate) for running the engine in a Playdate console
+
 ## Demo
 
 Online demo is [available here](https://mcdevon.github.io/taxman-wasm/). It is built using the [Wasm port of the engine](https://github.com/mcdevon/taxman-wasm). The Wasm port repository contains an example of how to build a scene and add objects there, as well as how to add assets and load them.
@@ -33,8 +38,10 @@ Current Features include
 - Scene Graph, Game Objects, reusable Components
 - Dynamic ArrayLists, HashMaps, and String Builders, which support the memory management scheme
 - Dithering to draw grayscale images
+- Advanced dithering features for animation and effects
 - Bitmap fonts (currently monospace only)
 - Sprite atlases (currently only using LibGDX format)
+- Render textures and off-screen rendering
 - Frame animations
 - Transform animations
 - Easings for transform animations, including cubic bezier curves
@@ -47,15 +54,12 @@ Current Features include
 
 The engine can use fixed-point numbers for in-game calculations. This is due to the original game idea needing platform-indepent deterministic game replays using only player inputs. By deafult regular floats are used.
 
-There is no actual camera, as the viewport remains always in origin. But functionally there is equivalent camera node, which translates (transform, scale, and rotate supported) the node and child nodes. This also allows easy HUD implementation as there is no need for multiple camera trickery.
-
 ## Rough Backlog
 
 - How-to-use guide
 - Examples of scenes, objects, components, and game state
 - Audio support
 - Render optimisations
-- Keep 1-bit images in memory with 1-bit colors instead of 8-bit colors
 - 9-sprite
 - Sprite alpha using dithering
 - Easier UI layout scheme using object's top-left corner as origin for child objects
