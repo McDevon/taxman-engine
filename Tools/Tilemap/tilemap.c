@@ -213,7 +213,7 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                     Number end_x = start_x + tile_size.width;
                     Number start_y = nb_mul(nb_from_int(y), tile_size.height);
                     Number end_y = start_y + tile_size.height;
-                    const uint8_t flip_flags = (render_options.flip_x ? 0x01 : 0) | (render_options.flip_y ? 0x02 : 0);
+                    const uint8_t flip_flags_dither = (tile->options & tile_draw_option_flip_x ? 0x01 : 0) | (tile->options & tile_draw_option_flip_y ? 0x02 : 0);
 
                     if (!self->w_dither_mask
                         || start_x < dither_mask_start_x
@@ -221,10 +221,10 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                         || start_y < dither_mask_start_y
                         || end_y > dither_mask_end_y) {
                         
-                        context_render_rect_dither_threshold(ctx, self->dither_mask_threshold_color, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, flip_flags);
+                        context_render_rect_dither_threshold(ctx, self->dither_mask_threshold_color, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, flip_flags_dither);
                     } else {
                         dither_slice->rect = (Rect2DInt){{nb_to_int(start_x - dither_mask_start_x), nb_to_int(start_y - dither_mask_start_y)}, tile_size_int};
-                        context_render_rect_dither(ctx, dither_slice, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, (Vector2DInt){0, 0}, flip_flags);
+                        context_render_rect_dither(ctx, dither_slice, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, (Vector2DInt){0, 0}, 0, flip_flags_dither);
                     }
                 } else {
                     context_render_rect_image(ctx, tile->w_image, (Vector2DInt){ nb_to_int(pos.i13 + anchor_x_translate + x * tile_size.width), nb_to_int(pos.i23 + anchor_y_translate + y * tile_size.height) }, render_options);

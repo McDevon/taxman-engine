@@ -24,7 +24,7 @@ typedef struct RenderOptions {
 })
 
 void context_render_rect_image(RenderContext *context, const Image *image, const Vector2DInt position, const RenderOptions render_options);
-void context_render_rect_dither(RenderContext *context, const Image *image, const Image *dither_texture, const Vector2DInt position, const Vector2DInt offset, const int flip_flags_xy);
+void context_render_rect_dither(RenderContext *context, const Image *image, const Image *dither_texture, const Vector2DInt position, const Vector2DInt offset, const int flip_flags_xy_image, const int flip_flags_xy_dither);
 void context_render_rect_dither_threshold(RenderContext *context, const uint8_t threshold, const Image *dither_image, const Vector2DInt position, const int flip_flags_xy);
 
 void context_fill(RenderContext *context, uint8_t color);
