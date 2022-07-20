@@ -9,7 +9,9 @@
     bool flip_x; \
     bool flip_y; \
     bool rotate_and_scale; \
-    bool invert
+    bool invert; \
+    bool stamp; \
+    uint8_t stamp_color
 
 typedef struct Sprite {
     SPRITE_CONTENTS;
