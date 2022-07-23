@@ -204,7 +204,7 @@ void profiler_toggle()
     if (profiler_root_entry) {
         char *data = profiler_get_data();
         platform_print(data);
-        free(data);
+        platform_free(data);
         
         profiler_finish();
         LOG("#PROFILER Finished");

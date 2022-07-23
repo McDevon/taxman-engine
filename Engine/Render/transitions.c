@@ -150,7 +150,7 @@ void draw_fade_black(int32_t fade, Image *dither, RenderContext *ctx)
 void transition_fade_black_step(SceneManager *scene_manager, RenderContext *ctx)
 {
     const Number half_time = scene_manager->transition_length / 2;
-    if (scene_manager->transition_step < half_time) {
+    if (scene_manager->transition_step <= half_time) {
         draw_fade_black(255 - nb_to_int(nb_div(nb_mul(scene_manager->transition_step, nb_from_int(255)), half_time)), scene_manager->w_transition_dither, ctx);
     } else {
         ctx->render_transform = render_camera_get_transform(ctx->render_camera);

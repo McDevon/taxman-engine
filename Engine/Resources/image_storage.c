@@ -241,7 +241,7 @@ void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, v
         return;
     }
     
-    data->sprite_sheet_data = strdup(sheet_data);
+    data->sprite_sheet_data = platform_strdup(sheet_data);
     
     int row_length = 0;
 
@@ -279,7 +279,7 @@ void load_sprite_sheet(const char *sprite_sheet_name, resource_callback_t resour
     SpriteSheetDataPackage *data = platform_calloc(sizeof(SpriteSheetDataPackage), 1);
     data->resource_callback = resource_callback;
     data->context = context;
-    data->sprite_sheet_name = strdup(sprite_sheet_name);
+    data->sprite_sheet_name = platform_strdup(sprite_sheet_name);
 
     platform_read_text_file(file_name, &load_sprite_sheet_callback, data);
     platform_free(file_name);

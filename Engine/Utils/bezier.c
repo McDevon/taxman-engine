@@ -61,7 +61,7 @@ typedef struct BezierPrecomputed {
 void bezier_precomputed_destroy(void *object)
 {
     BezierPrecomputed *self = (BezierPrecomputed *)object;
-    free(self->table);
+    platform_free(self->table);
 }
 
 char *bezier_precomputed_describe(void *object)

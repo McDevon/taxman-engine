@@ -65,11 +65,11 @@ void transition_finish(void)
 
 void transition_step(Number delta_time_millis)
 {
+    _scene_manager.transition_step += delta_time_millis;
+    
     if (_scene_manager.transition_step > _scene_manager.transition_length / 2 && _scene_manager.next_scene) {
         switch_scene();
     }
-    
-    _scene_manager.transition_step += delta_time_millis;
     
     switch (_scene_manager.transition) {
         case st_swipe_left_to_right:
@@ -122,7 +122,7 @@ void game_step(Number delta_time_millis, Controls controls)
         {
             char *data = profiler_get_data();
             platform_print(data);
-            free(data);
+            platform_free(data);
             
             profiler_finish();
             break;
