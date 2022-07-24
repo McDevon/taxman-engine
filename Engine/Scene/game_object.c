@@ -209,6 +209,18 @@ void go_render(GameObject *object, RenderContext *ctx)
     }
 }
 
+void go_set_scene_manager_recursively(void *obj, SceneManager *scene_manager)
+{
+    GameObject *go = (GameObject *)obj;
+    go->go_private->w_scene_manager = scene_manager;
+    
+    ArrayList *children = go->go_private->children;
+    size_t count = list_count(children);
+    for (size_t i = 0; i < count; ++i) {
+        go_set_scene_manager_recursively(list_get(children, i), scene_manager);
+    }
+}
+
 void go_add_child(void *obj, void *child)
 {
     GameObject *go = (GameObject *)obj;
@@ -221,7 +233,7 @@ void go_add_child(void *obj, void *child)
     
     list_add(go->go_private->children, goc);
     goc->go_private->w_parent = go;
-    goc->go_private->w_scene_manager = go->go_private->w_scene_manager;
+    go_set_scene_manager_recursively(goc, go->go_private->w_scene_manager);
     
     go->go_private->z_order_dirty = true;
 
