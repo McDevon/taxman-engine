@@ -435,9 +435,9 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
                             nb_from_int(tile->w_image->rect.size.width),
                             nb_from_int(tile->w_image->rect.size.height)
                         };
-                    } else if (nb_from_int(tile->w_image->rect.size.width) != tilemap->tile_size.width ||
-                               nb_from_int(tile->w_image->rect.size.height) != tilemap->tile_size.height) {
-                        LOG_ERROR("Tilemap tile images are of different size");
+                    } else if (tile->w_image->rect.size.width != nb_to_int(tilemap->tile_size.width) ||
+                               tile->w_image->rect.size.height != nb_to_int(tilemap->tile_size.height)) {
+                        LOG_ERROR("Tilemap tile images are of different size: %s is %d x %d, expected to be %d x %d", base->image_base_name, tile->w_image->rect.size.width, tile->w_image->rect.size.height, tilemap->tile_size.width, tilemap->tile_size.height);
                         ctx->valid = false;
                     }
                 }
