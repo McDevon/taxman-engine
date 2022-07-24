@@ -30,7 +30,7 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         pos = af_translate(pos, obj->position);
         pos = af_af_multiply(ctx->render_transform, pos);
 
-        context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(pos.i13), nb_to_int(pos.i23) }, render_options_make(self->flip_x, self->flip_y, self->invert, self->stamp, self->stamp_color));
+        context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(nb_floor(pos.i13)), nb_to_int(nb_floor(pos.i23)) }, render_options_make(self->flip_x, self->flip_y, self->invert, self->stamp, self->stamp_color));
     }
 }
 
