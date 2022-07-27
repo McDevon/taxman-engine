@@ -460,7 +460,7 @@ void *world_remove_object_from_world(void *child)
     return child;
 }
 
-bool directions_contains_direction(Directions directions, Direction direction)
+bool directions_contains_direction(DirectionTable directions, Direction direction)
 {
     return ((direction == dir_up && directions.up)
             || (direction == dir_down && directions.down)
@@ -498,7 +498,7 @@ bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_b
             if (!tile || ((world->collision_masks[tile->collision_layer] & (1 << physics_body->collision_layer)) == 0)) {
                 continue;
             }
-            if (tile->collision_directions > 0) {
+            if (directions_contains_direction(tile->collision_directions, dir_opposite(moving_direction))) {
                 return true;                
             }
         }
@@ -579,8 +579,12 @@ void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Nu
 
 void world_pbd_move_dynamic(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D movement, pbd_collision_callback_t *callback, void *collision_context)
 {
-    world_pbd_move_dynamic_x(world, physics_body, movement.x, callback, collision_context);
-    world_pbd_move_dynamic_y(world, physics_body, movement.y, callback, collision_context);
+    if (movement.x != nb_zero) {
+        world_pbd_move_dynamic_x(world, physics_body, movement.x, callback, collision_context);
+    }
+    if (movement.y != nb_zero) {
+        world_pbd_move_dynamic_y(world, physics_body, movement.y, callback, collision_context);
+    }
 }
 
 void world_copy_collisions(bool collisions_from[4], bool *collisions_to)
@@ -611,7 +615,7 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
     Number move_x = nb_round(static_body->remainder_movement.x);
     Number move_y = nb_round(static_body->remainder_movement.y);
     
-    Directions collisions = static_body->collision_directions;
+    DirectionTable collisions = static_body->collision_directions;
     static_body->collision_directions = directions_none;
     
     if (move_x != nb_zero) {

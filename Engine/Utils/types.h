@@ -82,6 +82,16 @@ typedef enum {
     dir_down
 } Direction;
 
+typedef struct DirectionTable {
+    uint8_t left : 1;
+    uint8_t right : 1;
+    uint8_t up : 1;
+    uint8_t down : 1;
+} DirectionTable;
+
+#define directions_none (DirectionTable){ 0, 0, 0, 0 }
+#define directions_all (DirectionTable){ 1, 1, 1, 1 }
+
 #define int_rect_make(x, y, w, h) (Rect2DInt){ (Vector2DInt){ x, y }, (Size2DInt){ w, h } }
 #define rect_make(x, y, w, h) (Rect2D){ (Vector2D){ x, y }, (Size2D){ w, h } }
 

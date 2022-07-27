@@ -10,8 +10,8 @@
 typedef struct TileBase {
     BASE_OBJECT;
     char *image_base_name;
+    DirectionTable collision_directions;
     uint8_t collision_layer;
-    uint8_t collision_directions;
     uint8_t options;
 } TileBase;
 
@@ -39,7 +39,7 @@ char *tile_base_describe(void *object)
 
 BaseType TileBaseType = { "TileBase", &tile_base_destroy, &tile_base_describe };
 
-TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer, uint8_t collision_directions, uint8_t options)
+TileBase *tile_base_create(const char *image_base_name, uint8_t collision_layer, DirectionTable collision_directions, uint8_t options)
 {
     TileBase *base = platform_calloc(1, sizeof(TileBase));
     if (image_base_name) {
@@ -110,7 +110,7 @@ char *tile_describe(void *object)
 BaseType TileType = { "Tile", &tile_destroy, &tile_describe };
 
 
-Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer, uint8_t collision_directions, uint8_t options, char type_char)
+Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer, DirectionTable collision_directions, uint8_t options, char type_char)
 {
     Image *image = NULL;
     if (image_name) {
@@ -131,7 +131,7 @@ Tile *tile_create_with_type_char(const char *image_name, uint8_t collision_layer
     return tile;
 }
 
-Tile *tile_create(const char *image_name, uint8_t collision_layer, uint8_t collision_directions, uint8_t options)
+Tile *tile_create(const char *image_name, uint8_t collision_layer, DirectionTable collision_directions, uint8_t options)
 {
     return tile_create_with_type_char(image_name, collision_layer, collision_directions, options, '\0');
 }
@@ -426,7 +426,7 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
             if (base) {
                 Tile *tile;
                 if (base->image_base_name == NULL) {
-                    tile = tile_create_with_type_char(NULL, 0, 0, 0, t);
+                    tile = tile_create_with_type_char(NULL, 0, directions_none, 0, t);
                 } else {
                     tile = tile_create_with_type_char(base->image_base_name, base->collision_layer, base->collision_directions, base->options, t);
                     
@@ -499,11 +499,11 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
         
         uint8_t collision_layer = (uint8_t)atoi(collision_str);
         
-        uint8_t collision_directions = 0;
-        collision_directions += collision_dir_str[0] == '1' ? (1 << 0) : 0;
-        collision_directions += collision_dir_str[1] == '1' ? (1 << 1) : 0;
-        collision_directions += collision_dir_str[2] == '1' ? (1 << 2) : 0;
-        collision_directions += collision_dir_str[3] == '1' ? (1 << 3) : 0;
+        DirectionTable collision_directions = directions_none;
+        collision_directions.left = collision_dir_str[0] == '1' ? 1 : 0;
+        collision_directions.right = collision_dir_str[1] == '1' ? 1 : 0;
+        collision_directions.up = collision_dir_str[2] == '1' ? 1 : 0;
+        collision_directions.down = collision_dir_str[3] == '1' ? 1 : 0;
         
         TileBase *base = tile_base_create(image_base_name, collision_layer, collision_directions, options);
         hashtable_put(tilemap->tile_dictionary, tile_char, base);

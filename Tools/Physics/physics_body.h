@@ -7,16 +7,6 @@
 
 struct PhysicsBody;
 
-typedef struct Directions {
-    uint8_t left : 1;
-    uint8_t right : 1;
-    uint8_t up : 1;
-    uint8_t down : 1;
-} Directions;
-
-extern Directions directions_none;
-extern Directions directions_all;
-
 typedef struct PhysicsBody {
     GAME_OBJECT_COMPONENT;
     PhysicsWorld *w_world;
@@ -28,7 +18,7 @@ typedef struct PhysicsBody {
     Size2D size;
     Vector2D remainder_movement;
     uint8_t collision_layer;
-    Directions collision_directions;
+    DirectionTable collision_directions;
     bool dynamic;
 } PhysicsBody;
 

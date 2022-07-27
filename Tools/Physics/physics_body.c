@@ -1,9 +1,6 @@
 #include "physics_body.h"
 #include "physics_world.h"
 
-Directions directions_none = { 0, 0, 0, 0 };
-Directions directions_all = { 1, 1, 1, 1 };
-
 void pbd_destroy(void *comp)
 {    
     comp_destroy(comp);
