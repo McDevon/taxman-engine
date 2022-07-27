@@ -47,6 +47,8 @@ PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger
 void world_add_child(PhysicsWorld *world, void *child);
 void *world_remove_object_from_world(void *child);
 
+bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, struct PhysicsBody *physics_body, Vector2D new_position, Direction moving_direction);
+
 void world_pbd_move_dynamic(PhysicsWorld *world, struct PhysicsBody *physics_body, Vector2D movement, pbd_collision_callback_t *callback, void *collision_context);
 void world_pbd_move_static(PhysicsWorld *world, struct PhysicsBody *physics_body, Vector2D movement);
 

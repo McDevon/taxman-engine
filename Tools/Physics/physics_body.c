@@ -89,13 +89,16 @@ PhysicsBody *pbd_create()
     PhysicsBody *pho = (PhysicsBody *)comp_alloc(sizeof(PhysicsBody));
     
     pho->w_type = &PhysicsBodyComponentType;
-    pho->collision_layer = 0;
     pho->crush_override = NULL;
+    pho->w_crush_context = NULL;
     pho->position = vec_zero();
     pho->size = (Size2D){ nb_zero, nb_zero };
+    pho->object_offset = vec_zero();
     pho->remainder_movement = vec_zero();
+    pho->collision_layer = 0;
     pho->collision_directions = directions_all;
     pho->dynamic = false;
+    pho->trigger = false;
 
     return pho;
 }
@@ -130,7 +133,7 @@ inline Number pbd_left(PhysicsBody *physics_body)
 
 inline Number pbd_right(PhysicsBody *physics_body)
 {
-    return physics_body->position.x + physics_body->size.width;
+    return physics_body->position.x + physics_body->size.width - nb_one;
 }
 
 inline Number pbd_top(PhysicsBody *physics_body)
@@ -140,7 +143,7 @@ inline Number pbd_top(PhysicsBody *physics_body)
 
 inline Number pbd_bottom(PhysicsBody *physics_body)
 {
-    return physics_body->position.y + physics_body->size.height;
+    return physics_body->position.y + physics_body->size.height - nb_one;
 }
 
 inline bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)
@@ -149,6 +152,14 @@ inline bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)
              || pbd_bottom(pbd_a) < pbd_top(pbd_b)
              || pbd_left(pbd_a) > pbd_right(pbd_b)
              || pbd_top(pbd_a) > pbd_bottom(pbd_b));
+}
+
+bool pbd_overlap_in_position(PhysicsBody *pbd_a, PhysicsBody *pbd_b, Vector2D pbd_a_position)
+{
+    return !(pbd_a_position.x + pbd_a->size.width - nb_one < pbd_left(pbd_b)
+             || pbd_a_position.y + pbd_a->size.height - nb_one < pbd_top(pbd_b)
+             || pbd_a_position.x > pbd_right(pbd_b)
+             || pbd_a_position.y > pbd_bottom(pbd_b));
 }
 
 inline bool pbd_vertical_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)

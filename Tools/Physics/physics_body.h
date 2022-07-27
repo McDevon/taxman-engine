@@ -20,6 +20,7 @@ typedef struct PhysicsBody {
     uint8_t collision_layer;
     DirectionTable collision_directions;
     bool dynamic;
+    bool trigger;
 } PhysicsBody;
 
 extern GameObjectComponentType PhysicsBodyComponentType;
@@ -40,6 +41,7 @@ Number pbd_top(PhysicsBody *physics_body);
 Number pbd_bottom(PhysicsBody *physics_body);
 
 bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b);
+bool pbd_overlap_in_position(PhysicsBody *pbd_a, PhysicsBody *pbd_b, Vector2D pbd_a_position);
 bool pbd_vertical_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b);
 
 #endif /* physics_object_component_h */

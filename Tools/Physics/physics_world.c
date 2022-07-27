@@ -468,12 +468,31 @@ bool directions_contains_direction(DirectionTable directions, Direction directio
             || (direction == dir_right && directions.right));
 }
 
-PhysicsBody * world_pbd_dynamic_collides_static(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D position, Direction moving_direction)
+PhysicsBody *world_pbd_dynamic_collides_static(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D position, Direction moving_direction)
 {
+    if (!directions_contains_direction(physics_body->collision_directions, moving_direction)) {
+        return NULL;
+    }
+    for_each_begin(PhysicsBody *, other_body, world->physics_components) {
+        if (physics_body == other_body) {
+            continue;
+        }
+        if (other_body->dynamic || (world->collision_masks[physics_body->collision_layer] & (1 << other_body->collision_layer)) == 0) {
+            continue;
+        }
+        
+        if (pbd_overlap_in_position(physics_body, other_body, position) && !pbd_overlap(physics_body, other_body)) {
+            if (directions_contains_direction(other_body->collision_directions, dir_opposite(moving_direction))) {
+                return other_body;
+            }
+        }
+    }
+    for_each_end
+    
     return NULL;
 }
 
-bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D new_position, Direction moving_direction)
+bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D new_position, Direction moving_direction)
 {
     if (!world->w_tilemap) {
         return false;
@@ -487,7 +506,7 @@ bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_b
     Number tile_width = tilemap->tile_size.width;
     Number tile_height = tilemap->tile_size.height;
     
-    int32_t x_start, x_end, y_start, y_end;
+    int32_t x_start = -1, x_end = -1, y_start = -1, y_end = -1;
     
     if (moving_direction == dir_up) {
         Number current = pbd_top(physics_body);
@@ -506,7 +525,7 @@ bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_b
         x_end = nb_to_int(nb_floor(nb_div(pbd_right(physics_body), tile_width)));
     } else if (moving_direction == dir_down) {
         Number current = pbd_bottom(physics_body);
-        Number next = new_position.y + physics_body->size.height;
+        Number next = new_position.y + physics_body->size.height - nb_one;
         
         y_start = nb_to_int(nb_floor(nb_div(current, tile_height)));
         y_end = nb_to_int(nb_floor(nb_div(next, tile_height)));
@@ -532,11 +551,11 @@ bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_b
         
         --x_end;
         
-        y_start = nb_to_int(nb_floor(nb_div(pbd_top(physics_body), tile_width)));
-        y_end = nb_to_int(nb_floor(nb_div(pbd_bottom(physics_body), tile_width)));
+        y_start = nb_to_int(nb_floor(nb_div(pbd_top(physics_body), tile_height)));
+        y_end = nb_to_int(nb_floor(nb_div(pbd_bottom(physics_body), tile_height)));
     } else if (moving_direction == dir_right) {
         Number current = pbd_right(physics_body);
-        Number next = new_position.x + physics_body->size.width;
+        Number next = new_position.x + physics_body->size.width - nb_one;
         
         x_start = nb_to_int(nb_floor(nb_div(current, tile_width)));
         x_end = nb_to_int(nb_floor(nb_div(next, tile_width)));
@@ -547,13 +566,8 @@ bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_b
         
         ++x_start;
         
-        y_start = nb_to_int(nb_floor(nb_div(pbd_top(physics_body), tile_width)));
-        y_end = nb_to_int(nb_floor(nb_div(pbd_bottom(physics_body), tile_width)));
-    } else {
-        x_start = -1;
-        x_end = -1;
-        y_start = -1;
-        y_end = -1;
+        y_start = nb_to_int(nb_floor(nb_div(pbd_top(physics_body), tile_height)));
+        y_end = nb_to_int(nb_floor(nb_div(pbd_bottom(physics_body), tile_height)));
     }
     
     for (int32_t y = y_start; y <= y_end; ++y) {
@@ -586,21 +600,24 @@ void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Nu
          while (move != nb_zero) {
             Direction moving_direction = sign > nb_zero ? dir_right : dir_left;
             Vector2D next_position = vec(physics_body->position.x + sign, physics_body->position.y);
-            if (world_pbd_dynamic_collides_tile(world, physics_body, next_position, moving_direction)) {
+            if (world_pbd_collides_tile_if_moves_to(world, physics_body, next_position, moving_direction)) {
                 if (callback) {
                     callback(physics_body, NULL, moving_direction, collision_context);
                 }
                 break;
             }
             PhysicsBody *collided_static = world_pbd_dynamic_collides_static(world, physics_body, next_position, moving_direction);
-            if (!collided_static) {
+            if (!collided_static || collided_static->trigger) {
                 physics_body->position.x += sign;
                 move -= sign;
-            } else {
+            }
+            if (collided_static) {
                 if (callback) {
                     callback(physics_body, collided_static, moving_direction, collision_context);
                 }
-                break;
+                if (!collided_static->trigger) {
+                    break;
+                }
             }
         }
     }
@@ -621,21 +638,24 @@ void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Nu
         while (move != nb_zero) {
             Direction moving_direction = sign > nb_zero ? dir_down : dir_up;
             Vector2D next_position = vec(physics_body->position.x, physics_body->position.y + sign);
-            if (world_pbd_dynamic_collides_tile(world, physics_body, next_position, moving_direction)) {
+            if (world_pbd_collides_tile_if_moves_to(world, physics_body, next_position, moving_direction)) {
                 if (callback) {
                     callback(physics_body, NULL, sign > nb_zero ? dir_down : dir_up, collision_context);
                 }
                 break;
             }
             PhysicsBody *collided_static = world_pbd_dynamic_collides_static(world, physics_body, next_position, moving_direction);
+            if (!collided_static || collided_static->trigger) {
+                physics_body->position.y += sign;
+                move -= sign;
+            }
             if (collided_static) {
                 if (callback) {
                     callback(physics_body, collided_static, moving_direction, collision_context);
                 }
-                break;
-            } else {
-                physics_body->position.y += sign;
-                move -= sign;
+                if (!collided_static->trigger) {
+                    break;                    
+                }
             }
         }
     }
@@ -689,13 +709,12 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
             if (!dynamic_body->dynamic || (world->collision_masks[static_body->collision_layer] & (1 << dynamic_body->collision_layer)) == 0) {
                 continue;
             }
-            
-            if (pbd_overlap(static_body, dynamic_body)) {
-                if (move_x > nb_zero && static_body->collision_directions.right && dynamic_body->collision_directions.left) {
-                    world_pbd_move_dynamic_x(world, dynamic_body, pbd_right(static_body) - pbd_left(dynamic_body), &pbd_crush, NULL);
-                } else if (move_x < nb_zero && static_body->collision_directions.left && dynamic_body->collision_directions.right){
-                    world_pbd_move_dynamic_x(world, dynamic_body, pbd_left(static_body) - pbd_right(dynamic_body), &pbd_crush, NULL);
-                }
+
+            bool overlap = pbd_overlap(static_body, dynamic_body);
+            if (overlap && move_x > nb_zero && static_body->collision_directions.right && dynamic_body->collision_directions.left) {
+                world_pbd_move_dynamic_x(world, dynamic_body, pbd_right(static_body) - pbd_left(dynamic_body), &pbd_crush, NULL);
+            } else if (overlap && move_x < nb_zero && static_body->collision_directions.left && dynamic_body->collision_directions.right){
+                world_pbd_move_dynamic_x(world, dynamic_body, pbd_left(static_body) - pbd_right(dynamic_body), &pbd_crush, NULL);
             } else if (dynamic_body->w_mount == static_body) {
                 world_pbd_move_dynamic_x(world, dynamic_body, move_x, NULL, NULL);
             }
@@ -709,13 +728,12 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
             if (!dynamic_body->dynamic || (world->collision_masks[static_body->collision_layer] & (1 << dynamic_body->collision_layer)) == 0) {
                 continue;
             }
-
-            if (pbd_overlap(static_body, dynamic_body)) {
-                if (move_y > nb_zero && static_body->collision_directions.down && dynamic_body->collision_directions.up) {
-                    world_pbd_move_dynamic_y(world, dynamic_body, pbd_bottom(static_body) - pbd_top(dynamic_body), &pbd_crush, NULL);
-                } else if (move_y < nb_zero && static_body->collision_directions.up && dynamic_body->collision_directions.down) {
-                    world_pbd_move_dynamic_y(world, dynamic_body, pbd_top(static_body) - pbd_bottom(dynamic_body), &pbd_crush, NULL);
-                }
+            
+            bool overlap = pbd_overlap(static_body, dynamic_body);
+            if (overlap && move_y > nb_zero && static_body->collision_directions.down && dynamic_body->collision_directions.up) {
+                world_pbd_move_dynamic_y(world, dynamic_body, pbd_bottom(static_body) - pbd_top(dynamic_body), &pbd_crush, NULL);
+            } else if (overlap && move_y < nb_zero && static_body->collision_directions.up && dynamic_body->collision_directions.down) {
+                world_pbd_move_dynamic_y(world, dynamic_body, pbd_top(static_body) - pbd_bottom(dynamic_body), &pbd_crush, NULL);
             } else if (dynamic_body->w_mount == static_body) {
                 world_pbd_move_dynamic_y(world, dynamic_body, move_y, NULL, NULL);
             }
