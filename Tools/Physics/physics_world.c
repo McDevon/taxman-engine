@@ -473,7 +473,7 @@ PhysicsBody * world_pbd_dynamic_collides_static(PhysicsWorld *world, PhysicsBody
     return NULL;
 }
 
-bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D position, Direction moving_direction)
+bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D new_position, Direction moving_direction)
 {
     if (!world->w_tilemap) {
         return false;
@@ -487,11 +487,75 @@ bool world_pbd_dynamic_collides_tile(PhysicsWorld *world, PhysicsBody *physics_b
     Number tile_width = tilemap->tile_size.width;
     Number tile_height = tilemap->tile_size.height;
     
-    int32_t x_start = nb_to_int(nb_floor(nb_div(position.x , tile_width)));
-    int32_t x_end = nb_to_int(nb_floor(nb_div(position.x + physics_body->size.width , tile_width)));
-    int32_t y_start = nb_to_int(nb_floor(nb_div(position.y , tile_height)));
-    int32_t y_end = nb_to_int(nb_floor(nb_div(position.y + physics_body->size.height , tile_height)));
-
+    int32_t x_start, x_end, y_start, y_end;
+    
+    if (moving_direction == dir_up) {
+        Number current = pbd_top(physics_body);
+        Number next = new_position.y;
+        
+        y_start = nb_to_int(nb_floor(nb_div(next, tile_height)));
+        y_end = nb_to_int(nb_floor(nb_div(current, tile_height)));
+        
+        if (y_start == y_end) {
+            return false;
+        }
+        
+        --y_end;
+        
+        x_start = nb_to_int(nb_floor(nb_div(pbd_left(physics_body), tile_width)));
+        x_end = nb_to_int(nb_floor(nb_div(pbd_right(physics_body), tile_width)));
+    } else if (moving_direction == dir_down) {
+        Number current = pbd_bottom(physics_body);
+        Number next = new_position.y + physics_body->size.height;
+        
+        y_start = nb_to_int(nb_floor(nb_div(current, tile_height)));
+        y_end = nb_to_int(nb_floor(nb_div(next, tile_height)));
+        
+        if (y_start == y_end) {
+            return false;
+        }
+        
+        ++y_start;
+        
+        x_start = nb_to_int(nb_floor(nb_div(pbd_left(physics_body), tile_width)));
+        x_end = nb_to_int(nb_floor(nb_div(pbd_right(physics_body), tile_width)));
+    } else if (moving_direction == dir_left) {
+        Number current = pbd_left(physics_body);
+        Number next = new_position.x;
+        
+        x_start = nb_to_int(nb_floor(nb_div(next, tile_width)));
+        x_end = nb_to_int(nb_floor(nb_div(current, tile_width)));
+        
+        if (x_start == x_end) {
+            return false;
+        }
+        
+        --x_end;
+        
+        y_start = nb_to_int(nb_floor(nb_div(pbd_top(physics_body), tile_width)));
+        y_end = nb_to_int(nb_floor(nb_div(pbd_bottom(physics_body), tile_width)));
+    } else if (moving_direction == dir_right) {
+        Number current = pbd_right(physics_body);
+        Number next = new_position.x + physics_body->size.width;
+        
+        x_start = nb_to_int(nb_floor(nb_div(current, tile_width)));
+        x_end = nb_to_int(nb_floor(nb_div(next, tile_width)));
+        
+        if (x_start == x_end) {
+            return false;
+        }
+        
+        ++x_start;
+        
+        y_start = nb_to_int(nb_floor(nb_div(pbd_top(physics_body), tile_width)));
+        y_end = nb_to_int(nb_floor(nb_div(pbd_bottom(physics_body), tile_width)));
+    } else {
+        x_start = -1;
+        x_end = -1;
+        y_start = -1;
+        y_end = -1;
+    }
+    
     for (int32_t y = y_start; y <= y_end; ++y) {
         for (int32_t x = x_start; x <= x_end; ++x) {
             Tile *tile = tilemap_tile_at(tilemap, x, y);
