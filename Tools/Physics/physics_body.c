@@ -1,6 +1,9 @@
 #include "physics_body.h"
 #include "physics_world.h"
 
+Directions directions_none = { 0, 0, 0, 0 };
+Directions directions_all = { 1, 1, 1, 1 };
+
 void pbd_destroy(void *comp)
 {    
     comp_destroy(comp);
@@ -14,12 +17,17 @@ char *pbd_describe(void *comp)
 void pbd_set_body_rect_to_parent(PhysicsBody *self)
 {
     GameObject *parent = comp_get_parent(self);
-    if (self->body_rect.size.width == nb_zero || self->body_rect.size.height == nb_zero) {
-        self->body_rect = rect_make(-nb_mul(parent->anchor.x, parent->size.width),
-                                    -nb_mul(parent->anchor.y, parent->size.height),
-                                    parent->size.width,
-                                    parent->size.height);
+    if (self->size.width == nb_zero || self->size.height == nb_zero) {
+        self->object_offset = vec(nb_mul(parent->anchor.x, parent->size.width),
+                                  nb_mul(parent->anchor.y, parent->size.height));
+        self->size = (Size2D) { parent->size.width, parent->size.height };
     }
+}
+
+void pbd_set_position_to_parent(PhysicsBody *self)
+{
+    GameObject *parent = comp_get_parent(self);
+    self->position = vec_round(vec_vec_subtract(parent->position, self->object_offset));
 }
 
 void pbd_add_to_world(PhysicsBody* self)
@@ -54,11 +62,20 @@ void pbd_start(GameObjectComponent *comp)
 {
     PhysicsBody *self = (PhysicsBody *)comp;
     
-    if (self->body_rect.size.width == nb_zero || self->body_rect.size.height == nb_zero) {
+    if (self->size.width == nb_zero || self->size.height == nb_zero) {
         pbd_set_body_rect_to_parent(self);
     }
     
+    pbd_set_position_to_parent(self);
     pbd_add_to_world(self);
+}
+
+void pbd_update(GameObjectComponent *comp, Number dt_ms)
+{
+    PhysicsBody *self = (PhysicsBody *)comp;
+    GameObject *parent = comp_get_parent(self);
+    
+    parent->position = vec_vec_add(self->position, self->object_offset);
 }
 
 GameObjectComponentType PhysicsBodyComponentType = {
@@ -66,7 +83,7 @@ GameObjectComponentType PhysicsBodyComponentType = {
     NULL,
     &pbd_obj_will_be_removed,
     &pbd_start,
-    NULL,
+    &pbd_update,
     NULL
 };
 
@@ -75,12 +92,70 @@ PhysicsBody *pbd_create()
     PhysicsBody *pho = (PhysicsBody *)comp_alloc(sizeof(PhysicsBody));
     
     pho->w_type = &PhysicsBodyComponentType;
-    pho->gravity_affects = true;
     pho->collision_layer = 0;
-    pho->collision_dir[dir_left] = false;
-    pho->collision_dir[dir_right] = false;
-    pho->collision_dir[dir_up] = false;
-    pho->collision_dir[dir_down] = false;
+    pho->crush_override = NULL;
+    pho->position = vec_zero();
+    pho->size = (Size2D){ nb_zero, nb_zero };
+    pho->remainder_movement = vec_zero();
+    pho->collision_directions = directions_all;
+    pho->dynamic = false;
 
     return pho;
+}
+
+void pbd_move_dynamic(PhysicsBody *physics_body, Vector2D movement, pbd_collision_callback_t callback, void *collision_context)
+{
+    if (physics_body->w_world) {
+        world_pbd_move_dynamic(physics_body->w_world, physics_body, movement, callback, collision_context);
+    }
+}
+
+void pbd_move_static(PhysicsBody *physics_body, Vector2D movement)
+{
+    if (physics_body->w_world) {
+        world_pbd_move_static(physics_body->w_world, physics_body, movement);
+    }
+}
+
+void pbd_crush(PhysicsBody *physics_body, PhysicsBody *crushing_body, Direction direction, void *collision_context)
+{
+    if (physics_body->crush_override) {
+        physics_body->crush_override(physics_body, crushing_body, direction, physics_body->w_crush_context);
+    } else {
+        go_schedule_destroy(comp_get_parent(physics_body));
+    }
+}
+
+inline Number pbd_left(PhysicsBody *physics_body)
+{
+    return physics_body->position.x;
+}
+
+inline Number pbd_right(PhysicsBody *physics_body)
+{
+    return physics_body->position.x + physics_body->size.width;
+}
+
+inline Number pbd_top(PhysicsBody *physics_body)
+{
+    return physics_body->position.y;
+}
+
+inline Number pbd_bottom(PhysicsBody *physics_body)
+{
+    return physics_body->position.y + physics_body->size.height;
+}
+
+inline bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)
+{
+    return !(pbd_right(pbd_a) < pbd_left(pbd_b)
+             || pbd_bottom(pbd_a) < pbd_top(pbd_b)
+             || pbd_left(pbd_a) > pbd_right(pbd_b)
+             || pbd_top(pbd_a) > pbd_bottom(pbd_b));
+}
+
+inline bool pbd_vertical_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)
+{
+    return !(pbd_bottom(pbd_a) < pbd_top(pbd_b)
+             || pbd_top(pbd_a) > pbd_bottom(pbd_b));
 }

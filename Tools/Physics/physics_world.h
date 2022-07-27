@@ -10,6 +10,8 @@ extern GameObjectComponentType PhysicsWorldComponentType;
 typedef struct PhysicsWorld PhysicsWorld;
 typedef void (collision_callback_t)(void *context, struct PhysicsBody *obj_a, struct PhysicsBody *obj_b);
 
+typedef void (pbd_collision_callback_t)(struct PhysicsBody *obj_a, struct PhysicsBody *obj_b, Direction direction, void *context);
+
 #define empty_collision_masks { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 
 void set_collision_masks(uint16_t *masks,
@@ -44,5 +46,8 @@ PhysicsWorld *world_create(void *callback_context, collision_callback_t *trigger
 
 void world_add_child(PhysicsWorld *world, void *child);
 void *world_remove_object_from_world(void *child);
+
+void world_pbd_move_dynamic(PhysicsWorld *world, struct PhysicsBody *physics_body, Vector2D movement, pbd_collision_callback_t *callback, void *collision_context);
+void world_pbd_move_static(PhysicsWorld *world, struct PhysicsBody *physics_body, Vector2D movement);
 
 #endif /* physics_world_h */

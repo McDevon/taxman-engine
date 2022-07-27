@@ -67,6 +67,14 @@ inline Vector2D vec_inverse(Vector2D v)
     };
 }
 
+inline Vector2D vec_round(Vector2D v)
+{
+    return (Vector2D) {
+        nb_round(v.x),
+        nb_round(v.y)
+    };
+}
+
 inline Vector2D vec(Number x, Number y)
 {
     return (Vector2D){ x, y };
