@@ -1,7 +1,6 @@
 #ifndef physics_object_component_h
 #define physics_object_component_h
 
-#include <stdio.h>
 #include "engine.h"
 #include "physics_world.h"
 
