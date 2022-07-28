@@ -234,6 +234,9 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
             }
         }
         
+        if (dither_slice) {
+            destroy(dither_slice);
+        }
     }
 }
 
