@@ -11,8 +11,9 @@ typedef struct PhysicsBody {
     GAME_OBJECT_COMPONENT;
     PhysicsWorld *w_world;
     struct PhysicsBody *w_mount;
-    pbd_collision_callback_t *crush_override;
-    void *w_crush_context;
+    pbd_collision_callback_t *crush_override_callback;
+    pbd_collision_callback_t *push_callback;
+    void *w_callback_context;
     Vector2D position;
     Vector2D object_offset;
     Size2D size;
@@ -34,6 +35,7 @@ void pbd_move_dynamic(PhysicsBody *physics_body, Vector2D movement, pbd_collisio
 void pbd_move_static(PhysicsBody *physics_body, Vector2D movement);
 
 void pbd_crush(PhysicsBody *physics_body, PhysicsBody *crushing_body, Direction direction, void *collision_context);
+void pbd_pushed(PhysicsBody *physics_body, PhysicsBody *pushing_body, Direction moving_direction);
 
 Number pbd_left(PhysicsBody *physics_body);
 Number pbd_right(PhysicsBody *physics_body);

@@ -89,8 +89,8 @@ PhysicsBody *pbd_create()
     PhysicsBody *pho = (PhysicsBody *)comp_alloc(sizeof(PhysicsBody));
     
     pho->w_type = &PhysicsBodyComponentType;
-    pho->crush_override = NULL;
-    pho->w_crush_context = NULL;
+    pho->crush_override_callback = NULL;
+    pho->w_callback_context = NULL;
     pho->position = vec_zero();
     pho->size = (Size2D){ nb_zero, nb_zero };
     pho->object_offset = vec_zero();
@@ -119,10 +119,17 @@ void pbd_move_static(PhysicsBody *physics_body, Vector2D movement)
 
 void pbd_crush(PhysicsBody *physics_body, PhysicsBody *crushing_body, Direction direction, void *collision_context)
 {
-    if (physics_body->crush_override) {
-        physics_body->crush_override(physics_body, crushing_body, direction, physics_body->w_crush_context);
+    if (physics_body->crush_override_callback) {
+        physics_body->crush_override_callback(physics_body, crushing_body, direction, physics_body->w_callback_context);
     } else {
         go_schedule_destroy(comp_get_parent(physics_body));
+    }
+}
+
+void pbd_pushed(PhysicsBody *physics_body, PhysicsBody *pushing_body, Direction moving_direction)
+{
+    if (physics_body->push_callback) {
+        physics_body->push_callback(physics_body, pushing_body, moving_direction, physics_body->w_callback_context);
     }
 }
 

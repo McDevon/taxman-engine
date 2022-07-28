@@ -703,6 +703,7 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
     static_body->collision_directions = directions_none;
     
     if (move_x != nb_zero) {
+        Number previous_x = static_body->position.x;
         static_body->remainder_movement.x -= move_x;
         static_body->position.x += move_x;
         for_each_begin(PhysicsBody *, dynamic_body, world->physics_components) {
@@ -710,11 +711,13 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
                 continue;
             }
 
-            bool overlap = pbd_overlap(static_body, dynamic_body);
-            if (overlap && move_x > nb_zero && static_body->collision_directions.right && dynamic_body->collision_directions.left) {
-                world_pbd_move_dynamic_x(world, dynamic_body, pbd_right(static_body) - pbd_left(dynamic_body), &pbd_crush, NULL);
-            } else if (overlap && move_x < nb_zero && static_body->collision_directions.left && dynamic_body->collision_directions.right){
-                world_pbd_move_dynamic_x(world, dynamic_body, pbd_left(static_body) - pbd_right(dynamic_body), &pbd_crush, NULL);
+            bool overlap = pbd_overlap(static_body, dynamic_body) && !pbd_overlap_in_position(static_body, dynamic_body, vec(previous_x, static_body->position.y));
+            if (overlap && move_x > nb_zero && collisions.right && dynamic_body->collision_directions.left) {
+                world_pbd_move_dynamic_x(world, dynamic_body, pbd_right(static_body) - pbd_left(dynamic_body) + nb_one, &pbd_crush, NULL);
+                pbd_pushed(dynamic_body, static_body, dir_right);
+            } else if (overlap && move_x < nb_zero && collisions.left && dynamic_body->collision_directions.right){
+                world_pbd_move_dynamic_x(world, dynamic_body, pbd_left(static_body) - pbd_right(dynamic_body) - nb_one, &pbd_crush, NULL);
+                pbd_pushed(dynamic_body, static_body, dir_left);
             } else if (dynamic_body->w_mount == static_body) {
                 world_pbd_move_dynamic_x(world, dynamic_body, move_x, NULL, NULL);
             }
@@ -722,6 +725,7 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
         for_each_end;
     }
     if (move_y != nb_zero) {
+        Number previous_y = static_body->position.y;
         static_body->remainder_movement.y -= move_y;
         static_body->position.y += move_y;
         for_each_begin(PhysicsBody *, dynamic_body, world->physics_components) {
@@ -729,11 +733,13 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
                 continue;
             }
             
-            bool overlap = pbd_overlap(static_body, dynamic_body);
-            if (overlap && move_y > nb_zero && static_body->collision_directions.down && dynamic_body->collision_directions.up) {
-                world_pbd_move_dynamic_y(world, dynamic_body, pbd_bottom(static_body) - pbd_top(dynamic_body), &pbd_crush, NULL);
-            } else if (overlap && move_y < nb_zero && static_body->collision_directions.up && dynamic_body->collision_directions.down) {
-                world_pbd_move_dynamic_y(world, dynamic_body, pbd_top(static_body) - pbd_bottom(dynamic_body), &pbd_crush, NULL);
+            bool overlap = pbd_overlap(static_body, dynamic_body) && !pbd_overlap_in_position(static_body, dynamic_body, vec(static_body->position.x, previous_y));
+            if (overlap && move_y > nb_zero && collisions.down && dynamic_body->collision_directions.up) {
+                world_pbd_move_dynamic_y(world, dynamic_body, pbd_bottom(static_body) - pbd_top(dynamic_body) + nb_one, &pbd_crush, NULL);
+                pbd_pushed(dynamic_body, static_body, dir_down);
+            } else if (overlap && move_y < nb_zero && collisions.up && dynamic_body->collision_directions.down) {
+                world_pbd_move_dynamic_y(world, dynamic_body, pbd_top(static_body) - pbd_bottom(dynamic_body) - nb_one, &pbd_crush, NULL);
+                pbd_pushed(dynamic_body, static_body, dir_up);
             } else if (dynamic_body->w_mount == static_body) {
                 world_pbd_move_dynamic_y(world, dynamic_body, move_y, NULL, NULL);
             }
