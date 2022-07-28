@@ -66,13 +66,13 @@ typedef struct AffineTransformFloat {
 
 typedef struct Controls {
     Number crank;
-    uint8_t button_left;
-    uint8_t button_right;
-    uint8_t button_up;
-    uint8_t button_down;
-    uint8_t button_a;
-    uint8_t button_b;
-    uint8_t button_menu;
+    uint8_t button_left : 1;
+    uint8_t button_right : 1;
+    uint8_t button_up : 1;
+    uint8_t button_down : 1;
+    uint8_t button_a : 1;
+    uint8_t button_b : 1;
+    uint8_t button_menu : 1;
 } Controls;
 
 typedef enum {
