@@ -111,7 +111,7 @@ void go_update(GameObject *object, Number dt_ms)
         GameObjectComponent *comp = list_get(components, i);
         GameObjectComponentType *c_type = comp_type(comp);
 
-        if (c_type->update) {
+        if (comp->active && c_type->update) {
             c_type->update(comp, dt_ms);
         }
     }
@@ -139,7 +139,8 @@ void go_fixed_update(GameObject *object, Number dt_ms)
     for (size_t i = 0; i < c_count; ++i) {
         GameObjectComponent *comp = list_get(components, i);
         GameObjectComponentType *c_type = comp_type(comp);
-        if (c_type->fixed_update) {
+        
+        if (comp->active && c_type->fixed_update) {
             c_type->fixed_update(comp, dt_ms);
         }
     }

@@ -115,7 +115,7 @@ bool directions_contains_direction(DirectionTable directions, Direction directio
             || (direction == dir_right && directions.right));
 }
 
-PhysicsBody *world_pbd_dynamic_collides_static(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D position, Direction moving_direction)
+PhysicsBody *world_pbd_collides_static_if_moves_to(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D position, Direction moving_direction)
 {
     if (!directions_contains_direction(physics_body->collision_directions, moving_direction)) {
         return NULL;
@@ -234,6 +234,9 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
 
 void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Number movement, pbd_collision_callback_t *callback, void *collision_context)
 {
+    if (!physics_body->active) {
+        return;
+    }
     if (!physics_body->dynamic) {
         LOG_WARNING("Trying to move a static physics body with world_pbd_move_dynamic_x()");
         return;
@@ -253,7 +256,7 @@ void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Nu
                 }
                 break;
             }
-            PhysicsBody *collided_static = world_pbd_dynamic_collides_static(world, physics_body, next_position, moving_direction);
+            PhysicsBody *collided_static = world_pbd_collides_static_if_moves_to(world, physics_body, next_position, moving_direction);
             if (!collided_static || collided_static->trigger) {
                 physics_body->position.x += sign;
                 move -= sign;
@@ -272,6 +275,9 @@ void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Nu
 
 void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Number movement, pbd_collision_callback_t *callback, void *collision_context)
 {
+    if (!physics_body->active) {
+        return;
+    }
     if (!physics_body->dynamic) {
         LOG_WARNING("Trying to move a static physics body with world_pbd_move_dynamic_y()");
         return;
@@ -291,7 +297,7 @@ void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Nu
                 }
                 break;
             }
-            PhysicsBody *collided_static = world_pbd_dynamic_collides_static(world, physics_body, next_position, moving_direction);
+            PhysicsBody *collided_static = world_pbd_collides_static_if_moves_to(world, physics_body, next_position, moving_direction);
             if (!collided_static || collided_static->trigger) {
                 physics_body->position.y += sign;
                 move -= sign;
@@ -336,6 +342,9 @@ void world_clear_collisions(bool *collisions)
 
 void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector2D movement)
 {
+    if (!static_body->active) {
+        return;
+    }
     if (static_body->dynamic) {
         LOG_WARNING("Trying to move a dynamic physics body with world_move_static()");
         return;
