@@ -323,16 +323,16 @@ void tilemap_set_tile_edges(TileMap *tilemap)
             Tile *u = tilemap_tile_at(tilemap, x, y - 1);
             Tile *d = tilemap_tile_at(tilemap, x, y + 1);
             
-            if (l && l->type_char != tile->type_char) {
+            if (!l || l->type_char != tile->type_char) {
                 sb_append_string(sb, "l");
             }
-            if (r && r->type_char != tile->type_char) {
+            if (!r || r->type_char != tile->type_char) {
                 sb_append_string(sb, "r");
             }
-            if (u && u->type_char != tile->type_char) {
+            if (!u || u->type_char != tile->type_char) {
                 sb_append_string(sb, "u");
             }
-            if (d && d->type_char != tile->type_char) {
+            if (!d || d->type_char != tile->type_char) {
                 sb_append_string(sb, "d");
             }
 
