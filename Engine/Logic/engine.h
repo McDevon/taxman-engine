@@ -27,5 +27,6 @@
 #include "action_animator.h"
 #include "action_constructors.h"
 #include "profiler.h"
+#include "weak_container.h"
 
 #endif /* engine_h */
