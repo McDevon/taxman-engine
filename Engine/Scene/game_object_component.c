@@ -15,9 +15,10 @@ GameObjectComponent *comp_alloc(size_t type_size)
     return object;
 }
 
-inline GameObjectComponentType *comp_type(GameObjectComponent *obj)
+inline GameObjectComponentType *comp_type(void *component)
 {
-    return (GameObjectComponentType *)obj->w_type;
+    GameObjectComponent *comp = (GameObjectComponent *)component;
+    return (GameObjectComponentType *)comp->w_type;
 }
 
 void comp_remove_from_parent(void *obj)
@@ -50,8 +51,9 @@ inline struct SceneManager *comp_get_scene_manager(void *obj)
     return go_get_scene_manager(parent);
 }
 
-GameObjectComponent *comp_get_component(GameObjectComponent *self, GameObjectComponentType *type)
+GameObjectComponent *comp_get_component(void *component, GameObjectComponentType *type)
 {
+    GameObjectComponent *self = (GameObjectComponent *)component;
     GameObject *parent = comp_get_parent(self);
     return go_get_component(parent, type);
 }

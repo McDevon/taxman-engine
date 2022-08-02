@@ -35,11 +35,11 @@ GameObjectComponent *comp_alloc(size_t type_size);
 
 void comp_remove_from_parent(void *obj);
 
-GameObject *comp_get_parent(void *obj);
-struct SceneManager *comp_get_scene_manager(void *obj);
-GameObjectComponentType *comp_type(GameObjectComponent *obj);
+GameObject *comp_get_parent(void *component);
+struct SceneManager *comp_get_scene_manager(void *component);
+GameObjectComponentType *comp_type(void *component);
 
-GameObjectComponent *comp_get_component(GameObjectComponent *obj, GameObjectComponentType *type);
+GameObjectComponent *comp_get_component(void *component, GameObjectComponentType *type);
 
 void comp_destroy(void *object);
 char *comp_describe(void *object);
