@@ -173,3 +173,13 @@ ActionObject *action_ease_bezier_prec_create(ActionObject *action, Float control
     return (ActionObject *)object;
 }
 
+ActionObject *action_ease_bezier_prec_table_create(ActionObject *action, Float *table, size_t table_size)
+{
+    struct ActionEase *object = action_ease_create(action);
+    
+    object->function = &action_ease_bezier_precomputed_fn;
+    object->context = bezier_precomputed_create_from_table(table, table_size);
+    
+    return (ActionObject *)object;
+}
+
