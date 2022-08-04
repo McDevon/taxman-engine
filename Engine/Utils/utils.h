@@ -25,4 +25,8 @@ item = (type)list_get(list, for_each_index);
 
 #define str_equals(a, b) (strcmp(a, b) == 0)
 
+#define str_starts_with(str, start) \
+({ __typeof__ (start) __start = (start); \
+  (strncmp(str, __start, strlen(__start)) == 0); })
+
 #endif /* utils_h */
