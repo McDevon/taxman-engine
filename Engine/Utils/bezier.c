@@ -194,6 +194,20 @@ BezierPrecomputed *bezier_precomputed_create(Float control_points[4], size_t tab
     return data;
 }
 
+BezierPrecomputed *bezier_precomputed_create_from_table(Float *table, size_t table_size)
+{
+    BezierPrecomputed *data = platform_calloc(1, sizeof(BezierPrecomputed));
+    data->w_type = &BezierPrecomputedType;
+    data->table_size = table_size;
+    data->table = platform_calloc(table_size, sizeof(Float));
+    
+    for (size_t i = 0; i < table_size; ++i) {
+        data->table[i] = table[i];
+    }
+    
+    return data;
+}
+
 Float bezier_precomputed_get(BezierPrecomputed *data, Float x)
 {
     if (x <= 0.f) {
@@ -210,3 +224,23 @@ Float bezier_precomputed_get(BezierPrecomputed *data, Float x)
     return data->table[index] + (data->table[index + 1] - data->table[index]) * sub_pos;
 }
 
+char *bezier_precomputed_get_table(BezierPrecomputed *self)
+{
+    StringBuilder *sb = sb_create();
+    sb_append_string(sb, "bezier_precomputed_create_from_table((float[]){ ");
+    for (int i = 0; i < self->table_size; ++i) {
+        sb_append_float(sb, self->table[i], 6);
+        sb_append_string(sb, "f");
+        if (i < self->table_size - 1) {
+            sb_append_string(sb, ", ");
+        }
+    }
+    sb_append_string(sb, " }, ");
+    sb_append_int(sb, (int)self->table_size);
+    sb_append_string(sb, ");");
+
+    char *description = sb_get_string(sb);
+    destroy(sb);
+    
+    return description;
+}
