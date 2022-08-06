@@ -3,13 +3,14 @@
 
 #include <stdlib.h>
 #include "stdbool.h"
+#include "image.h"
 
 typedef uint64_t platform_time_t;
 
 typedef void (load_image_data_callback_t)(const char *, const uint32_t, const uint32_t, const bool, const uint8_t *, void *);
 typedef void (load_text_data_callback_t)(const char *, const char *, void *);
 
-void platform_display_set_image(uint8_t *buffer);
+void platform_display_set_image(uint8_t *buffer, ImageData *screen_dither);
 void platform_load_image(const char *file_path, load_image_data_callback_t *callback, void *context);
 void platform_read_text_file(const char *file_path, load_text_data_callback_t *callback, void *context);
 
