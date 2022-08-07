@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "image.h"
+#include "game_main.h"
 
-void update_buffer(uint8_t *buffer, ImageData *screen_dither);
+void update_buffer(uint8_t *buffer, ScreenRenderOptions *render_options);
 
 #endif /* game_display_h */

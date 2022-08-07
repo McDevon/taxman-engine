@@ -18,7 +18,8 @@ static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL
 
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
 static Number _fixed_dt_counter = 0;
-static ImageData *_screen_dither = NULL;
+
+static ScreenRenderOptions _screen_options = { NULL, false };
 
 RenderContext *get_main_render_context()
 {
@@ -151,7 +152,7 @@ void game_step(Number delta_time_millis, Controls controls)
             transition_finish();
         } else {
             transition_step(delta_time_millis);
-            update_buffer(_screen.buffer, _screen_dither);
+            update_buffer(_screen.buffer, &_screen_options);
         }
 #ifdef ENABLE_PROFILER
         profiler_end_segment();
@@ -222,7 +223,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Draw screen");
 #endif
-    update_buffer(_screen.buffer, _screen_dither);
+    update_buffer(_screen.buffer, &_screen_options);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
     profiler_end_segment();
@@ -231,5 +232,10 @@ void game_step(Number delta_time_millis, Controls controls)
 
 void set_screen_dither(ImageData * screen_dither)
 {
-    _screen_dither = screen_dither;
+    _screen_options.screen_dither = screen_dither;
+}
+
+void set_screen_invert(bool invert)
+{
+    _screen_options.invert = invert;
 }

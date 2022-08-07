@@ -25,7 +25,7 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
     
     const Vector2DInt draw_offset = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y,
+        flip_y ? image->offset.y : image->original.height - (image->offset.y + source_height),
     };
     
     if (position.x + draw_offset.x > target_width
@@ -194,7 +194,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
     
     const Vector2DInt draw_offset_int = (Vector2DInt){
         flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y
+        flip_y ? image->offset.y : image->original.height - (image->offset.y + image->rect.size.height)
     };
     const Vector2D draw_offset = (Vector2D){
         nb_from_int(draw_offset_int.x),

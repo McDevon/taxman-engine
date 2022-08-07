@@ -333,15 +333,3 @@ RenderContext *render_context_create(ImageData *target_buffer, bool background_e
     
     return ctx;
 }
-
-
-/*
- const ImageData *target_buffer;
- ArrayList *rendered_rects;
- ArrayList *rect_pool;
- ArrayList *active_rects;
- ArrayList *end_rects;
- ArrayList *merge_rects;
- AffineTransform camera_matrix;
- bool background_enabled;
- */
