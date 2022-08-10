@@ -45,8 +45,10 @@ Current Features include
 - Frame animations
 - Transform animations
 - Easings for transform animations, including cubic bezier curves
+- Precomputed bezier curves to make them run faster in embedded environments
 - Tilemaps with automatic tile selection
 - Platformer physics with one-directional platforms and walls
+- Moving platforms and pushable objects
 - Collision detection using sweep-and-prune algorithm
 - Camera
 - Pseudorandom number generator
@@ -63,10 +65,7 @@ The engine can use fixed-point numbers for in-game calculations. This is due to 
 - 9-sprite
 - Sprite alpha using dithering
 - Easier UI layout scheme using object's top-left corner as origin for child objects
-- Support sprite rotation in sprite atlases
-- Moving platforms and pushable objects
 - Clean exit (clear all allocated memory and quit)
-- Tool to compute bezier curve values ahead-of-time
 - Use user-defined resolution instead of a hard-coded one
 
 ## Contributing
