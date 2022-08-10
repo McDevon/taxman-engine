@@ -210,6 +210,7 @@ void load_sprite_sheet_image_callback(const char *image_data_name, bool success,
                     read_success = false;
                     break;
                 }
+                offset.y = original.height - (offset.y + size.height);
                 image_slice_create_and_store(sprite_sheet_data_name, sprite_name, (Rect2DInt){ origin, size }, original, offset);
             }
             
