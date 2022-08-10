@@ -27,12 +27,13 @@ typedef struct SceneManager {
     Number transition_length;
     Number transition_step;
     SceneTransition transition;
+    bool controls_enabled;
 } SceneManager;
 
 void scene_change(SceneManager *scene_manager, GameObject *next_scene, SceneTransition transition, Number time);
 
 SceneManager *scene_manager_create(void);
 
-#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, EMPTY_CONTROLS(), 0, 0, st_none }
+#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, empty_controls, 0, 0, st_none, true }
 
 #endif /* game_scene_h */

@@ -141,7 +141,11 @@ void game_step(Number delta_time_millis, Controls controls)
     
     profiler_start_segment("Game loop");
 #endif
-    _scene_manager.controls = controls;
+    if (_scene_manager.controls_enabled) {
+        _scene_manager.controls = controls;
+    } else {
+        _scene_manager.controls = empty_controls;
+    }
     
     if (_scene_manager.transition != st_none) {
 #ifdef ENABLE_PROFILER
