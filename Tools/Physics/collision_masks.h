@@ -2,6 +2,7 @@
 #define collision_masks_h
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #define empty_collision_masks { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 
