@@ -2,13 +2,14 @@
 #define sprite_h
 
 #include "game_object.h"
+#include "types.h"
 
 #define SPRITE_CONTENTS \
     GAME_OBJECT; \
     Image *w_image; \
     bool flip_x; \
     bool flip_y; \
-    bool rotate_and_scale; \
+    DrawMode draw_mode; \
     bool invert; \
     bool stamp; \
     uint8_t stamp_color

@@ -13,7 +13,42 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
 
     AffineTransform pos = af_identity();
     
-    if (self->rotate_and_scale) {
+    if (self->draw_mode == drawmode_default) {
+        pos = af_scale(pos, obj->scale);
+        pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
+        pos = af_rotate(pos, obj->rotation);
+        pos = af_translate(pos, obj->position);
+        pos = af_af_multiply(ctx->render_transform, pos);
+
+        context_render_rect_image(ctx,
+                                  self->w_image,
+                                  (Vector2DInt){ nb_to_int(nb_floor(pos.i13)), nb_to_int(nb_floor(pos.i23)) },
+                                  render_options_make(self->flip_x,
+                                                      self->flip_y,
+                                                      self->invert,
+                                                      self->stamp,
+                                                      self->stamp_color)
+                                  );
+    } else if (self->draw_mode == drawmode_scale) {
+        pos = af_scale(pos, obj->scale);
+        pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
+        pos = af_rotate(pos, obj->rotation);
+        pos = af_translate(pos, obj->position);
+        pos = af_af_multiply(ctx->render_transform, pos);
+        
+        AffineTransform scale_transform = af_af_multiply(pos, af_identity());
+        
+        context_render_scale_image(ctx,
+                                   self->w_image,
+                                   (Vector2DInt){ nb_to_int(nb_floor(pos.i13)), nb_to_int(nb_floor(pos.i23)) },
+                                   vec(scale_transform.i11, scale_transform.i22),
+                                   render_options_make(self->flip_x,
+                                                       self->flip_y,
+                                                       self->invert,
+                                                       self->stamp,
+                                                       self->stamp_color)
+                                   );
+    } else if (self->draw_mode == drawmode_rotate_and_scale) {
         pos = af_scale(pos, obj->scale);
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
         pos = af_rotate(pos, obj->rotation);
@@ -22,15 +57,14 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
         
         ctx->render_transform = pos;
 
-        context_render(ctx, self->w_image, render_options_make(self->flip_x, self->flip_y, self->invert, self->stamp, self->stamp_color));
-    } else {
-        pos = af_scale(pos, obj->scale);
-        pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
-        pos = af_rotate(pos, obj->rotation);
-        pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->render_transform, pos);
-
-        context_render_rect_image(ctx, self->w_image, (Vector2DInt){ nb_to_int(nb_floor(pos.i13)), nb_to_int(nb_floor(pos.i23)) }, render_options_make(self->flip_x, self->flip_y, self->invert, self->stamp, self->stamp_color));
+        context_render(ctx,
+                       self->w_image,
+                       render_options_make(self->flip_x,
+                                           self->flip_y,
+                                           self->invert,
+                                           self->stamp,
+                                           self->stamp_color)
+                       );
     }
 }
 
@@ -68,7 +102,7 @@ Sprite *sprite_create(const char *image_name)
     go->w_type = &SpriteType;
     sprite_set_image(sprite, get_image(image_name));
 
-    sprite->rotate_and_scale = true;
+    sprite->draw_mode = drawmode_default;
     sprite->flip_x = false;
     sprite->flip_y = false;
     sprite->invert = false;

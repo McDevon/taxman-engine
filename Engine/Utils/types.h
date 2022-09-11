@@ -89,6 +89,12 @@ typedef struct DirectionTable {
     uint8_t down : 1;
 } DirectionTable;
 
+typedef enum {
+    drawmode_default,
+    drawmode_scale,
+    drawmode_rotate_and_scale,
+} DrawMode;
+
 #define directions_none (DirectionTable){ 0, 0, 0, 0 }
 #define directions_all (DirectionTable){ 1, 1, 1, 1 }
 

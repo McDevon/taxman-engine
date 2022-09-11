@@ -11,6 +11,7 @@
 #include "types.h"
 #include "constants.h"
 
+#include "profiler.h"
 #include "profiler_internal.h"
 
 static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0 /*image_settings_alpha | image_settings_rgb*/ };

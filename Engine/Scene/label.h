@@ -3,6 +3,7 @@
 
 #include "game_object.h"
 #include "grid_atlas.h"
+#include "types.h"
 
 #define LABEL_CONTENTS \
     GAME_OBJECT; \
@@ -10,7 +11,7 @@
     char *text; \
     int32_t text_length; \
     int32_t visible_chars; \
-    bool rotate_and_scale; \
+    DrawMode draw_mode; \
     bool invert
 
 typedef struct Label {
