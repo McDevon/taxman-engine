@@ -92,6 +92,7 @@ typedef struct DirectionTable {
 typedef enum {
     drawmode_default,
     drawmode_scale,
+    drawmode_rotate,
     drawmode_rotate_and_scale,
 } DrawMode;
 

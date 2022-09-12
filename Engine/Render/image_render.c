@@ -155,7 +155,7 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     if (!context || !image) { return; }
     
 #ifdef ENABLE_PROFILER
-    profiler_start_segment("Prepare context_render_rect_image");
+    profiler_start_segment("Prepare context_render_scale_image");
 #endif
 
     const int32_t source_width = image->rect.size.width;
@@ -206,7 +206,7 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
-    profiler_start_segment("Fill context_render_rect_image");
+    profiler_start_segment("Fill context_render_scale_image");
 #endif
     
     if (source_has_alpha) {
@@ -315,6 +315,234 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
 #endif
 }
 
+void context_render_rotate_image(RenderContext *context, const Image *image, const Vector2DInt position, const Number angle, const Vector2D anchor, const RenderOptions render_options)
+{
+    if (!context || !image) { return; }
+    
+#ifdef ENABLE_PROFILER
+    profiler_start_segment("Prepare context_render_rotate_image");
+#endif
+    
+    const int32_t source_width = image->rect.size.width;
+    const int32_t source_height = image->rect.size.height;
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
+    
+    const bool flip_x = render_options.flip_x;
+    const bool flip_y = render_options.flip_y;
+    
+    const Vector2DInt draw_offset_int = (Vector2DInt){
+        flip_x ? image->original.width - (image->offset.x + image->rect.size.width) : image->offset.x,
+        flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y
+    };
+    const Vector2D draw_offset = (Vector2D){
+        nb_from_int(draw_offset_int.x),
+        nb_from_int(draw_offset_int.y)
+    };
+
+    Vector2D left_up = (Vector2D){ draw_offset.x, draw_offset.y };
+    Vector2D right_up = (Vector2D){ draw_offset.x + nb_from_int(source_width), draw_offset.y };
+    Vector2D left_down = (Vector2D){ draw_offset.x, draw_offset.y + nb_from_int(source_height) };
+    Vector2D right_down = (Vector2D){ draw_offset.x + nb_from_int(source_width), draw_offset.y + nb_from_int(source_height) };
+    
+    Vector2D corners[] = { left_up, right_up, left_down, right_down };
+    
+    Number top = nb_max_value;
+    Number left = nb_max_value;
+    Number bottom = nb_min_value;
+    Number right = nb_min_value;
+    
+    const Number angle_sin = nb_sin(angle);
+    const Number angle_cos = nb_cos(angle);
+        
+    for (int i = 0; i < 4; ++i) {
+        Vector2D corner = vec_vec_subtract(corners[i], anchor);
+        
+        Vector2D rotated = vec_vec_add(vec(nb_mul(corner.x, angle_cos) - nb_mul(corner.y, angle_sin),
+                                           nb_mul(corner.x, angle_sin) + nb_mul(corner.y, angle_cos)), anchor);
+        
+        Vector2D positioned = vec_vec_add(rotated, vec(nb_from_int(position.x), nb_from_int(position.y)));
+        
+        if (positioned.x < left) {
+            left = positioned.x;
+        }
+        if (positioned.x > right) {
+            right = positioned.x;
+        }
+        if (positioned.y < top) {
+            top = positioned.y;
+        }
+        if (positioned.y > bottom) {
+            bottom = positioned.y;
+        }
+    }
+    
+    if (right < nb_zero || left > nb_from_int(SCREEN_WIDTH) || bottom < nb_zero || top > nb_from_int(SCREEN_HEIGHT)) {
+#ifdef ENABLE_PROFILER
+        profiler_end_segment();
+#endif
+        return;
+    }
+    
+    const int32_t source_data_width = image->w_image_data->size.width;
+    const ImageBuffer *image_buffer = image->w_image_data->buffer;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    const int32_t source_channels = image_channel_count(image);
+    ImageBuffer *target = context->w_target_buffer->buffer;
+    
+    const bool source_has_alpha = image_has_alpha(image);
+    
+    AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->render_transform));
+        
+    int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
+    int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
+    int32_t i_left = max(nb_to_int(nb_round(left)), 0);
+    int32_t i_top = max(nb_to_int(nb_round(top)), 0);
+    const int32_t source_origin_x = image->rect.origin.x;
+    const int32_t source_origin_y = image->rect.origin.y;
+
+    const bool invert = render_options.invert;
+    const bool stamp = render_options.stamp;
+    
+    const Number neg_angle_sin = nb_sin(-angle);
+    const Number neg_angle_cos = nb_cos(-angle);
+    
+    const Vector2D position_nb = (vec(nb_from_int(position.x), nb_from_int(position.y)));
+    const Vector2D draw_area_anchor = vec_vec_subtract(anchor, draw_offset);
+    
+    const Float position_f_x = nb_to_float(position_nb.x);
+    const Float position_f_y = nb_to_float(position_nb.y);
+    const Float anchor_f_x = nb_to_float(draw_area_anchor.x);
+    const Float anchor_f_y = nb_to_float(draw_area_anchor.y);
+
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+    profiler_start_segment("Fill context_render_rotate_image");
+#endif
+    
+    if (source_has_alpha) {
+        const int32_t source_alpha_offset = image_alpha_offset(image);
+        const uint8_t stamp_color = render_options.stamp_color;
+        if (stamp) {
+            for (int32_t j = i_top; j < i_bottom; j++) {
+                const int32_t y_t_index = j * target_width;
+                const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+
+                for (int32_t i = i_left; i < i_right; i++) {
+                    const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
+
+                    Float rotated_x = source_x_pos * neg_angle_cos + sin_y_and_anchor_x;
+                    Float rotated_y = source_x_pos * neg_angle_sin + cos_y_and_anchor_y;
+                    
+                    const int32_t x = flip_x ? source_width - (int)rotated_x + draw_offset_int.x - 1: (int)rotated_x - draw_offset_int.x;
+                    const int32_t y = flip_y ? source_height - (int)rotated_y + draw_offset_int.y - 1 : (int)rotated_y - draw_offset_int.y;
+                    
+                    if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
+                        continue;
+                    }
+                    int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                    if (image_buffer[i_index + source_alpha_offset] < 128) {
+                        continue;
+                    }
+                    
+                    int32_t t_index = (i + y_t_index) * target_channels;
+                    target[t_index] = stamp_color;
+                }
+            }
+        } else {
+            for (int32_t j = i_top; j < i_bottom; j++) {
+                const int32_t y_t_index = j * target_width;
+                const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+
+                for (int32_t i = i_left; i < i_right; i++) {
+                    const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
+
+                    Float rotated_x = source_x_pos * neg_angle_cos + sin_y_and_anchor_x;
+                    Float rotated_y = source_x_pos * neg_angle_sin + cos_y_and_anchor_y;
+                    
+                    const int32_t x = flip_x ? source_width - (int)rotated_x + draw_offset_int.x - 1: (int)rotated_x - draw_offset_int.x;
+                    const int32_t y = flip_y ? source_height - (int)rotated_y + draw_offset_int.y - 1 : (int)rotated_y - draw_offset_int.y;
+                    
+                    if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
+                        continue;
+                    }
+                    int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                    if (image_buffer[i_index + source_alpha_offset] < 128) {
+                        continue;
+                    }
+                    
+                    int32_t t_index = (i + y_t_index) * target_channels;
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                }
+            }
+        }
+    } else {
+        if (stamp) {
+            const uint8_t stamp_color = render_options.stamp_color;
+            for (int32_t j = i_top; j < i_bottom; j++) {
+                const int32_t y_t_index = j * target_width;
+                const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+
+                for (int32_t i = i_left; i < i_right; i++) {
+                    const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
+
+                    Float rotated_x = source_x_pos * neg_angle_cos + sin_y_and_anchor_x;
+                    Float rotated_y = source_x_pos * neg_angle_sin + cos_y_and_anchor_y;
+                    
+                    const int32_t x = flip_x ? source_width - (int)rotated_x + draw_offset_int.x - 1: (int)rotated_x - draw_offset_int.x;
+                    const int32_t y = flip_y ? source_height - (int)rotated_y + draw_offset_int.y - 1 : (int)rotated_y - draw_offset_int.y;
+                    
+                    if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
+                        continue;
+                    }
+                    
+                    int32_t t_index = (i + y_t_index) * target_channels;
+                    target[t_index] = stamp_color;
+                }
+            }
+        } else {
+            for (int32_t j = i_top; j < i_bottom; j++) {
+                const int32_t y_t_index = j * target_width;
+                const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+
+                for (int32_t i = i_left; i < i_right; i++) {
+                    const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
+
+                    Float rotated_x = source_x_pos * neg_angle_cos + sin_y_and_anchor_x;
+                    Float rotated_y = source_x_pos * neg_angle_sin + cos_y_and_anchor_y;
+                    
+                    const int32_t x = flip_x ? source_width - (int)rotated_x + draw_offset_int.x - 1: (int)rotated_x - draw_offset_int.x;
+                    const int32_t y = flip_y ? source_height - (int)rotated_y + draw_offset_int.y - 1 : (int)rotated_y - draw_offset_int.y;
+                    
+                    if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
+                        continue;
+                    }
+                    
+                    int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
+                    int32_t t_index = (i + y_t_index) * target_channels;
+                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                }
+            }
+        }
+    }
+
+    context_rect_rendered(context, i_left, i_right - 1, i_top, i_bottom - 1);
+
+#ifdef ENABLE_PROFILER
+    profiler_end_segment();
+#endif
+
+}
+
 void context_fill(RenderContext *context, uint8_t color)
 {
     if (!context) { return; }
@@ -324,10 +552,10 @@ void context_fill(RenderContext *context, uint8_t color)
     const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
     ImageBuffer *target = context->w_target_buffer->buffer;
 
-    for (int32_t i = 0; i < target_width; i++) {
-        for (int32_t j = 0; j < target_height; j++) {
-            int32_t t_index = (i + j * target_width) * target_channels;
-            target[t_index] = color;
+    for (int32_t j = 0; j < target_height; ++j) {
+        int32_t y_pos = j * target_width;
+        for (int32_t i = 0; i < target_width; ++i) {
+            target[(i + y_pos) * target_channels] = color;
         }
     }
 }
