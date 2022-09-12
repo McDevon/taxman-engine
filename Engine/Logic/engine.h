@@ -1,6 +1,7 @@
 #ifndef engine_h
 #define engine_h
 
+#include "profiler.h"
 #include "game_main.h"
 #include "types.h"
 #include "image_storage.h"
@@ -26,7 +27,6 @@
 #include "constants.h"
 #include "action_animator.h"
 #include "action_constructors.h"
-#include "profiler.h"
 #include "weak_container.h"
 
 #endif /* engine_h */

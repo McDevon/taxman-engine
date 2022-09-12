@@ -35,6 +35,7 @@ char *profiler_entry_describe(void *obj)
 void profiler_entry_destroy(void *obj)
 {
     ProfilerEntry *entry = (ProfilerEntry*)obj;
+    platform_free(entry->key);
     destroy(entry->subentries);
 }
 
@@ -59,7 +60,7 @@ void profiler_init()
 {
     profiler_root_entry = profiler_entry_create();
     w_profiler_top_entry = profiler_root_entry;
-    profiler_root_entry->key = "Total";
+    profiler_root_entry->key = platform_strdup("Total");
     
     profiler_root_entry->start_time = platform_current_time();
     
@@ -82,7 +83,7 @@ void profiler_start_segment(const char *segment_name)
     ProfilerEntry *entry = hashtable_get(w_profiler_top_entry->subentries, segment_name);
     if (!entry) {
         entry = profiler_entry_create();
-        entry->key = (char *)segment_name;
+        entry->key = platform_strdup(segment_name);
         hashtable_put(w_profiler_top_entry->subentries, segment_name, entry);
         entry->w_parent = w_profiler_top_entry;
     }

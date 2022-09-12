@@ -29,4 +29,8 @@ item = (type)list_get(list, for_each_index);
 ({ __typeof__ (start) __start = (start); \
   (strncmp(str, __start, strlen(__start)) == 0); })
 
+#define is_power_of_two(value) \
+({ __typeof__ (value) __value = (value); \
+  ((__value != 0) && ((__value & (__value - 1)) == 0)); })
+
 #endif /* utils_h */

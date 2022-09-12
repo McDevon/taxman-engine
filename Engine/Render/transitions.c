@@ -2,6 +2,7 @@
 #include "transforms.h"
 #include "constants.h"
 #include "utils.h"
+#include "engine_log.h"
 
 void draw_ltr_first_half(int32_t fade_width, int32_t dither_width, Image *dither, RenderContext *ctx)
 {
@@ -32,14 +33,21 @@ void draw_ltr_first_half(int32_t fade_width, int32_t dither_width, Image *dither
         }
     }
     
+    if (!is_power_of_two(dither_tx_width) || !is_power_of_two(dither_tx_height)) {
+        LOG_ERROR("Transition dither size not power of two");
+        return;
+    }
+    uint32_t maskX = dither_tx_width - 1;
+    uint32_t maskY = dither_tx_height - 1;
+
     for (int32_t i = black_width; i < right_edge; i++) {
         int32_t grey_val = 255 - ((i - dither_left_edge) * 255 / dither_width);
-        const int32_t dither_x = (i + offset_x) % dither_tx_width;
+        const int32_t dither_x = (i + offset_x) & maskX;
         
         for (int32_t j = 0; j < height; j++) {
             int32_t index = (i + j * width) * target_channels;
             
-            const int32_t dither_y = (j + offset_y) % dither_tx_height;
+            const int32_t dither_y = (j + offset_y) & maskY;
             
             const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_data_width) * dither_channels;
 
@@ -78,15 +86,22 @@ void draw_ltr_second_half(int32_t fade_width, int32_t dither_width, Image *dithe
             target[index] = 0;
         }
     }
+    
+    if (!is_power_of_two(dither_tx_width) || !is_power_of_two(dither_tx_height)) {
+        LOG_ERROR("Transition dither size not power of two");
+        return;
+    }
+    uint32_t maskX = dither_tx_width - 1;
+    uint32_t maskY = dither_tx_height - 1;
         
     for (int32_t i = max(left_edge, 0); i < dither_right_edge; i++) {
         int32_t grey_val = 255 - ((dither_width - i + left_edge) * 255 / dither_width);
-        const int32_t dither_x = (i + offset_x) % dither_tx_width;
-
+        const int32_t dither_x = (i + offset_x) & maskX;
         for (int32_t j = 0; j < height; j++) {
+
             int32_t index = (i + j * width) * target_channels;
             
-            const int32_t dither_y = (j + offset_y) % dither_tx_height;
+            const int32_t dither_y = (j + offset_y) & maskY;
             
             const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_data_width) * dither_channels;
 
@@ -130,13 +145,20 @@ void draw_fade_black(int32_t fade, Image *dither, RenderContext *ctx)
     
     ImageBuffer *target = ctx->w_target_buffer->buffer;
     ImageBuffer *dither_buffer = dither->w_image_data->buffer;
+    
+    if (!is_power_of_two(dither_tx_width) || !is_power_of_two(dither_tx_height)) {
+        LOG_ERROR("Transition dither size not power of two");
+        return;
+    }
+    uint32_t maskX = dither_tx_width - 1;
+    uint32_t maskY = dither_tx_height - 1;
 
-    for (int32_t i = 0; i < width; i++) {
-        for (int32_t j = 0; j < height; j++) {
+    for (int32_t j = 0; j < height; j++) {
+        const int32_t dither_y = (j + offset_y) & maskY;
+        for (int32_t i = 0; i < width; i++) {
             int32_t index = (i + j * width) * target_channels;
             
-            const int32_t dither_x = (i + offset_x) % dither_tx_width;
-            const int32_t dither_y = (j + offset_y) % dither_tx_height;
+            const int32_t dither_x = (i + offset_x) & maskX;
             
             const uint32_t d_index = (dither_x + dither_origin_x + (dither_y + dither_origin_y) * dither_data_width) * dither_channels;
 
