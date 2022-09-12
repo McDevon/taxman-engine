@@ -4,8 +4,7 @@
 #include <stdlib.h>
 #include "stdbool.h"
 #include "game_main.h"
-
-typedef uint64_t platform_time_t;
+#include "platform_types.h" // platform_time_t from platform implementation
 
 typedef void (load_image_data_callback_t)(const char *, const uint32_t, const uint32_t, const bool, const uint8_t *, void *);
 typedef void (load_text_data_callback_t)(const char *, const char *, void *);
