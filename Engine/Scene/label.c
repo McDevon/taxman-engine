@@ -81,6 +81,49 @@ void label_render(GameObject *obj, RenderContext *ctx)
                                        render_options_make(false, false, self->invert, false, 0));
             ++col;
         }
+    } else if (self->draw_mode == drawmode_rotate) {
+        pos = af_scale(pos, obj->scale);
+        pos = af_rotate(pos, obj->rotation);
+        pos = af_translate(pos, obj->position);
+        pos = af_af_multiply(ctx->render_transform, pos);
+             
+        Number x_offset = nb_from_int(self->w_font_atlas->item_size.width);
+        Number y_offset = nb_from_int(self->w_font_atlas->item_size.height);
+        
+        Number angle = go_rotation_from_root(obj);
+        Number angle_sin = nb_sin(angle);
+        Number angle_cos = nb_cos(angle);
+        
+        Vector2D x_translate = vec(nb_mul(x_offset, angle_cos), nb_mul(x_offset, angle_sin));
+        Vector2D y_translate = vec(nb_mul(y_offset, -angle_sin), nb_mul(y_offset, angle_cos));
+        
+        Vector2D left_edge = vec(pos.i13, pos.i23);
+        Vector2D glyph_pos = left_edge;
+
+        char glyph;
+        for (int32_t i = 0; (glyph = self->text[i]) != '\0'; ++i) {
+            if (i >= self->visible_chars) {
+                break;
+            }
+            
+            if (glyph == '\n') {
+                left_edge = vec_vec_add(left_edge, y_translate);
+                glyph_pos = left_edge;
+                continue;
+            }
+            
+            Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
+            
+            context_render_rotate_image(ctx,
+                                        img,
+                                        (Vector2DInt){ nb_to_int(glyph_pos.x), nb_to_int(glyph_pos.y) },
+                                        angle,
+                                        vec_zero(),
+                                        render_options_make(false, false, self->invert, false, 0)
+                                        );
+            glyph_pos = vec_vec_add(glyph_pos, x_translate);
+        }
+        
     } else if (self->draw_mode == drawmode_rotate_and_scale) {
         pos = af_scale(pos, obj->scale);
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });

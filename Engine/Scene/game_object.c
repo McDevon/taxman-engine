@@ -388,7 +388,7 @@ GameObject *go_get_ancestor_with_tag(void *obj, int32_t tag)
 
 AffineTransform go_recursive_position_search(GameObject *current, GameObject *ancestor)
 {
-    if (current == ancestor) {
+    if (current == ancestor || current == NULL) {
         return af_identity();
     }
     
@@ -406,13 +406,11 @@ AffineTransform go_recursive_position_search(GameObject *current, GameObject *an
 
 Number go_recursive_rotation_search(GameObject *current, GameObject *ancestor)
 {
-    if (current == ancestor) {
+    if (current == ancestor || current == NULL) {
         return nb_zero;
     }
-    
-    Number rotation = go_recursive_rotation_search(current->go_private->w_parent, ancestor);
-    
-    return rotation + current->rotation;
+        
+    return go_recursive_rotation_search(current->go_private->w_parent, ancestor) + current->rotation;
 }
 
 Vector2D go_position_in_ancestor(void *obj, void *ancestor)
@@ -428,6 +426,19 @@ Vector2D go_position_in_ancestor(void *obj, void *ancestor)
     return vec(pos.i13, pos.i23);
 }
 
+Vector2D go_position_from_root(void *obj)
+{
+    GameObject *current = (GameObject *)obj;
+    
+    if (!current->go_private->w_parent) {
+        return current->position;
+    }
+    
+    AffineTransform pos = go_recursive_position_search(current, NULL);
+    
+    return vec(pos.i13, pos.i23);
+}
+
 Number go_rotation_in_ancestor(void *obj, void *ancestor)
 {
     GameObject *current = (GameObject *)obj;
@@ -437,6 +448,17 @@ Number go_rotation_in_ancestor(void *obj, void *ancestor)
     }
         
     return go_recursive_rotation_search(current, ancestor);
+}
+
+Number go_rotation_from_root(void *obj)
+{
+    GameObject *current = (GameObject *)obj;
+    
+    if (!current->go_private->w_parent) {
+        return current->rotation;
+    }
+        
+    return go_recursive_rotation_search(current, NULL);
 }
 
 void go_schedule_destroy(void *obj)

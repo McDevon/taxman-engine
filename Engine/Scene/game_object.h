@@ -67,6 +67,7 @@ struct GameObjectComponent *go_get_component(GameObject *obj, struct GameObjectC
 
 Vector2D go_position_in_ancestor(void *obj, void *ancestor);
 Number go_rotation_in_ancestor(void *obj, void *ancestor);
+Number go_rotation_from_root(void *obj);
 
 void go_schedule_destroy(void *obj);
 

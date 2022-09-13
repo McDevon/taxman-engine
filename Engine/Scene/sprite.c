@@ -7,9 +7,12 @@
 void sprite_render(GameObject *obj, RenderContext *ctx)
 {
     Sprite *self = (Sprite *)obj;
+    
+    Number anchor_x = nb_mul(obj->anchor.x, obj->size.width);
+    Number anchor_y = nb_mul(obj->anchor.y, obj->size.height);
 
-    Number anchor_x_translate = -nb_mul(nb_mul(obj->anchor.x, obj->size.width), obj->scale.x);
-    Number anchor_y_translate = -nb_mul(nb_mul(obj->anchor.y, obj->size.height), obj->scale.y);
+    Number anchor_x_translate = -nb_mul(anchor_x, obj->scale.x);
+    Number anchor_y_translate = -nb_mul(anchor_y, obj->scale.y);
 
     AffineTransform pos = af_identity();
     
@@ -48,6 +51,23 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
                                                        self->stamp,
                                                        self->stamp_color)
                                    );
+    } else if (self->draw_mode == drawmode_rotate) {
+        pos = af_scale(pos, obj->scale);
+        pos = af_rotate(pos, obj->rotation);
+        pos = af_translate(pos, obj->position);
+        pos = af_af_multiply(ctx->render_transform, pos);
+                
+        context_render_rotate_image(ctx,
+                                    self->w_image,
+                                    (Vector2DInt){ nb_to_int(nb_floor(pos.i13) + anchor_x_translate), nb_to_int(nb_floor(pos.i23) + anchor_y_translate) },
+                                    go_rotation_from_root(obj),
+                                    vec(anchor_x, anchor_y),
+                                    render_options_make(self->flip_x,
+                                                        self->flip_y,
+                                                        self->invert,
+                                                        self->stamp,
+                                                        self->stamp_color)
+                                    );
     } else if (self->draw_mode == drawmode_rotate_and_scale) {
         pos = af_scale(pos, obj->scale);
         pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
