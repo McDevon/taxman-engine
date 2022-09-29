@@ -12,6 +12,7 @@
 #include "scene_manager.h"
 #include "sprite.h"
 #include "sprite_animator.h"
+#include "nine_sprite.h"
 #include "off_screen_renderer.h"
 #include "label.h"
 #include "image.h"
