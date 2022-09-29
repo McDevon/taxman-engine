@@ -28,6 +28,7 @@ ActionObject *action_ease_bezier_prec_table_create(ActionObject *action, Float *
 
 ActionObject *action_callback_create(void (*callback)(void *obj, void *context), void *context);
 ActionObject *action_function_create(void (*callback)(void *obj, void *context, Float position), void *context, Float length);
+ActionObject *action_function_lerp_create(void (*callback)(void *obj, void *context, Float position), void *context, Float length, Float start, Float end);
 
 typedef struct CallbackContextWeakRef CallbackContextWeakRef;
 typedef struct CallbackContextStrongRef CallbackContextStrongRef;

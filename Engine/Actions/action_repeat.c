@@ -79,7 +79,7 @@ static ActionObjectType ActionRepeatType = {
 ActionObject *action_repeat_create(ActionObject *action, int count)
 {
     struct ActionRepeat *object = platform_calloc(1, sizeof(struct ActionRepeat));
-    object->length = action->length * count;
+    object->length = count == 0 ? __FLT_MAX__ : action->length * count;
     object->count = count;
     object->action_object = action;
     object->w_type = &ActionRepeatType;
