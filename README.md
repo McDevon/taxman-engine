@@ -51,6 +51,7 @@ Current Features include
 - Moving platforms and pushable objects
 - Collision detection using sweep-and-prune algorithm
 - Camera
+- 9-sprite
 - Pseudorandom number generator
 - Profiler
 
@@ -62,9 +63,7 @@ The engine can use fixed-point numbers for in-game calculations. This is due to 
 - Examples of scenes, objects, components, and game state
 - Audio support
 - Render optimisations
-- 9-sprite
 - Sprite alpha using dithering
-- Easier UI layout scheme using object's top-left corner as origin for child objects
 - Clean exit (clear all allocated memory and quit)
 - Use user-defined resolution instead of a hard-coded one
 
