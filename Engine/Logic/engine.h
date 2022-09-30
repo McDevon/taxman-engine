@@ -29,5 +29,6 @@
 #include "action_animator.h"
 #include "action_constructors.h"
 #include "weak_container.h"
+#include "data_container.h"
 
 #endif /* engine_h */
