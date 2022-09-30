@@ -32,7 +32,8 @@ typedef struct GameObjectType {
     Number rotation; \
     int32_t tag; \
     bool active; \
-    bool ignore_camera
+    bool ignore_camera; \
+    bool layout_children_from_top_left
 
 typedef struct GameObject {
     GO_CONTENTS;

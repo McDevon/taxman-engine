@@ -189,13 +189,26 @@ void go_render(GameObject *object, RenderContext *ctx)
     position = af_rotate(position, object->rotation);
     position = af_translate(position, object->position);
     position = af_af_multiply(transform, position);
+    AffineTransform child_render_transform;
+    if (object->layout_children_from_top_left) {
+        Number anchor_x = nb_mul(object->anchor.x, object->size.width);
+        Number anchor_y = nb_mul(object->anchor.y, object->size.height);
+
+        Number anchor_x_translate = -nb_mul(anchor_x, object->scale.x);
+        Number anchor_y_translate = -nb_mul(anchor_y, object->scale.y);
+        
+        child_render_transform = af_translate(position, (Vector2D){ anchor_x_translate, anchor_y_translate });
+
+    } else {
+        child_render_transform = position;
+    }
 
     for (; i < count; ++i) {
         GameObject *child = (GameObject *)list_get(list, i);
         if (child->go_private->z_order >= 0) {
             break;
         }
-        ctx->render_transform = position;
+        ctx->render_transform = child_render_transform;
         go_render(child, ctx);
     }
     
@@ -205,7 +218,7 @@ void go_render(GameObject *object, RenderContext *ctx)
     }
     
     for (; i < count; ++i) {
-        ctx->render_transform = position;
+        ctx->render_transform = child_render_transform;
         go_render((GameObject *)list_get(list, i), ctx);
     }
 }
