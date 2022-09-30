@@ -80,6 +80,11 @@ Number random_next_number_limit(Random *state, Number limit)
 #endif
 }
 
+Float random_next_float(Random *state)
+{
+    return (Float)random_next_uint64(state) / (Float)UINT64_MAX;
+}
+
 int random_next_int(Random *state)
 {
     return (int)(random_next_uint64(state) & INT_MAX);
