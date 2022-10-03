@@ -14,11 +14,6 @@ struct ActionFunction {
 
 void action_function_destroy(void *obj)
 {
-    struct ActionFunction *self = (struct ActionFunction *)obj;
-    if (self->context) {
-        destroy(self->context);
-        self->context = NULL;
-    }
 }
 
 char *action_function_describe(void *obj)

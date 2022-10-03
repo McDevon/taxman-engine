@@ -32,12 +32,4 @@ ActionObject *action_callback_create(void (*callback)(void *obj, void *context),
 ActionObject *action_function_create(void (*callback)(void *obj, void *context, Float position), void *context, Float length);
 ActionObject *action_function_lerp_create(void (*callback)(void *obj, void *context, Float position), void *context, Float length, Float start, Float end);
 
-typedef struct CallbackContextWeakRef CallbackContextWeakRef;
-typedef struct CallbackContextStrongRef CallbackContextStrongRef;
-
-CallbackContextWeakRef *callback_context_create_weakref(void *context);
-CallbackContextStrongRef *callback_context_create_strongref(void *context);
-
-void *callback_context_get(void *context_object);
-
 #endif /* action_constructors_h */

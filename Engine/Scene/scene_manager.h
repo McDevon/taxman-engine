@@ -20,7 +20,8 @@ typedef struct SceneManager {
     BASE_OBJECT;
     GameObject *current_scene;
     GameObject *next_scene;
-    ArrayList *destroy_queue;
+    ArrayList *go_destroy_queue;
+    ArrayList *comp_destroy_queue;
     Image *w_transition_dither;
     void *data;
     Controls controls;
@@ -34,6 +35,6 @@ void scene_change(SceneManager *scene_manager, GameObject *next_scene, SceneTran
 
 SceneManager *scene_manager_create(void);
 
-#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, empty_controls, 0, 0, st_none, true }
+#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, NULL, empty_controls, 0, 0, st_none, true }
 
 #endif /* game_scene_h */

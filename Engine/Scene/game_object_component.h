@@ -41,6 +41,8 @@ GameObjectComponentType *comp_type(void *component);
 
 GameObjectComponent *comp_get_component(void *component, GameObjectComponentType *type);
 
+void comp_schedule_destroy(void *component);
+
 void comp_destroy(void *object);
 char *comp_describe(void *object);
 

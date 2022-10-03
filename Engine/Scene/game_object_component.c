@@ -28,11 +28,11 @@ void comp_remove_from_parent(void *obj)
         LOG_ERROR("Trying to remove component from parent, has no parent");
         return;
     }
-    ArrayList *par_children = comp->comp_private->w_parent->go_private->children;
-    size_t count = list_count(par_children);
+    ArrayList *par_components = comp->comp_private->w_parent->go_private->components;
+    size_t count = list_count(par_components);
     for (size_t i = 0; i < count; ++i) {
-        if (list_get(par_children, i) == comp) {
-            list_drop_index(par_children, i);
+        if (list_get(par_components, i) == comp) {
+            list_drop_index(par_components, i);
             break;
         }
     }
@@ -56,6 +56,21 @@ GameObjectComponent *comp_get_component(void *component, GameObjectComponentType
     GameObjectComponent *self = (GameObjectComponent *)component;
     GameObject *parent = comp_get_parent(self);
     return go_get_component(parent, type);
+}
+
+void comp_schedule_destroy(void *obj)
+{
+    SceneManager *scene_manager = comp_get_scene_manager(obj);
+    if (!scene_manager) {
+        if (comp_get_parent(obj)) {
+            comp_remove_from_parent(obj);
+        }
+        destroy(obj);
+    } else {
+        if (!list_contains(scene_manager->comp_destroy_queue, obj)) {
+            list_add(scene_manager->comp_destroy_queue, obj);
+        }
+    }
 }
 
 char *comp_describe(void *object)

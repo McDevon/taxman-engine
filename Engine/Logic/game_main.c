@@ -10,6 +10,7 @@
 #include "platform_adapter.h"
 #include "types.h"
 #include "constants.h"
+#include "game_object_component.h"
 
 #include "profiler.h"
 #include "profiler_internal.h"
@@ -42,7 +43,8 @@ void game_init(void *first_scene)
     _ctx.merge_rects = list_create_with_weak_references();
     _ctx.end_rects = list_create_with_weak_references();
 
-    _scene_manager.destroy_queue = list_create_with_weak_references();
+    _scene_manager.go_destroy_queue = list_create_with_weak_references();
+    _scene_manager.comp_destroy_queue = list_create_with_weak_references();
     _scene_manager.current_scene = first_scene;
     go_initialize(_scene_manager.current_scene, &_scene_manager);    
 }
@@ -50,7 +52,8 @@ void game_init(void *first_scene)
 void switch_scene(void)
 {
     destroy(_scene_manager.current_scene);
-    list_clear(_scene_manager.destroy_queue);
+    list_clear(_scene_manager.go_destroy_queue);
+    list_clear(_scene_manager.comp_destroy_queue);
     _scene_manager.current_scene = _scene_manager.next_scene;
     _scene_manager.next_scene = NULL;
     render_camera_reset(_ctx.render_camera);
@@ -97,19 +100,29 @@ void transition_step(Number delta_time_millis)
 
 void scene_cleanup(void)
 {
-    size_t count = list_count(_scene_manager.destroy_queue);
+    size_t count = list_count(_scene_manager.go_destroy_queue);
     
-    if (count == 0) {
-        return;
+    if (count > 0) {
+        for (size_t i = 0; i < count; ++i) {
+            GameObject *obj = list_get(_scene_manager.go_destroy_queue, i);
+            go_remove_from_parent(obj);
+            destroy(obj);
+        }
+        
+        list_clear(_scene_manager.go_destroy_queue);
     }
     
-    for (size_t i = 0; i < count; ++i) {
-        GameObject *obj = list_get(_scene_manager.destroy_queue, i);
-        go_remove_from_parent(obj);
-        destroy(obj);
-    }
+    count = list_count(_scene_manager.comp_destroy_queue);
     
-    list_clear(_scene_manager.destroy_queue);
+    if (count > 0) {
+        for (size_t i = 0; i < count; ++i) {
+            GameObjectComponent *comp = list_get(_scene_manager.comp_destroy_queue, i);
+            comp_remove_from_parent(comp);
+            destroy(comp);
+        }
+        
+        list_clear(_scene_manager.comp_destroy_queue);
+    }
 }
 
 void game_step(Number delta_time_millis, Controls controls)

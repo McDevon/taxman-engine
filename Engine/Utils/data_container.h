@@ -8,6 +8,9 @@ typedef struct DataContainer {
     void *data;
 } DataContainer;
 
+/**
+    DataContainer holds a pointer that is freed with platform_free() when the object is destroyed.
+ */
 DataContainer *data_container_create(void *data);
 
 #endif /* data_container_h */

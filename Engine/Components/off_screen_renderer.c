@@ -27,16 +27,28 @@ void off_screen_renderer_update(GameObjectComponent *comp, Number dt_ms)
     
     go_update(self->root_object, dt_ms);
     
-    size_t count = list_count(self->internal_scene_manager->destroy_queue);
+    size_t count = list_count(self->internal_scene_manager->go_destroy_queue);
     
     if (count > 0) {
         for (size_t i = 0; i < count; ++i) {
-            GameObject *obj = list_get(self->internal_scene_manager->destroy_queue, i);
+            GameObject *obj = list_get(self->internal_scene_manager->go_destroy_queue, i);
             go_remove_from_parent(obj);
             destroy(obj);
         }
         
-        list_clear(self->internal_scene_manager->destroy_queue);
+        list_clear(self->internal_scene_manager->go_destroy_queue);
+    }
+    
+    count = list_count(self->internal_scene_manager->comp_destroy_queue);
+    
+    if (count > 0) {
+        for (size_t i = 0; i < count; ++i) {
+            GameObjectComponent *comp = list_get(self->internal_scene_manager->comp_destroy_queue, i);
+            comp_remove_from_parent(comp);
+            destroy(comp);
+        }
+        
+        list_clear(self->internal_scene_manager->comp_destroy_queue);
     }
     
     render_texture_render_go(self->render_texture, self->root_object);

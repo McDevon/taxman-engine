@@ -16,11 +16,6 @@ struct ActionFunctionLerp {
 
 void action_function_lerp_destroy(void *obj)
 {
-    struct ActionFunctionLerp *self = (struct ActionFunctionLerp *)obj;
-    if (self->context) {
-        destroy(self->context);
-        self->context = NULL;
-    }
 }
 
 char *action_function_lerp_describe(void *obj)

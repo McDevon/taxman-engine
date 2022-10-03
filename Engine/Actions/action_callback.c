@@ -83,11 +83,6 @@ void *callback_context_get(void *context_object)
 
 void action_callback_destroy(void *obj)
 {
-    struct ActionCallback *self = (struct ActionCallback *)obj;
-    if (self->context) {
-        destroy(self->context);
-        self->context = NULL;
-    }
 }
 
 char *action_callback_describe(void *obj)

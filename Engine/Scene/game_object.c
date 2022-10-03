@@ -483,8 +483,8 @@ void go_schedule_destroy(void *obj)
         }
         destroy(obj);
     } else {
-        if (!list_contains(scene_manager->destroy_queue, obj)) {
-            list_add(scene_manager->destroy_queue, obj);
+        if (!list_contains(scene_manager->go_destroy_queue, obj)) {
+            list_add(scene_manager->go_destroy_queue, obj);
         }
     }
 }

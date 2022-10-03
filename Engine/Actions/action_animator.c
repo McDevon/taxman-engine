@@ -1,5 +1,6 @@
 #include "action_animator.h"
 #include "platform_adapter.h"
+#include "game_object_component.h"
 
 typedef struct Act {
     GAME_OBJECT_COMPONENT;
@@ -44,6 +45,7 @@ void act_update(GameObjectComponent *comp, Number dt_ms)
     ActionObject *action = self->action_object;
     
     if (!action || action->position >= 1.f) {
+        comp_schedule_destroy(self);
         return;
     }
     
