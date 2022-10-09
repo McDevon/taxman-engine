@@ -12,9 +12,8 @@ void log_print(const char *format, ...)
     sb_append_string(sb, "[debug] ");
     
     va_list arg;
-    int done;
     va_start (arg, format);
-    done = sb_vfprintf(sb, format, arg);
+    sb_vfprintf(sb, format, arg);
     va_end (arg);
     
     sb_append_line_break(sb);
@@ -33,9 +32,8 @@ void log_print_warning(const char *format, ...)
     sb_append_string(sb, "[warning] ");
     
     va_list arg;
-    int done;
     va_start (arg, format);
-    done = sb_vfprintf(sb, format, arg);
+    sb_vfprintf(sb, format, arg);
     va_end (arg);
     
     sb_append_line_break(sb);
@@ -54,9 +52,8 @@ void log_print_error(const char *format, ...)
     sb_append_string(sb, "[error] ");
     
     va_list arg;
-    int done;
     va_start (arg, format);
-    done = sb_vfprintf(sb, format, arg);
+    sb_vfprintf(sb, format, arg);
     va_end (arg);
     
     sb_append_line_break(sb);
