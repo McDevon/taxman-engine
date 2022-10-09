@@ -106,13 +106,13 @@ char *action_callback_describe(void *obj)
 
 void action_callback_start(ActionObject *action, GameObject *go)
 {
+    struct ActionCallback *self = (struct ActionCallback*)action;
+    self->callback(go, self->context);
 }
 
 Float action_callback_update(ActionObject *action, GameObject *go, Float dt_s)
 {
-    struct ActionCallback *self = (struct ActionCallback*)action;
-    
-    self->callback(go, self->context);
+    struct ActionCallback *self = (struct ActionCallback*)action;    
     self->position = 1.f;
     
     return dt_s;
