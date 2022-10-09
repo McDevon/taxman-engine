@@ -41,6 +41,7 @@ Float action_delay_update(ActionObject *action, GameObject *go, Float dt_s)
     struct ActionDelay *self = (struct ActionDelay*)action;
     
     self->timer += dt_s;
+    self->position = self->timer / self->length;
     
     return max(self->timer - self->length, 0.f);
 }

@@ -38,7 +38,6 @@ void action_sequence_start(ActionObject *action, GameObject *go)
 {
     struct ActionSequence *self = (struct ActionSequence*)action;
     self->index = 0;
-    
     action_call_start(list_get(self->actions, self->index), go);
 }
 
@@ -53,7 +52,7 @@ Float action_sequence_update(ActionObject *action, GameObject *go, Float dt_s)
     
     while (available_time > 0.f && (self->index < actions_count)) {
         available_time = action_call_update(current_action, go, available_time);
-        if (available_time > 0.f) {
+        if (current_action->position >= 1.f) {
             action_call_finish(current_action, go);
             if (++self->index < actions_count) {
                 current_action = list_get(self->actions, self->index);
@@ -70,8 +69,8 @@ Float action_sequence_update(ActionObject *action, GameObject *go, Float dt_s)
     if (self->index < actions_count) {
         position += current_action->position * current_action->length;
     }
-    self->position = position / self->length;
-        
+    self->position = self->length > 0.f ? position / self->length : 0.f;
+    
     return available_time;
 }
 

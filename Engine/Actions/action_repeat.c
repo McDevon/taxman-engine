@@ -56,7 +56,7 @@ Float action_repeat_update(ActionObject *action, GameObject *go, Float dt_s)
     
     while (available_time > 0.f && (self->counter < self->count || self->count == 0)) {
         available_time = action_call_update(self->action_object, go, available_time);
-        if (available_time > 0.f) {
+        if (self->action_object->position >= 1.f) {
             action_call_finish(self->action_object, go);
             if (self->count == 0 || self->counter++ < self->count) {
                 action_call_start(self->action_object, go);
