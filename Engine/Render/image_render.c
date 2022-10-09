@@ -169,8 +169,8 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const bool flip_y = render_options.flip_y;
     
     const Vector2DInt draw_offset = (Vector2DInt){
-        flip_x ? image->original.width - (image->offset.x + source_scaled_width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + source_scaled_height) : image->offset.y
+        flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x,
+        flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y
     };
     
     if (position.x + draw_offset.x > target_width
@@ -227,7 +227,7 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                     const int32_t p_i = (int32_t)floorf(position_x);
                     position_x += move_x;
                     const int32_t ctx_x = i + position.x + draw_offset.x;
-                    const int32_t x = flip_x * (source_scaled_width - p_i - 1) + !flip_x * p_i;
+                    const int32_t x = flip_x * (source_width - p_i - 1) + !flip_x * p_i;
                     
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     if (image_buffer[i_index + source_alpha_offset] < 128) {
@@ -240,9 +240,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                 }
             }
         } else {
-            Float position_y = 0;
+            Float position_y = start_y;
             for (int32_t j = start_y; j < end_y; j++) {
-                Float position_x = 0;
+                Float position_x = start_x;
                 const int32_t ctx_y = j + position.y + draw_offset.y;
                 const int32_t p_j = (int32_t)floorf(position_y);
                 const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
@@ -254,7 +254,7 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                     const int32_t p_i = (int32_t)floorf(position_x);
                     position_x += move_x;
                     const int32_t ctx_x = i + position.x + draw_offset.x;
-                    const int32_t x = flip_x * (source_scaled_width - p_i - 1) + !flip_x * p_i;
+                    const int32_t x = flip_x * (source_width - p_i - 1) + !flip_x * p_i;
                     
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     if (image_buffer[i_index + source_alpha_offset] < 128) {
@@ -297,7 +297,7 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                     const int32_t p_i = (int32_t)floorf(position_x);
                     position_x += move_x;
                     const int32_t ctx_x = i + position.x;
-                    const int32_t x = flip_x * (source_scaled_width - p_i - 1) + !flip_x * p_i;
+                    const int32_t x = flip_x * (source_width - p_i - 1) + !flip_x * p_i;
 
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
@@ -392,8 +392,6 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     
     const bool source_has_alpha = image_has_alpha(image);
     
-    AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->render_transform));
-        
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
     int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
     int32_t i_left = max(nb_to_int(nb_round(left)), 0);
