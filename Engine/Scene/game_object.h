@@ -64,7 +64,7 @@ GameObject *go_get_parent(void *obj);
 GameObject *go_get_root_ancestor(void *obj);
 GameObject *go_get_ancestor_with_tag(void *obj, int32_t tag);
 struct SceneManager *go_get_scene_manager(void *obj);
-struct GameObjectComponent *go_get_component(GameObject *obj, struct GameObjectComponentType *type);
+struct GameObjectComponent *go_get_component(void *obj, struct GameObjectComponentType *type);
 
 Vector2D go_position_in_ancestor(void *obj, void *ancestor);
 Number go_rotation_in_ancestor(void *obj, void *ancestor);
@@ -77,7 +77,7 @@ int32_t go_get_z_order(void *obj);
 
 char *go_describe(void *obj);
 
-GameObjectType *go_type(GameObject *object);
+GameObjectType *go_type(void *object);
 
 void go_destroy(void *obj);
 

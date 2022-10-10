@@ -15,9 +15,9 @@ static GameObjectType PlainGameObjectType = {
     NULL, NULL, NULL, NULL, NULL, NULL
 };
 
-inline GameObjectType *go_type(GameObject *object)
+inline GameObjectType *go_type(void *object)
 {
-    return (GameObjectType *)object->w_type;
+    return (GameObjectType *)((GameObject *)object)->w_type;
 }
 
 GameObject *go_alloc(size_t type_size)
@@ -312,8 +312,9 @@ void go_add_component(void *obj, void *comp)
     }
 }
 
-GameObjectComponent *go_get_component(GameObject *self, GameObjectComponentType *type)
+GameObjectComponent *go_get_component(void *obj, GameObjectComponentType *type)
 {
+    GameObject *self = (GameObject *)obj;
     ArrayList *components = go_get_components(self);
     size_t comp_count = list_count(components);
     for (size_t i = 0; i < comp_count; ++i) {

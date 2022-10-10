@@ -1,6 +1,8 @@
 #ifndef utils_h
 #define utils_h
 
+#include <string.h>
+
 #define max(a,b) \
 ({ __typeof__ (a) __a = (a); \
     __typeof__ (b) __b = (b); \
