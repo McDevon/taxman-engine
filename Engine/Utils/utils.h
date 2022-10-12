@@ -18,6 +18,10 @@
     __typeof__ (b) __b = (b); \
   (__a >= 0 ? __a / __b : ((__a + 1) / __b) - 1); })
 
+#define f_lerp(a, b, f) \
+({ __typeof__ (f) __f = (f); \
+  (a) * (1.f - __f) + (b) * __f; })
+
 #define for_each_begin(type, item, list) { type item = NULL; \
 const size_t for_each_count = list_count(list); \
 for (size_t for_each_index = 0; for_each_index < for_each_count; ++for_each_index) { \
