@@ -1,4 +1,5 @@
 #include "bezier.h"
+#include "bezier_private.h"
 #include "types.h"
 #include "platform_adapter.h"
 #include "string_builder.h"
@@ -12,19 +13,12 @@
 #define BEZIER_SUB_PRECISION 0.000001f
 #define BEZIER_SUB_ITERATIONS 10
 
-#define SPLINE_TABLE_SIZE 11
 Float sample_step = 1.f / (SPLINE_TABLE_SIZE - 1.f);
 
 #define CP_X_0 0
 #define CP_Y_0 1
 #define CP_X_1 2
 #define CP_Y_1 3
-
-typedef struct BezierModel {
-    BASE_OBJECT;
-    Float control_points[4];
-    Float spline_table[SPLINE_TABLE_SIZE];
-} BezierModel;
 
 void bezier_model_destroy(void *object)
 {
@@ -51,12 +45,6 @@ char *bezier_model_describe(void *object)
 }
 
 BaseType BezierModelType = { "BezierModel", &bezier_model_destroy, &bezier_model_describe };
-
-typedef struct BezierPrecomputed {
-    BASE_OBJECT;
-    Float *table;
-    size_t table_size;
-} BezierPrecomputed;
 
 void bezier_precomputed_destroy(void *object)
 {

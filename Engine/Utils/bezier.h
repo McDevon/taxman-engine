@@ -4,6 +4,9 @@
 #include "base_object.h"
 #include "types.h"
 
+extern BaseType BezierModelType;
+extern BaseType BezierPrecomputedType;
+
 typedef struct BezierModel BezierModel;
 typedef struct BezierPrecomputed BezierPrecomputed;
 
