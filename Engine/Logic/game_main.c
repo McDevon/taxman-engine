@@ -21,7 +21,9 @@ static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
 static Number _fixed_dt_counter = 0;
 
-static ScreenRenderOptions _screen_options = { NULL, false };
+static ScreenRenderOptions _screen_options = { NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0 }, false };
+
+static ImageBuffer *_active_screen_buffer;
 
 RenderContext *get_main_render_context()
 {
@@ -34,6 +36,7 @@ void game_init(void *first_scene)
     ImageBuffer *screenBuffer = platform_malloc(sizeof(uint8_t) * SCREEN_WIDTH * SCREEN_HEIGHT);
 
     _screen.buffer = screenBuffer;
+    _active_screen_buffer = screenBuffer;
     
     _ctx.w_target_buffer = &_screen;
     _ctx.render_camera = render_camera_create((Size2DInt){ SCREEN_WIDTH, SCREEN_HEIGHT });
@@ -241,7 +244,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Draw screen");
 #endif
-    update_buffer(_screen.buffer, &_screen_options);
+    update_buffer(_active_screen_buffer, &_screen_options);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
     profiler_end_segment();
@@ -256,4 +259,24 @@ void set_screen_dither(ImageData * screen_dither)
 void set_screen_invert(bool invert)
 {
     _screen_options.invert = invert;
+}
+
+void reset_screen_options(void)
+{
+    _screen_options.screen_dither = NULL;
+    set_screen_source_buffer(&_screen);
+    _screen_options.invert = false;
+}
+
+void set_screen_source_buffer(ImageData *screen_buffer)
+{
+    ImageData *image_data = screen_buffer ? screen_buffer : &_screen;
+    _screen_options.source_size = image_data->size;
+    _screen_options.source_offset = (Vector2DInt){ 0, 0 };
+    _active_screen_buffer = image_data->buffer;
+}
+
+void set_screen_source_offset(Vector2DInt source_offset)
+{
+    _screen_options.source_offset = source_offset;
 }
