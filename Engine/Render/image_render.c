@@ -568,6 +568,22 @@ void context_clear_black(RenderContext *context)
     context_fill(context, 0x00);
 }
 
+void context_fill_rect(RenderContext *context, RenderRect *rect, uint8_t color)
+{
+    if (!context) { return; }
+
+    const int32_t target_width = rect->right - rect->left;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    ImageBuffer *target = context->w_target_buffer->buffer;
+
+    for (int32_t j = rect->top; j < rect->bottom; j++) {
+        int32_t y_pos = j * target_width;
+        for (int32_t i = rect->left; i < rect->right; i++) {
+            target[(i + y_pos) * target_channels] = color;
+        }
+    }
+}
+
 void context_render(RenderContext *context, const Image *image, const RenderOptions render_options)
 {
     if (!context || !image) { return; }
