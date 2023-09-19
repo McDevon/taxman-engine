@@ -123,20 +123,24 @@ def generate_sprite_sheet(directory, output_path):
         image_start += width * height
     image_name = output_name + '.png'
     output_image.save(os.path.join(output_path, image_name))
-    write_sprite_sheet_data(file_names, data, image_name, os.path.join(output_path, output_name + '.txt'))
+    write_sprite_sheet_data(file_names, data, image_name,
+                            os.path.join(output_path, output_name + '.txt'))
 
 
 def write_sprite_sheet_data(file_names, data, atlas_image_name, output_path):
-    file = open(output_path, 'w', encoding='UTF-8')
+    file = open(output_path, 'w', encoding='ASCII')
     file.write(atlas_image_name + '\n')
 
     for file_name in file_names:
         file_dict = data[file_name]
         file.write(file_name + '\n')
         file.write(f"  start: {str(file_dict['start'])}\n")
-        file.write(f"  size: {str(file_dict['width'])} {str(file_dict['height'])}\n")
-        file.write(f"  orig: {str(file_dict['orig_w'])} {str(file_dict['orig_h'])}\n")
-        file.write(f"  offset: {str(file_dict['offset_x'])} {str(file_dict['offset_y'])}\n")
+        file.write(
+            f"  size: {str(file_dict['width'])}, {str(file_dict['height'])}\n")
+        file.write(
+            f"  orig: {str(file_dict['orig_w'])}, {str(file_dict['orig_h'])}\n")
+        file.write(
+            f"  offset: {str(file_dict['offset_x'])}, {str(file_dict['offset_y'])}\n")
 
     file.close()
 

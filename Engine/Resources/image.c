@@ -9,7 +9,7 @@
 void image_data_destroy(void *value)
 {
     ImageData *image = (ImageData *)value;
-    if (image->buffer) {
+    if (image->buffer && image->parent_data == NULL) {
         platform_free(image->buffer);
     }
 }
@@ -61,6 +61,9 @@ uint32_t image_data_byte_count(const ImageData *image)
 void image_data_clear(ImageData *image)
 {
     if (!image) { return; }
+    if (image->parent_data != NULL) {
+        LOG_WARNING("Clearing image data buffer that is part of another buffer");
+    }
     
     const uint32_t byte_count = image_data_byte_count(image);
     for (int32_t i = 0; i < byte_count; ++i) {
@@ -76,6 +79,22 @@ ImageData *image_data_create(ImageBuffer *buffer, const Size2DInt size, const ui
     image->buffer = buffer;
     image->size = size;
     image->settings = settings;
+    image->parent_data = NULL;
+    
+    image->w_type = &ImageDataType;
+    
+    return image;
+}
+
+ImageData *image_data_create_subdata(ImageData *parent, const int start, const Size2DInt size)
+{
+    const int start_multiplier = image_data_channel_count(parent);
+
+    ImageData *image = platform_calloc(1, sizeof(ImageData));
+    image->buffer = parent->buffer + start * start_multiplier;
+    image->size = size;
+    image->settings = parent->settings;
+    image->parent_data = parent;
     
     image->w_type = &ImageDataType;
     

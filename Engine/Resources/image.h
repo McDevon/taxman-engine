@@ -16,6 +16,7 @@ typedef struct ImageData {
     ImageBuffer *buffer;
     Size2DInt size;
     uint32_t settings;
+    struct ImageData *parent_data;
 } ImageData;
 
 typedef struct Image {
@@ -27,6 +28,7 @@ typedef struct Image {
 } Image;
 
 ImageData *image_data_create(ImageBuffer *buffer, const Size2DInt size, const uint32_t settings);
+ImageData *image_data_create_subdata(ImageData *parent, const int start, const Size2DInt size);
 ImageData *image_data_xor_texture(const Size2DInt size, const Vector2DInt offset, const uint32_t settings);
 void image_data_clear(ImageData *image);
 

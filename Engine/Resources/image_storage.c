@@ -115,7 +115,7 @@ GridAtlas *get_grid_atlas(const char *atlas_name)
     return entry;
 }
 
-Image *image_slice_create_and_store(const char *image_data_name, const char *image_name, const Rect2DInt rect, const Size2DInt original, const Vector2DInt offset)
+Image *image_slice_create_and_store(const char *image_data_name, const char *image_name, const int start, const Size2DInt size, const Size2DInt original, const Vector2DInt offset)
 {
     ImageData *image_data = get_image_data(image_data_name);
     if (!image_data) {
@@ -123,11 +123,13 @@ Image *image_slice_create_and_store(const char *image_data_name, const char *ima
         return NULL;
     }
     
-    Image *image = image_create_trimmed(image_data, rect, original, offset);
+    ImageData *image_subdata = image_data_create_subdata(image_data, start, size);
+    hashtable_put(&image_data_table, image_name, image_subdata);
+    
+    Image *image = image_create(image_subdata, int_rect_make(0, 0, size.width, size.height));
     if (!image) {
         return NULL;
     }
-    LOG("Create image slice %s of %s x: %d y: %d w: %d h: %d", image_name, image_data_name, rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
     hashtable_put(&image_slice_table, image_name, image);
     
@@ -166,13 +168,14 @@ void load_sprite_sheet_image_callback(const char *image_data_name, bool success,
     int row_length = 0;
     int row_start = 0;
     int sprite_row = -1;
-    Vector2DInt origin = (Vector2DInt){ 0, 0 };
+    
+    int sprite_start = 0;
     Size2DInt size = (Size2DInt){ 0, 0 };
     Size2DInt original = (Size2DInt){ 0, 0 };
     Vector2DInt offset = (Vector2DInt){ 0, 0 };
 
     char *sheet_data = data->sprite_sheet_data;
-    char sprite_name[30];
+    char sprite_name[50];
     char sprite_sheet_data_name[30];
     char chr;
     bool read_success = true;
@@ -182,36 +185,36 @@ void load_sprite_sheet_image_callback(const char *image_data_name, bool success,
             if (row == 0) {
                 strncpy(sprite_sheet_data_name, sheet_data + row_start, row_length);
                 sprite_sheet_data_name[row_length] = '\0';
-            } else if (row == 5 || sprite_row == 7) {
+            } else if (row == 1 || sprite_row == 5) {
                 sprite_row = 0;
                 strncpy(sprite_name, sheet_data + row_start, row_length);
                 sprite_name[row_length] = '\0';
-            } else if (sprite_row == 2) {
-                if (sscanf(sheet_data + row_start, "  xy: %d, %d", &origin.x, &origin.y) != 2) {
-                    LOG_ERROR("Cannot read sprite origin for sprite '%s' in sprite sheet '%s'.", sprite_name, data->sprite_sheet_name);
+            } else if (sprite_row == 1) {
+                if (sscanf(sheet_data + row_start, "  start: %d", &sprite_start) != 1) {
+                    LOG_ERROR("Cannot read sprite start for sprite '%s' in sprite sheet '%s'.", sprite_name, data->sprite_sheet_name);
                     read_success = false;
                     break;
                 }
-            } else if (sprite_row == 3) {
+            } else if (sprite_row == 2) {
                 if (sscanf(sheet_data + row_start, "  size: %d, %d", &size.width, &size.height) != 2) {
                     LOG_ERROR("Cannot read sprite size for sprite '%s' in sprite sheet '%s'.", sprite_name, data->sprite_sheet_name);
                     read_success = false;
                     break;
                 }
-            } else if (sprite_row == 4) {
+            } else if (sprite_row == 3) {
                 if (sscanf(sheet_data + row_start, "  orig: %d, %d", &original.width, &original.height) != 2) {
                     LOG_ERROR("Cannot read sprite original size for sprite '%s' in sprite sheet '%s'.", sprite_name, data->sprite_sheet_name);
                     read_success = false;
                     break;
                 }
-            } else if (sprite_row == 5) {
+            } else if (sprite_row == 4) {
                 if (sscanf(sheet_data + row_start, "  offset: %d, %d", &offset.x, &offset.y) != 2) {
                     LOG_ERROR("Cannot read sprite offset for sprite '%s' in sprite sheet '%s'.", sprite_name, data->sprite_sheet_name);
                     read_success = false;
                     break;
                 }
                 offset.y = original.height - (offset.y + size.height);
-                image_slice_create_and_store(sprite_sheet_data_name, sprite_name, (Rect2DInt){ origin, size }, original, offset);
+                image_slice_create_and_store(sprite_sheet_data_name, sprite_name, sprite_start, size, original, offset);
             }
             
             row_length = 0;
