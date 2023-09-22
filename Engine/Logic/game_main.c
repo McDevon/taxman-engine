@@ -15,7 +15,7 @@
 #include "profiler.h"
 #include "profiler_internal.h"
 
-static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0 /*image_settings_alpha | image_settings_rgb*/ };
+static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0, NULL /*image_settings_alpha | image_settings_rgb*/ };
 static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false };
 
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
@@ -103,19 +103,7 @@ void transition_step(Number delta_time_millis)
 
 void scene_cleanup(void)
 {
-    size_t count = list_count(_scene_manager.go_destroy_queue);
-    
-    if (count > 0) {
-        for (size_t i = 0; i < count; ++i) {
-            GameObject *obj = list_get(_scene_manager.go_destroy_queue, i);
-            go_remove_from_parent(obj);
-            destroy(obj);
-        }
-        
-        list_clear(_scene_manager.go_destroy_queue);
-    }
-    
-    count = list_count(_scene_manager.comp_destroy_queue);
+    size_t count = list_count(_scene_manager.comp_destroy_queue);
     
     if (count > 0) {
         for (size_t i = 0; i < count; ++i) {
@@ -125,6 +113,18 @@ void scene_cleanup(void)
         }
         
         list_clear(_scene_manager.comp_destroy_queue);
+    }
+
+    count = list_count(_scene_manager.go_destroy_queue);
+    
+    if (count > 0) {
+        for (size_t i = 0; i < count; ++i) {
+            GameObject *obj = list_get(_scene_manager.go_destroy_queue, i);
+            go_remove_from_parent(obj);
+            destroy(obj);
+        }
+        
+        list_clear(_scene_manager.go_destroy_queue);
     }
 }
 
