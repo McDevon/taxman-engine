@@ -18,7 +18,7 @@ void scene_change(SceneManager *scene_manager, GameObject *next_scene, SceneTran
     scene_manager->transition = transition;
     scene_manager->transition_step = 0;
     scene_manager->transition_length = time;
-    scene_manager->w_transition_dither = get_image("dither_blue");
+    scene_manager->w_transition_dither = get_image("dither_blue.png");
 }
 
 void scenemanager_destroy(void *object)

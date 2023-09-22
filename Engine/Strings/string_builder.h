@@ -20,6 +20,8 @@ void sb_log_to_console(StringBuilder *sb);
 void sb_clear(StringBuilder *sb);
 
 int sb_append_string(StringBuilder *sb, const char *string);
+int sb_append_substring(StringBuilder *sb, const char *string, const size_t len);
+int sb_append_string_until_char(StringBuilder *sb, const char *string, const char end);
 int sb_append_char(StringBuilder *sb, const char ch);
 int sb_append_line_break(StringBuilder *sb);
 int sb_append_int(StringBuilder *sb, int value);

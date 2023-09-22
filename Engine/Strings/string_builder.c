@@ -1,6 +1,7 @@
 #include "string_builder.h"
 #include "platform_adapter.h"
 #include "engine_log.h"
+#include "utils.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -60,6 +61,39 @@ int sb_append_string(StringBuilder *sb, const char *string)
     
     strncpy(sb->string + sb->length, string, len + 1);
     sb->length += len;
+    
+    return 0;
+}
+
+int sb_append_substring(StringBuilder *sb, const char *string, const size_t len)
+{
+    const size_t used_len = min(len, strlen(string));
+    int ret = sb_ensure_increase(sb, used_len);
+    if (ret) {
+        return ret;
+    }
+    
+    strncpy(sb->string + sb->length, string, used_len + 1);
+    sb->length += used_len;
+    
+    return 0;
+}
+
+int sb_append_string_until_char(StringBuilder *sb, const char *string, const char end)
+{
+    size_t len = strlen(string);
+    int ret = sb_ensure_increase(sb, len);
+    if (ret) {
+        return ret;
+    }
+    
+    char *dst = sb->string + sb->length;
+    const char *src = string;
+    size_t max = len + 1;
+    size_t i = 0;
+    while(i++ != max && *src != end && (*dst++ = *src++));
+    
+    sb->length += i - 1;
     
     return 0;
 }

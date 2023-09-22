@@ -316,7 +316,7 @@ void tilemap_set_tile_edges(TileMap *tilemap)
             }
             
             sb_clear(sb);
-            sb_append_string(sb, base->image_base_name);
+            sb_append_string_until_char(sb, base->image_base_name, '.');
             
             Tile *l = tilemap_tile_at(tilemap, x - 1, y);
             Tile *r = tilemap_tile_at(tilemap, x + 1, y);
@@ -335,6 +335,8 @@ void tilemap_set_tile_edges(TileMap *tilemap)
             if (!d || d->type_char != tile->type_char) {
                 sb_append_string(sb, "d");
             }
+            
+            sb_append_string(sb, ".png");
 
             char *image_name = sb_get_string(sb);
             
