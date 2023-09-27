@@ -11,7 +11,7 @@ Some features of the engine are based on the idea of having 1-bit screen, but ad
 To run the engine, a platform adapter is needed. Currently there are two publicly available platform adapters:
 
 - [Wasm adapter](https://github.com/mcdevon/taxman-wasm) for running the engine in a browser
-- [Playdate adapter (WIP)](https://github.com/mcdevon/taxman-playdate) for running the engine in a Playdate console
+- [Playdate adapter](https://github.com/mcdevon/taxman-playdate) for running the engine in a Playdate console
 
 ## Demo
 
