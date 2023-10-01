@@ -253,6 +253,9 @@ void game_step(Number delta_time_millis, Controls controls)
 
 void set_screen_dither(ImageData * screen_dither)
 {
+    if (image_data_has_alpha(screen_dither)) {
+        LOG_WARNING("Screen dither data has alpha, which can have unwanted results");
+    }
     _screen_options.screen_dither = screen_dither;
 }
 
