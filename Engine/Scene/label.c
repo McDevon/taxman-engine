@@ -8,155 +8,12 @@
 #include "utils.h"
 #include "string_builder.h"
 #include "platform_adapter.h"
+#include "image_object_render.h"
 
 void label_render(GameObject *obj, RenderContext *ctx)
 {
     Label *self = (Label *)obj;
-
-    Number anchor_x_translate = -nb_mul(nb_mul(obj->anchor.x, obj->size.width), obj->scale.x);
-    Number anchor_y_translate = -nb_mul(nb_mul(obj->anchor.y, obj->size.height), obj->scale.y);
-
-    AffineTransform pos = af_identity();
-
-    if (self->draw_mode == drawmode_default) {
-        pos = af_scale(pos, obj->scale);
-        pos = af_rotate(pos, obj->rotation);
-        pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->render_transform, pos);
-
-        int32_t x_offset = self->w_font_atlas->item_size.width;
-        int32_t y_offset = self->w_font_atlas->item_size.height;
-        int32_t col = 0;
-        int32_t row = 0;
-
-        char glyph;
-        for (int32_t i = 0; (glyph = self->text[i]) != '\0'; ++i) {
-            if (i >= self->visible_chars) {
-                break;
-            }
-            
-            if (glyph == '\n') {
-                col = 0;
-                ++row;
-                continue;
-            }
-            
-            Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
-            
-            context_render_rect_image(ctx, img, (Vector2DInt){ nb_to_int(nb_floor(pos.i13 + anchor_x_translate)) + col * x_offset, nb_to_int(nb_floor(pos.i23 + anchor_y_translate)) + row * y_offset }, render_options_make(false, false, self->invert, false, 0));
-            ++col;
-        }
-    } else if (self->draw_mode == drawmode_scale) {
-        pos = af_scale(pos, obj->scale);
-        pos = af_rotate(pos, obj->rotation);
-        pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->render_transform, pos);
-        
-        AffineTransform scale_transform = af_af_multiply(pos, af_identity());
-        Vector2D scale = vec(scale_transform.i11, scale_transform.i22);
-
-        int32_t x_offset = self->w_font_atlas->item_size.width;
-        int32_t y_offset = self->w_font_atlas->item_size.height;
-        int32_t col = 0;
-        int32_t row = 0;
-
-        char glyph;
-        for (int32_t i = 0; (glyph = self->text[i]) != '\0'; ++i) {
-            if (i >= self->visible_chars) {
-                break;
-            }
-            
-            if (glyph == '\n') {
-                col = 0;
-                ++row;
-                continue;
-            }
-            
-            Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
-            
-            context_render_scale_image(ctx,
-                                       img,
-                                       (Vector2DInt){ nb_to_int(nb_floor(pos.i13 + anchor_x_translate)) + (int32_t)floorf(scale.x * col * x_offset), nb_to_int(nb_floor(pos.i23 + anchor_y_translate)) + (int32_t)floorf(scale.y * row * y_offset) },
-                                       scale,
-                                       render_options_make(false, false, self->invert, false, 0));
-            ++col;
-        }
-    } else if (self->draw_mode == drawmode_rotate) {
-        pos = af_scale(pos, obj->scale);
-        pos = af_rotate(pos, obj->rotation);
-        pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->render_transform, pos);
-             
-        Number x_offset = nb_from_int(self->w_font_atlas->item_size.width);
-        Number y_offset = nb_from_int(self->w_font_atlas->item_size.height);
-        
-        Number angle = go_rotation_from_root(obj);
-        Number angle_sin = nb_sin(angle);
-        Number angle_cos = nb_cos(angle);
-        
-        Vector2D x_translate = vec(nb_mul(x_offset, angle_cos), nb_mul(x_offset, angle_sin));
-        Vector2D y_translate = vec(nb_mul(y_offset, -angle_sin), nb_mul(y_offset, angle_cos));
-        
-        Vector2D left_edge = vec(pos.i13, pos.i23);
-        Vector2D glyph_pos = left_edge;
-
-        char glyph;
-        for (int32_t i = 0; (glyph = self->text[i]) != '\0'; ++i) {
-            if (i >= self->visible_chars) {
-                break;
-            }
-            
-            if (glyph == '\n') {
-                left_edge = vec_vec_add(left_edge, y_translate);
-                glyph_pos = left_edge;
-                continue;
-            }
-            
-            Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
-            
-            context_render_rotate_image(ctx,
-                                        img,
-                                        (Vector2DInt){ nb_to_int(glyph_pos.x), nb_to_int(glyph_pos.y) },
-                                        angle,
-                                        vec_zero(),
-                                        render_options_make(false, false, self->invert, false, 0)
-                                        );
-            glyph_pos = vec_vec_add(glyph_pos, x_translate);
-        }
-        
-    } else if (self->draw_mode == drawmode_rotate_and_scale) {
-        pos = af_scale(pos, obj->scale);
-        pos = af_translate(pos, (Vector2D){ anchor_x_translate, anchor_y_translate });
-        pos = af_rotate(pos, obj->rotation);
-        pos = af_translate(pos, obj->position);
-        pos = af_af_multiply(ctx->render_transform, pos);
-        
-        Number x_offset = nb_from_int(self->w_font_atlas->item_size.width);
-        Number y_offset = nb_from_int(self->w_font_atlas->item_size.height);
-        
-        AffineTransform left_edge = pos;
-        
-        char glyph;
-        for (int32_t i = 0; (glyph = self->text[i]) != '\0'; ++i) {
-            if (i >= self->visible_chars) {
-                break;
-            }
-            
-            if (glyph == '\n') {
-                AffineTransform v_offset = af_translate(af_identity(), (Vector2D){ nb_zero, y_offset });
-                left_edge = af_af_multiply(left_edge, v_offset);
-                pos = left_edge;
-                continue;
-            }
-            
-            Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
-            
-            ctx->render_transform = pos;
-            context_render(ctx, img, render_options_make(false, false, self->invert, false, 0));
-            AffineTransform offset = af_translate(af_identity(), (Vector2D){ x_offset, nb_zero });
-            pos = af_af_multiply(pos, offset);
-        }
-    }
+    image_object_render(self->render_cache->image, obj, render_options_make(false, false, self->invert, false, 0), self->draw_mode, ctx);
 }
 
 void label_destroy(void *value)
@@ -168,6 +25,10 @@ void label_destroy(void *value)
     if (label->text) {
         platform_free(label->text);
         label->text = NULL;
+    }
+    if (label->render_cache) {
+        destroy(label->render_cache);
+        label->render_cache = NULL;
     }
 }
 
@@ -198,6 +59,48 @@ GameObjectType LabelType = {
     &label_render
 };
 
+void label_render_cached_image(Label *self, int32_t start_index) {
+    int32_t x_offset = self->w_font_atlas->item_size.width;
+    int32_t y_offset = self->w_font_atlas->item_size.height;
+    int32_t col = 0;
+    int32_t row = 0;
+        
+    if (start_index < 0) {
+        start_index = 0;
+    } else if (start_index >= self->text_length) {
+        return;
+    }
+    
+    char glyph;
+    if (start_index > 0) {
+        for (int32_t i = 0; i < start_index && (glyph = self->text[i]) != '\0'; ++i) {
+            if (glyph == '\n') {
+                col = 0;
+                ++row;
+                continue;
+            }
+            ++col;
+        }
+    }
+
+    for (int32_t i = start_index; (glyph = self->text[i]) != '\0'; ++i) {
+        if (i >= self->visible_chars) {
+            break;
+        }
+        
+        if (glyph == '\n') {
+            col = 0;
+            ++row;
+            continue;
+        }
+        
+        Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
+        
+        context_render_rect_image(self->render_cache->render_context, img, (Vector2DInt){ col * x_offset, row * y_offset }, render_options_make(false, false, self->invert, false, 0));
+        ++col;
+    }
+}
+
 void label_set_text(Label *label, const char *text)
 {
     if (label->text) {
@@ -226,6 +129,37 @@ void label_set_text(Label *label, const char *text)
         label->text = platform_strdup(text);
         label->text_length = len;
         label->visible_chars = len;
+        
+        if (label->render_cache == NULL) {
+            label->render_cache = render_texture_create((Size2DInt){nb_to_int(label->size.width), nb_to_int(label->size.height)}, image_data_channel_count(label->w_font_atlas->w_atlas));
+        } else {
+            render_texture_resize(label->render_cache, (Size2DInt){nb_to_int(label->size.width), nb_to_int(label->size.height)});
+        }
+        context_clear_transparent_white(label->render_cache->render_context);
+        label_render_cached_image(label, 0);
+    }
+}
+
+void label_set_visible_chars(Label *label, const int32_t visible_chars)
+{
+    if (visible_chars == label->visible_chars) {
+        return;
+    }
+    if (visible_chars < 0) {
+        label->visible_chars = 0;
+        context_clear_transparent_white(label->render_cache->render_context);
+    } else if (visible_chars > label->text_length) {
+        int32_t previously_visible_chars = label->visible_chars;
+        label->visible_chars = label->text_length;
+        label_render_cached_image(label, previously_visible_chars);
+    } else if (visible_chars > label->visible_chars) {
+        int32_t previously_visible_chars = label->visible_chars;
+        label->visible_chars = visible_chars;
+        label_render_cached_image(label, previously_visible_chars);
+    } else {
+        label->visible_chars = visible_chars;
+        context_clear_transparent_white(label->render_cache->render_context);
+        label_render_cached_image(label, 0);
     }
 }
 

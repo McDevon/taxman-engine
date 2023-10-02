@@ -32,6 +32,7 @@ void context_render_rect_dither_threshold(RenderContext *context, const uint8_t 
 void context_fill(RenderContext *context, uint8_t color);
 void context_clear_white(RenderContext *context);
 void context_clear_black(RenderContext *context);
+void context_clear_transparent_white(RenderContext *context);
 void context_fill_rect(RenderContext *context, RenderRect *rect, uint8_t color);
 
 void context_render(RenderContext *context, const Image *image, const RenderOptions render_options);

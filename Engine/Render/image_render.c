@@ -54,8 +54,8 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
     const int32_t end_y = min(source_height, target_height - position.y - draw_offset.y);
     
     const bool source_has_alpha = image_has_alpha(image);
+    const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
     const bool invert = render_options.invert;
-    const bool stamp = render_options.stamp;
     
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -64,8 +64,8 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
     
     if (source_has_alpha) {
         const int32_t source_alpha_offset = image_alpha_offset(image);
-        if (stamp) {
-            const uint8_t stamp_color = render_options.stamp_color;
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
             for (int32_t j = start_y; j < end_y; j++) {
                 const int32_t ctx_y = j + position.y + draw_offset.y;
                 const int32_t y = flip_y * (source_height - j - 1) + !flip_y * j;
@@ -77,13 +77,10 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
                     const int32_t x = flip_x * (source_width - i - 1) + !flip_x * i;
                     
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
-                    if (image_buffer[i_index + source_alpha_offset] < 128) {
-                        continue;
-                    }
-                    
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = stamp_color;
+                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    target[t_index + target_alpha_offset] = image_buffer[i_index + source_alpha_offset];
                 }
             }
         } else {
@@ -109,18 +106,23 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
             }
         }
     } else {
-        if (stamp) {
-            const uint8_t stamp_color = render_options.stamp_color;
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
             for (int32_t j = start_y; j < end_y; j++) {
-                const int32_t ctx_y = j + position.y + draw_offset.y;
+                const int32_t ctx_y = j + position.y;
+                const int32_t y = flip_y * (source_height - j - 1) + !flip_y * j;
+                const int32_t y_i_index = (y + source_origin_y) * source_data_width;
                 const int32_t y_t_index = ctx_y * target_width;
                 
                 for (int32_t i = start_x; i < end_x; i++) {
-                    const int32_t ctx_x = i + position.x + draw_offset.x;
+                    const int32_t ctx_x = i + position.x;
+                    const int32_t x = flip_x * (source_width - i - 1) + !flip_x * i;
                     
+                    int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = stamp_color;
+                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    target[t_index + target_alpha_offset] = 255;
                 }
             }
         } else {
@@ -558,9 +560,39 @@ void context_fill(RenderContext *context, uint8_t color)
     }
 }
 
+void context_fill_alpha(RenderContext *context, uint8_t color, uint8_t alpha_color)
+{
+    if (!context) { return; }
+    
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    
+    if (target_channels == 1) {
+        context_fill(context, color);
+        return;
+    }
+
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
+    ImageBuffer *target = context->w_target_buffer->buffer;
+
+    for (int32_t j = 0; j < target_height; ++j) {
+        int32_t y_pos = j * target_width;
+        for (int32_t i = 0; i < target_width; ++i) {
+            int32_t index = (i + y_pos) * target_channels;
+            target[index] = color;
+            target[index + 1] = alpha_color;
+        }
+    }
+}
+
 void context_clear_white(RenderContext *context)
 {
     context_fill(context, 0xff);
+}
+
+void context_clear_transparent_white(RenderContext *context)
+{
+    context_fill_alpha(context, 0xff, 0x00);
 }
 
 void context_clear_black(RenderContext *context)
