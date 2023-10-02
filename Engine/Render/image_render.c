@@ -77,10 +77,15 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
                     const int32_t x = flip_x * (source_width - i - 1) + !flip_x * i;
                     
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
+                    uint8_t source_alpha = image_buffer[i_index + source_alpha_offset];
+                    if (source_alpha < 128) {
+                        continue;
+                    }
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
-                    target[t_index + target_alpha_offset] = image_buffer[i_index + source_alpha_offset];
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = source_alpha;
                 }
             }
         } else {
@@ -101,7 +106,8 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
                     
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }
@@ -121,7 +127,8 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                     target[t_index + target_alpha_offset] = 255;
                 }
             }
@@ -139,7 +146,8 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }
@@ -203,8 +211,8 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const Float move_y = (Float)source_height / (Float)source_scaled_height;
 
     const bool source_has_alpha = image_has_alpha(image);
+    const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
     const bool invert = render_options.invert;
-    const bool stamp = render_options.stamp;
     
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -213,11 +221,11 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     
     if (source_has_alpha) {
         const int32_t source_alpha_offset = image_alpha_offset(image);
-        if (stamp) {
-            const uint8_t stamp_color = render_options.stamp_color;
-            Float position_y = 0;
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
+            Float position_y = start_y;
             for (int32_t j = start_y; j < end_y; j++) {
-                Float position_x = 0;
+                Float position_x = start_x;
                 const int32_t ctx_y = j + position.y + draw_offset.y;
                 const int32_t p_j = (int32_t)floorf(position_y);
                 const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
@@ -232,13 +240,15 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                     const int32_t x = flip_x * (source_width - p_i - 1) + !flip_x * p_i;
                     
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
-                    if (image_buffer[i_index + source_alpha_offset] < 128) {
+                    uint8_t source_alpha = image_buffer[i_index + source_alpha_offset];
+                    if (source_alpha < 128) {
                         continue;
                     }
-                    
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
-                    
-                    target[t_index] = stamp_color;
+
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = source_alpha;
                 }
             }
         } else {
@@ -265,23 +275,36 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                     
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }
     } else {
-        if (stamp) {
-            const uint8_t stamp_color = render_options.stamp_color;
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
+            Float position_y = 0;
             for (int32_t j = start_y; j < end_y; j++) {
-                const int32_t ctx_y = j + position.y + draw_offset.y;
+                Float position_x = 0;
+                const int32_t ctx_y = j + position.y;
+                const int32_t p_j = (int32_t)floorf(position_y);
+                const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
+                const int32_t y_i_index = (y + source_origin_y) * source_data_width;
                 const int32_t y_t_index = ctx_y * target_width;
-                
+                position_y += move_y;
+
                 for (int32_t i = start_x; i < end_x; i++) {
-                    const int32_t ctx_x = i + position.x + draw_offset.x;
-                    
+                    const int32_t p_i = (int32_t)floorf(position_x);
+                    position_x += move_x;
+                    const int32_t ctx_x = i + position.x;
+                    const int32_t x = flip_x * (source_width - p_i - 1) + !flip_x * p_i;
+
+                    int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
-                    
-                    target[t_index] = stamp_color;
+                                        
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = 255;
                 }
             }
         } else {
@@ -304,7 +327,8 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                     int32_t i_index = (x + source_origin_x + y_i_index) * source_channels;
                     int32_t t_index = (ctx_x + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }
@@ -393,7 +417,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     ImageBuffer *target = context->w_target_buffer->buffer;
     
     const bool source_has_alpha = image_has_alpha(image);
-    
+    const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
+
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
     int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
     int32_t i_left = max(nb_to_int(nb_round(left)), 0);
@@ -402,7 +427,6 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     const int32_t source_origin_y = image->rect.origin.y;
 
     const bool invert = render_options.invert;
-    const bool stamp = render_options.stamp;
     
     const Number neg_angle_sin = nb_sin(-angle);
     const Number neg_angle_cos = nb_cos(-angle);
@@ -422,8 +446,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     
     if (source_has_alpha) {
         const int32_t source_alpha_offset = image_alpha_offset(image);
-        const uint8_t stamp_color = render_options.stamp_color;
-        if (stamp) {
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
@@ -443,12 +467,15 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
                         continue;
                     }
                     int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
-                    if (image_buffer[i_index + source_alpha_offset] < 128) {
+                    uint8_t source_alpha = image_buffer[i_index + source_alpha_offset];
+                    if (source_alpha < 128) {
                         continue;
                     }
                     
                     int32_t t_index = (i + y_t_index) * target_channels;
-                    target[t_index] = stamp_color;
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = source_alpha;
                 }
             }
         } else {
@@ -482,8 +509,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             }
         }
     } else {
-        if (stamp) {
-            const uint8_t stamp_color = render_options.stamp_color;
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
@@ -503,8 +530,12 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
                         continue;
                     }
                     
+                    int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
                     int32_t t_index = (i + y_t_index) * target_channels;
-                    target[t_index] = stamp_color;
+
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = 255;
                 }
             }
         } else {
@@ -529,7 +560,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
                     
                     int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
                     int32_t t_index = (i + y_t_index) * target_channels;
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }
@@ -688,7 +720,8 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
     ImageBuffer *target = context->w_target_buffer->buffer;
     
     const bool source_has_alpha = image_has_alpha(image);
-    
+    const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
+
     AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->render_transform));
         
     int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
@@ -699,7 +732,6 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
     const int32_t source_origin_y = image->rect.origin.y;
 
     const bool invert = render_options.invert;
-    const bool stamp = render_options.stamp;
 
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -708,8 +740,8 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
 
     if (source_has_alpha) {
         const int32_t source_alpha_offset = image_alpha_offset(image);
-        const uint8_t stamp_color = render_options.stamp_color;
-        if (stamp) {
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
 
@@ -723,12 +755,15 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                         continue;
                     }
                     int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
-                    if (image_buffer[i_index + source_alpha_offset] < 128) {
+                    uint8_t source_alpha = image_buffer[i_index + source_alpha_offset];
+                    if (source_alpha < 128) {
                         continue;
                     }
-                    
                     int32_t t_index = (i + y_t_index) * target_channels;
-                    target[t_index] = stamp_color;
+                    
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = source_alpha;
                 }
             }
         } else {
@@ -750,28 +785,32 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                     }
                     
                     int32_t t_index = (i + y_t_index) * target_channels;
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }
     } else {
-        if (stamp) {
-            const uint8_t stamp_color = render_options.stamp_color;
+        if (target_has_alpha) {
+            const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
                     
-                    const int32_t x = (int)t.i13;
-                    const int32_t y = (int)t.i23;
+                    const int32_t x = flip_x ? source_width - (int)t.i13 - 1 : (int)t.i13;
+                    const int32_t y = flip_y ? source_height - (int)t.i23 - 1 : (int)t.i23;
                     
                     if (x < 0 || x >= source_width || y < 0 || y >= source_height) {
                         continue;
                     }
+                    int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
                     int32_t t_index = (i + y_t_index) * target_channels;
                     
-                    target[t_index] = stamp_color;
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
+                    target[t_index + target_alpha_offset] = 255;
                 }
             }
         } else {
@@ -790,7 +829,8 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                     int32_t i_index = (x + source_origin_x + (y + source_origin_y) * source_data_width) * source_channels;
                     int32_t t_index = (i + y_t_index) * target_channels;
                     
-                    target[t_index] = !invert * image_buffer[i_index] + invert * (255 - image_buffer[i_index]);
+                    uint8_t color = image_buffer[i_index];
+                    target[t_index] = !invert * color + invert * (255 - color);
                 }
             }
         }

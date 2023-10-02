@@ -60,9 +60,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                               (Vector2DInt){ left, top },
                               render_options_make(false,
                                                   false,
-                                                  self->invert,
-                                                  self->stamp,
-                                                  self->stamp_color)
+                                                  self->invert)
                               );
 
     context_render_scale_image(ctx,
@@ -71,9 +69,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                                vec(scale_x, nb_one),
                                render_options_make(false,
                                                    false,
-                                                   self->invert,
-                                                   self->stamp,
-                                                   self->stamp_color)
+                                                   self->invert)
                                );
 
     context_render_rect_image(ctx,
@@ -81,9 +77,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                               (Vector2DInt){ right_split, top },
                               render_options_make(false,
                                                   false,
-                                                  self->invert,
-                                                  self->stamp,
-                                                  self->stamp_color)
+                                                  self->invert)
                               );
 
     // Middle row
@@ -93,9 +87,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                                vec(nb_one, scale_y),
                                render_options_make(false,
                                                    false,
-                                                   self->invert,
-                                                   self->stamp,
-                                                   self->stamp_color)
+                                                   self->invert)
                                );
 
     context_render_scale_image(ctx,
@@ -104,9 +96,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                                vec(scale_x, scale_y),
                                render_options_make(false,
                                                    false,
-                                                   self->invert,
-                                                   self->stamp,
-                                                   self->stamp_color)
+                                                   self->invert)
                                );
 
     context_render_scale_image(ctx,
@@ -115,9 +105,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                                vec(nb_one, scale_y),
                                render_options_make(false,
                                                    false,
-                                                   self->invert,
-                                                   self->stamp,
-                                                   self->stamp_color)
+                                                   self->invert)
                                );
     
     // Bottom row
@@ -126,9 +114,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                               (Vector2DInt){ left, low_split },
                               render_options_make(false,
                                                   false,
-                                                  self->invert,
-                                                  self->stamp,
-                                                  self->stamp_color)
+                                                  self->invert)
                               );
 
     context_render_scale_image(ctx,
@@ -137,9 +123,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                                vec(scale_x, nb_one),
                                render_options_make(false,
                                                    false,
-                                                   self->invert,
-                                                   self->stamp,
-                                                   self->stamp_color)
+                                                   self->invert)
                                );
 
     context_render_rect_image(ctx,
@@ -147,9 +131,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
                               (Vector2DInt){ right_split, low_split },
                               render_options_make(false,
                                                   false,
-                                                  self->invert,
-                                                  self->stamp,
-                                                  self->stamp_color)
+                                                  self->invert)
                               );
 }
 
@@ -289,8 +271,6 @@ NineSprite *nine_sprite_create(const char *image_name, int32_t x_left_split, int
     nine_sprite_set_image(sprite, get_image(image_name), x_left_split, x_right_split, y_high_split, y_low_split);
 
     sprite->invert = false;
-    sprite->stamp = false;
-    sprite->stamp_color = 0;
 
     return sprite;
 }

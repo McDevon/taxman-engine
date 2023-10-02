@@ -9,17 +9,13 @@ typedef struct RenderOptions {
     uint8_t flip_x : 1;
     uint8_t flip_y : 1;
     uint8_t invert : 1;
-    uint8_t stamp : 1;
-    uint8_t stamp_color;
 } RenderOptions;
 
-#define render_options_make(flip_x_input, flip_y_input, invert_input, stamp_input, stamp_color_input) \
+#define render_options_make(flip_x_input, flip_y_input, invert_input) \
 ({ RenderOptions o; \
     o.flip_x = (flip_x_input); \
     o.flip_y = (flip_y_input); \
     o.invert = (invert_input); \
-    o.stamp = (stamp_input); \
-    o.stamp_color = (stamp_color_input); \
     o; \
 })
 

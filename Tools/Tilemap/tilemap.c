@@ -174,8 +174,8 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 const Tile *tile = (Tile *)list_get(self->tiles, index);
                 const RenderOptions render_options = render_options_make((tile->options & tile_draw_option_flip_x) > 0,
                                                                          (tile->options & tile_draw_option_flip_y) > 0,
-                                                                         (tile->options & tile_draw_option_invert) > 0,
-                                                                         0, 0);
+                                                                         (tile->options & tile_draw_option_invert) > 0
+                                                                         );
                 context_render(ctx, tile->w_image, render_options);
             }
         }
@@ -206,8 +206,8 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                 
                 const RenderOptions render_options = render_options_make((tile->options & tile_draw_option_flip_x) > 0,
                                                                          (tile->options & tile_draw_option_flip_y) > 0,
-                                                                         (tile->options & tile_draw_option_invert) > 0,
-                                                                         0, 0);
+                                                                         (tile->options & tile_draw_option_invert) > 0
+                                                                         );
                 
                 if (tile->options & tile_draw_option_dither) {
                     Number start_x = nb_floor(nb_mul(nb_from_int(x), tile_size.width));

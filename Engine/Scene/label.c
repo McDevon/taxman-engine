@@ -13,7 +13,7 @@
 void label_render(GameObject *obj, RenderContext *ctx)
 {
     Label *self = (Label *)obj;
-    image_object_render(self->render_cache->image, obj, render_options_make(false, false, self->invert, false, 0), self->draw_mode, ctx);
+    image_object_render(self->render_cache->image, obj, render_options_make(false, false, self->invert), self->draw_mode, ctx);
 }
 
 void label_destroy(void *value)
@@ -96,7 +96,7 @@ void label_render_cached_image(Label *self, int32_t start_index) {
         
         Image *img = grid_atlas_w_get_image(self->w_font_atlas, (Vector2DInt){ glyph & 0x1f, (glyph >> 5) - 1 });
         
-        context_render_rect_image(self->render_cache->render_context, img, (Vector2DInt){ col * x_offset, row * y_offset }, render_options_make(false, false, self->invert, false, 0));
+        context_render_rect_image(self->render_cache->render_context, img, (Vector2DInt){ col * x_offset, row * y_offset }, render_options_make(false, false, self->invert));
         ++col;
     }
 }

@@ -10,9 +10,7 @@ struct ns_private;
     GAME_OBJECT; \
     struct ns_private *ns_private; \
     Image *w_image; \
-    bool invert; \
-    bool stamp; \
-    uint8_t stamp_color
+    bool invert
 
 typedef struct NineSprite {
     NINE_SPRITE_CONTENTS;
