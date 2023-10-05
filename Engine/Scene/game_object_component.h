@@ -31,6 +31,9 @@ typedef struct GameObjectComponent {
     GameObjectComponent component_base; \
 }
 
+#define go_component_type(const_name_str, destroy, describe, added_to_object, object_will_be_removed_from_parent, start, update, fixed_update) \
+{ { { const_name_str, destroy, describe } }, added_to_object, object_will_be_removed_from_parent, start, update, fixed_update }
+
 GameObjectComponent *comp_alloc(size_t type_size);
 
 void comp_remove_from_parent(void *obj);

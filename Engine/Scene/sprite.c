@@ -29,15 +29,17 @@ char *sprite_describe(void *sprite)
     return go_describe(sprite);
 }
 
-GameObjectType SpriteType = {
-    { { "Sprite", &sprite_destroy, &sprite_describe } },
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    &sprite_render
-};
+GameObjectType SpriteType =
+    game_object_type("Sprite",
+                     &sprite_destroy,
+                     &sprite_describe,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &sprite_render
+                     );
 
 void sprite_set_image(Sprite *self, Image *image)
 {

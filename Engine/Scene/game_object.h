@@ -12,6 +12,15 @@ struct go_private;
 struct GameObjectComponent;
 struct GameObjectComponentType;
 
+#define GOT_CONTENTS \
+    BASE_TYPE; \
+    void (*added_to_parent)(struct GameObject *); \
+    void (*will_be_removed_from_parent)(struct GameObject *); \
+    void (*start)(struct GameObject *); \
+    void (*update)(struct GameObject *, Number); \
+    void (*fixed_update)(struct GameObject *, Number); \
+    void (*render)(struct GameObject *, RenderContext *)
+
 typedef struct GameObjectType {
     BASE_TYPE;
     void (*added_to_parent)(struct GameObject *);
@@ -43,6 +52,14 @@ typedef struct GameObject {
     struct { GO_CONTENTS; }; \
     GameObject go_base; \
 }
+
+#define GAME_OBJECT_TYPE union { \
+    struct { GOT_CONTENTS; }; \
+    GameObjectType go_type; \
+}
+
+#define game_object_type(const_name_str, destroy, describe, added_to_parent, will_be_removed_from_parent, start, update, fixed_update, render) \
+{ { { const_name_str, destroy, describe } }, added_to_parent, will_be_removed_from_parent, start, update, fixed_update, render }
 
 GameObject *go_alloc(size_t type_size);
 GameObject *go_create_empty(void);

@@ -8,10 +8,12 @@
 
 typedef void (load_image_data_callback_t)(const char *, const uint32_t, const uint32_t, const bool, const uint8_t *, void *);
 typedef void (load_text_data_callback_t)(const char *, const char *, void *);
+typedef void (file_exists_callback_t)(const char *, bool, void *);
 
 void platform_display_set_image(uint8_t *buffer, ScreenRenderOptions *render_options);
 void platform_load_image(const char *file_path, load_image_data_callback_t *callback, void *context);
 void platform_read_text_file(const char *file_path, load_text_data_callback_t *callback, void *context);
+void platform_file_exists(const char *file_path, file_exists_callback_t *callback, void *context);
 
 void *platform_malloc(size_t size);
 void *platform_calloc(size_t count, size_t size);

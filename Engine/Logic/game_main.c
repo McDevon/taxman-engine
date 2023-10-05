@@ -30,6 +30,11 @@ RenderContext *get_main_render_context()
     return &_ctx;
 }
 
+void __start_current_scene(void *_) {
+    go_initialize((GameObject *)_scene_manager.current_scene, &_scene_manager);
+    _scene_manager.running = true;
+}
+
 void game_init(void *first_scene)
 {
     LOG("Game init");
@@ -48,8 +53,14 @@ void game_init(void *first_scene)
 
     _scene_manager.go_destroy_queue = list_create_with_weak_references();
     _scene_manager.comp_destroy_queue = list_create_with_weak_references();
+    
+    _scene_manager.loaded_image_file_names = list_create_with_destructor(&platform_free);
+    _scene_manager.loaded_sprite_sheet_names = list_create_with_destructor(&platform_free);
+    _scene_manager.loaded_grid_atlas_names = list_create_with_destructor(&grid_atlas_info_destroy);
+    _scene_manager.assets_in_waiting = hashtable_create();
+    
     _scene_manager.current_scene = first_scene;
-    go_initialize(_scene_manager.current_scene, &_scene_manager);    
+    scene_manager_load_scene_assets(&_scene_manager, _scene_manager.current_scene, &__start_current_scene, NULL);
 }
 
 void switch_scene(void)
@@ -60,8 +71,7 @@ void switch_scene(void)
     _scene_manager.current_scene = _scene_manager.next_scene;
     _scene_manager.next_scene = NULL;
     render_camera_reset(_ctx.render_camera);
-    go_initialize(_scene_manager.current_scene, &_scene_manager);
-    go_start(_scene_manager.current_scene);
+    scene_manager_load_scene_assets(&_scene_manager, _scene_manager.current_scene, &__start_current_scene, NULL);
 }
 
 void transition_finish(void)
@@ -130,6 +140,9 @@ void scene_cleanup(void)
 
 void game_step(Number delta_time_millis, Controls controls)
 {
+    if (!_scene_manager.running) {
+        return;
+    }
 #ifdef ENABLE_PROFILER
     switch (profiler_schedule()) {
         case prof_start:
@@ -185,7 +198,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Scene start");
 #endif
-    go_start(_scene_manager.current_scene);
+    go_start((GameObject *)_scene_manager.current_scene);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
 #endif
@@ -204,7 +217,7 @@ void game_step(Number delta_time_millis, Controls controls)
     int i;
     const int max_loops = 3;
     for (i = 0; _fixed_dt_counter >= fixed_dt && i < 3; i++) {
-        go_fixed_update(_scene_manager.current_scene, fixed_dt);
+        go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt);
         _fixed_dt_counter -= fixed_dt;
     }
     
@@ -219,7 +232,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Update");
 #endif
-    go_update(_scene_manager.current_scene, delta_time_millis);
+    go_update((GameObject *)_scene_manager.current_scene, delta_time_millis);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
 #endif
@@ -236,7 +249,7 @@ void game_step(Number delta_time_millis, Controls controls)
     profiler_start_segment("Render");
 #endif
     _ctx.render_transform = render_camera_get_transform(_ctx.render_camera);
-    go_render(_scene_manager.current_scene, &_ctx);
+    go_render((GameObject *)_scene_manager.current_scene, &_ctx);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
 #endif

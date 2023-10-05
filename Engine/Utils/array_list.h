@@ -32,4 +32,12 @@ ArrayList *list_create(void);
 ArrayList *list_create_with_weak_references(void);
 ArrayList *list_create_with_destructor(void (*destructor)(void *));
 
+ArrayList *__list_of_strings(const char *, ...);
+ArrayList *__list_of_objects(void *, ...);
+
+bool list_contains_string(ArrayList *list, const char *string);
+
+#define list_of_strings(...) __list_of_strings(__VA_ARGS__, (char*)NULL)
+#define list_of_objects(...) __list_of_objects(__VA_ARGS__, (void*)NULL)
+
 #endif /* array_list_h */

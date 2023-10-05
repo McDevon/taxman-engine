@@ -29,12 +29,6 @@ item = (type)list_get(list, for_each_index);
 
 #define for_each_end }}
 
-#define str_equals(a, b) (strcmp(a, b) == 0)
-
-#define str_starts_with(str, start) \
-({ __typeof__ (start) __start = (start); \
-  (strncmp(str, __start, strlen(__start)) == 0); })
-
 #define is_power_of_two(value) \
 ({ __typeof__ (value) __value = (value); \
   ((__value != 0) && ((__value & (__value - 1)) == 0)); })

@@ -60,3 +60,21 @@ Image *grid_atlas_w_get_image(GridAtlas *atlas, Vector2DInt position)
     
     return atlas->last_image;
 }
+
+GridAtlasInfo *grid_atlas_info(const char *file_name, Size2DInt tile_size)
+{
+    GridAtlasInfo *info = platform_calloc(1, sizeof(GridAtlasInfo));
+    info->file_name = platform_strdup(file_name);
+    info->tile_size = tile_size;
+    
+    return info;
+}
+
+void grid_atlas_info_destroy(void *obj)
+{
+    GridAtlasInfo *info = (GridAtlasInfo*)obj;
+    if (info->file_name) {
+        platform_free(info->file_name);
+    }
+    platform_free(info);
+}

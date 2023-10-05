@@ -18,6 +18,7 @@
 #include "image.h"
 #include "render_texture.h"
 #include "utils.h"
+#include "string_utils.h"
 #include "array_list.h"
 #include "hash_table.h"
 #include "engine_log.h"
@@ -30,5 +31,6 @@
 #include "action_constructors.h"
 #include "weak_container.h"
 #include "data_container.h"
+#include "scene.h"
 
 #endif /* engine_h */

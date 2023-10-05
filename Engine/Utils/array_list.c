@@ -2,7 +2,9 @@
 #include "engine_log.h"
 #include "string_builder.h"
 #include "platform_adapter.h"
+#include "string_utils.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 #define DEFAULT_INITIAL_CAPACITY 2
 
@@ -184,6 +186,46 @@ ArrayList *list_create_with_destructor(void (*destructor)(void *))
     list->destructor = destructor;
     
     return list;
+}
+
+ArrayList *__list_of_strings(const char * first, ...)
+{
+    ArrayList *list = list_create_with_destructor(&platform_free);
+        
+    va_list arg;
+    va_start (arg, first);
+    for (const char *string_value = first; string_value != NULL; string_value = va_arg(arg, char *)) {
+        list_add(list, platform_strdup(string_value));
+    }
+    va_end (arg);
+
+    return list;
+}
+
+ArrayList *__list_of_objects(void * first, ...)
+{
+    ArrayList *list = list_create();
+        
+    va_list arg;
+    va_start (arg, first);
+    for (void *object = first; object != NULL; object = va_arg(arg, void *)) {
+        list_add(list, object);
+    }
+    va_end (arg);
+
+    return list;
+}
+
+bool list_contains_string(ArrayList *list, const char *string)
+{
+    for (int i = 0; i < list->count; ++i) {
+        const char *value = list->first[i];
+        if (str_equals(value, string)) {
+            return true;
+        }
+    }
+    return false;
+
 }
 
 ArrayList *list_create_with_weak_references()

@@ -49,15 +49,17 @@ char *label_describe(void *value)
     return description;
 }
 
-GameObjectType LabelType = {
-    { { "Label", &label_destroy, &label_describe } },
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    &label_render
-};
+GameObjectType LabelType =
+    game_object_type("Label",
+                     &label_destroy,
+                     &label_describe,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &label_render
+                     );
 
 void label_render_cached_image(Label *self, int32_t start_index) {
     int32_t x_offset = self->w_font_atlas->item_size.width;
