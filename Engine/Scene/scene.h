@@ -36,6 +36,8 @@ Scene *scene_alloc(size_t type_size);
 void scene_set_required_image_asset_names(void *scene, ArrayList *sprite_sheet_names);
 void scene_set_required_grid_atlas_infos(void *scene, ArrayList *grid_atlas_infos);
 
+void scene_destroy(void *);
+
 ArrayList *__list_of_grid_atlas_infos(struct GridAtlasInfo *, ...);
 
 #define list_of_grid_atlas_infos(...) __list_of_grid_atlas_infos(__VA_ARGS__, (struct GridAtlasInfo*)NULL)
