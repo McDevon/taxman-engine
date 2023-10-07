@@ -82,30 +82,37 @@ void transition_finish(void)
     _scene_manager.w_transition_dither = NULL;
 }
 
+bool transition_middle_point = false;
+
 void transition_step(Number delta_time_millis)
 {
     _scene_manager.transition_step += delta_time_millis;
     
-    if (_scene_manager.transition_step > _scene_manager.transition_length / 2 && _scene_manager.next_scene) {
+    if (transition_middle_point) {
         switch_scene();
+        transition_middle_point = false;
+    }
+    
+    if (_scene_manager.transition_step > _scene_manager.transition_length / 2 && _scene_manager.next_scene) {
+        transition_middle_point = true;
     }
     
     switch (_scene_manager.transition) {
         case st_swipe_left_to_right:
         {
-            transition_swipe_ltr_step(&_scene_manager, &_ctx);
+            transition_swipe_ltr_step(&_scene_manager, &_ctx, transition_middle_point);
             break;
         }
         case st_fade_black:
         {
-            transition_fade_black_step(&_scene_manager, &_ctx);
+            transition_fade_black_step(&_scene_manager, &_ctx, transition_middle_point);
             break;
         }
             
         default:
             break;
     }
-    
+
     if (_scene_manager.transition_step >= _scene_manager.transition_length) {
         transition_finish();
     }

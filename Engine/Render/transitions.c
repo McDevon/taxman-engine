@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "utils.h"
 #include "engine_log.h"
+#include "image_render.h"
 
 void draw_ltr_first_half(int32_t fade_width, int32_t dither_width, Image *dither, RenderContext *ctx)
 {
@@ -112,17 +113,19 @@ void draw_ltr_second_half(int32_t fade_width, int32_t dither_width, Image *dithe
     }
 }
 
-void transition_swipe_ltr_step(SceneManager *scene_manager, RenderContext *ctx)
+void transition_swipe_ltr_step(SceneManager *scene_manager, RenderContext *ctx, bool middle_frame)
 {
     const int32_t dither_width = 900;
     const int32_t full_width = dither_width + SCREEN_WIDTH;
 
     const Number half_time = scene_manager->transition_length / 2;
-    if (scene_manager->transition_step < half_time) {
+    if (middle_frame) {
+        context_fill(ctx, 0x00);
+    } else if (scene_manager->transition_step < half_time) {
         draw_ltr_first_half(nb_to_int(nb_mul(nb_from_int(full_width), nb_div(scene_manager->transition_step, half_time))), dither_width, scene_manager->w_transition_dither, ctx);
     } else {
         ctx->render_transform = render_camera_get_transform(ctx->render_camera);
-        go_render(scene_manager->current_scene, ctx);
+        go_render((GameObject *)scene_manager->current_scene, ctx);
         draw_ltr_second_half(nb_to_int(nb_mul(nb_from_int(full_width), nb_div((scene_manager->transition_length - scene_manager->transition_step), half_time))), dither_width, scene_manager->w_transition_dither, ctx);
     }
 }
@@ -150,8 +153,8 @@ void draw_fade_black(int32_t fade, Image *dither, RenderContext *ctx)
         LOG_ERROR("Transition dither size not power of two");
         return;
     }
-    uint32_t maskX = dither_tx_width - 1;
-    uint32_t maskY = dither_tx_height - 1;
+    const uint32_t maskX = dither_tx_width - 1;
+    const uint32_t maskY = dither_tx_height - 1;
 
     for (int32_t j = 0; j < height; j++) {
         const int32_t dither_y = (j + offset_y) & maskY;
@@ -169,14 +172,16 @@ void draw_fade_black(int32_t fade, Image *dither, RenderContext *ctx)
     }
 }
 
-void transition_fade_black_step(SceneManager *scene_manager, RenderContext *ctx)
+void transition_fade_black_step(SceneManager *scene_manager, RenderContext *ctx, bool middle_frame)
 {
     const Number half_time = scene_manager->transition_length / 2;
-    if (scene_manager->transition_step <= half_time) {
+    if (middle_frame) {
+        context_fill(ctx, 0x00);
+    } else if (scene_manager->transition_step <= half_time) {
         draw_fade_black(255 - nb_to_int(nb_div(nb_mul(scene_manager->transition_step, nb_from_int(255)), half_time)), scene_manager->w_transition_dither, ctx);
     } else {
         ctx->render_transform = render_camera_get_transform(ctx->render_camera);
-        go_render(scene_manager->current_scene, ctx);
+        go_render((GameObject *)scene_manager->current_scene, ctx);
         draw_fade_black(255 - nb_to_int(nb_div(nb_mul((scene_manager->transition_length - scene_manager->transition_step), nb_from_int(255)), half_time)), scene_manager->w_transition_dither, ctx);
     }
 }
