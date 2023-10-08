@@ -8,6 +8,80 @@
 #include "profiler.h"
 #include <math.h>
 
+void debug_render_square(RenderContext *context, const Vector2DInt position, const Size2DInt size) {
+    ImageBuffer *target = context->w_target_buffer->buffer;
+    const int32_t target_width = context->w_target_buffer->size.width;
+    const int32_t target_height = context->w_target_buffer->size.height;
+    const int32_t target_channels = image_data_channel_count(context->w_target_buffer);
+    const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
+    
+    const int32_t x_min = max(0, position.x);
+    const int32_t x_max = min(target_width - 1, position.x + size.width);
+    const int32_t y_min = max(0, position.y);
+    const int32_t y_max = min(target_height - 1, position.y + size.height);
+
+    if (target_has_alpha) {
+        const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
+        if (position.x >= 0) {
+            for (int32_t y = y_min; y <= y_max; ++y) {
+                int32_t t_index = (position.x + y * target_width) * target_channels;
+                target[t_index] = 0x00;
+                target[t_index + target_alpha_offset] = 0xff;
+            }
+        }
+        const int32_t right_vertical = position.x + size.width;
+        if (right_vertical < target_width) {
+            for (int32_t y = y_min; y <= y_max; ++y) {
+                int32_t t_index = (right_vertical + y * target_width) * target_channels;
+                target[t_index] = 0x00;
+                target[t_index + target_alpha_offset] = 0xff;
+            }
+        }
+        if (position.y >= 0) {
+            for (int32_t x = x_min; x <= x_max; ++x) {
+                int32_t t_index = (x + position.y * target_width) * target_channels;
+                target[t_index] = 0x00;
+                target[t_index + target_alpha_offset] = 0xff;
+            }
+        }
+        const int32_t bottom_horizontal = position.y + size.height;
+        if (bottom_horizontal < target_height) {
+            for (int32_t x = x_min; x <= x_max; ++x) {
+                int32_t t_index = (x + bottom_horizontal * target_width) * target_channels;
+                target[t_index] = 0x00;
+                target[t_index + target_alpha_offset] = 0xff;
+            }
+        }
+    } else {
+        if (position.x >= 0) {
+            for (int32_t y = y_min; y <= y_max; ++y) {
+                int32_t t_index = (position.x + y * target_width) * target_channels;
+                target[t_index] = 0x00;
+            }
+        }
+        const int32_t right_vertical = position.x + size.width;
+        if (right_vertical < target_width) {
+            for (int32_t y = y_min; y <= y_max; ++y) {
+                int32_t t_index = (right_vertical + y * target_width) * target_channels;
+                target[t_index] = 0x00;
+            }
+        }
+        if (position.y >= 0) {
+            for (int32_t x = x_min; x <= x_max; ++x) {
+                int32_t t_index = (x + position.y * target_width) * target_channels;
+                target[t_index] = 0x00;
+            }
+        }
+        const int32_t bottom_horizontal = position.y + size.height;
+        if (bottom_horizontal < target_height) {
+            for (int32_t x = x_min; x <= x_max; ++x) {
+                int32_t t_index = (x + bottom_horizontal * target_width) * target_channels;
+                target[t_index] = 0x00;
+            }
+        }
+    }
+}
+
 void context_render_rect_image(RenderContext *context, const Image *image, const Vector2DInt position, const RenderOptions render_options)
 {
     if (!context || !image) { return; }
@@ -152,6 +226,10 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
             }
         }
     }
+    
+#ifdef RENDER_DEBUG_BOXES
+    debug_render_square(context, (Vector2DInt){ position.x + draw_offset.x, position.y + draw_offset.y }, (Size2DInt){ source_width, source_height });
+#endif
     
     context_rect_rendered(context, start_x + position.x + draw_offset.x, end_x + position.x + draw_offset.x - 1, start_y + position.y + draw_offset.y, end_y + position.y + draw_offset.y - 1);
 
@@ -333,6 +411,10 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
             }
         }
     }
+    
+#ifdef RENDER_DEBUG_BOXES
+    debug_render_square(context, (Vector2DInt){ position.x + draw_offset.x, position.y + draw_offset.y }, (Size2DInt){ source_scaled_width, source_scaled_height });
+#endif
     
     context_rect_rendered(context, start_x + position.x + draw_offset.x, end_x + position.x + draw_offset.x - 1, start_y + position.y + draw_offset.y, end_y + position.y + draw_offset.y - 1);
 
@@ -566,6 +648,10 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             }
         }
     }
+    
+#ifdef RENDER_DEBUG_BOXES
+    debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+#endif
 
     context_rect_rendered(context, i_left, i_right - 1, i_top, i_bottom - 1);
 
@@ -836,6 +922,10 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
         }
     }
 
+#ifdef RENDER_DEBUG_BOXES
+    debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+#endif
+    
     context_rect_rendered(context, i_left, i_right - 1, i_top, i_bottom - 1);
 
 #ifdef ENABLE_PROFILER
