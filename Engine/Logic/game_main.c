@@ -32,6 +32,7 @@ RenderContext *get_main_render_context()
 
 void __start_current_scene(void *_) {
     go_initialize((GameObject *)_scene_manager.current_scene, &_scene_manager);
+    go_start((GameObject *)_scene_manager.current_scene);
     _scene_manager.running = true;
 }
 
