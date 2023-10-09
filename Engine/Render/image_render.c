@@ -250,16 +250,17 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const int32_t source_height = image->rect.size.height;
     const int32_t target_width = context->w_target_buffer->size.width;
     const int32_t target_height = context->w_target_buffer->size.height;
-    const int32_t source_scaled_width = (int32_t)nb_floor(image->rect.size.width * scale.x);
-    const int32_t source_scaled_height = (int32_t)nb_floor(image->rect.size.height * scale.y);
+    const int32_t source_scaled_width = (int32_t)nb_floor(nb_mul(nb_from_int(image->rect.size.width), scale.x));
+    const int32_t source_scaled_height = (int32_t)nb_floor(nb_mul(nb_from_int(image->rect.size.height), scale.y));
 
     const bool flip_x = render_options.flip_x;
     const bool flip_y = render_options.flip_y;
     
     const Vector2DInt draw_offset = (Vector2DInt){
-        flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x,
-        flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y
+        nb_to_int(nb_mul(nb_from_int(flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x), scale.x)),
+        nb_to_int(nb_mul(nb_from_int(flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y), scale.y))
     };
+    
     
     if (position.x + draw_offset.x > target_width
         || position.x + draw_offset.x + source_scaled_width < 0
@@ -285,6 +286,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const int32_t start_y = max(0, -position.y - draw_offset.y);
     const int32_t end_y = min(source_scaled_height, target_height - position.y - draw_offset.y);
     
+    const int32_t draw_start_x = (int32_t)(start_x / scale.x);
+    const int32_t draw_start_y = (int32_t)(start_y / scale.y);
+
     const Float move_x = (Float)source_width / (Float)source_scaled_width;
     const Float move_y = (Float)source_height / (Float)source_scaled_height;
 
@@ -301,9 +305,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
         const int32_t source_alpha_offset = image_alpha_offset(image);
         if (target_has_alpha) {
             const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
-            Float position_y = start_y;
+            Float position_y = draw_start_y;
             for (int32_t j = start_y; j < end_y; j++) {
-                Float position_x = start_x;
+                Float position_x = draw_start_x;
                 const int32_t ctx_y = j + position.y + draw_offset.y;
                 const int32_t p_j = (int32_t)floorf(position_y);
                 const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
@@ -330,9 +334,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                 }
             }
         } else {
-            Float position_y = start_y;
+            Float position_y = draw_start_y;
             for (int32_t j = start_y; j < end_y; j++) {
-                Float position_x = start_x;
+                Float position_x = draw_start_x;
                 const int32_t ctx_y = j + position.y + draw_offset.y;
                 const int32_t p_j = (int32_t)floorf(position_y);
                 const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
@@ -361,9 +365,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     } else {
         if (target_has_alpha) {
             const int32_t target_alpha_offset = image_data_alpha_offset(context->w_target_buffer);
-            Float position_y = 0;
+            Float position_y = draw_start_y;
             for (int32_t j = start_y; j < end_y; j++) {
-                Float position_x = 0;
+                Float position_x = draw_start_x;
                 const int32_t ctx_y = j + position.y;
                 const int32_t p_j = (int32_t)floorf(position_y);
                 const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
@@ -386,9 +390,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
                 }
             }
         } else {
-            Float position_y = 0;
+            Float position_y = draw_start_y;
             for (int32_t j = start_y; j < end_y; j++) {
-                Float position_x = 0;
+                Float position_x = draw_start_x;
                 const int32_t ctx_y = j + position.y;
                 const int32_t p_j = (int32_t)floorf(position_y);
                 const int32_t y = flip_y * (source_height - p_j - 1) + !flip_y * p_j;
