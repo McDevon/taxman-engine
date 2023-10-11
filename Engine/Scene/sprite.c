@@ -62,3 +62,19 @@ Sprite *sprite_create(const char *image_name)
 
     return sprite;
 }
+
+Sprite *sprite_create_with_image(Image *image)
+{
+    GameObject *go = go_alloc(sizeof(Sprite));
+    Sprite *sprite = (Sprite *)go;
+    go->w_type = &SpriteType;
+    sprite_set_image(sprite, image);
+
+    sprite->draw_mode = drawmode_default;
+    sprite->flip_x = false;
+    sprite->flip_y = false;
+    sprite->invert = false;
+
+    return sprite;
+}
+

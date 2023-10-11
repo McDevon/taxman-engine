@@ -19,4 +19,6 @@ RenderTexture *render_texture_create(Size2DInt size, int32_t channels);
 void render_texture_render_go(RenderTexture *render_texture, GameObject *object);
 void render_texture_resize(RenderTexture *self, Size2DInt size);
 
+RenderTexture *render_texture_create_with_rotated(Image *original_image, Number angle);
+
 #endif /* render_texture_h */

@@ -24,6 +24,7 @@ typedef struct Sprite {
 extern GameObjectType SpriteType;
 
 Sprite *sprite_create(const char *image_name);
+Sprite *sprite_create_with_image(Image *image);
 
 void sprite_set_image(Sprite *sprite, Image *image);
 
