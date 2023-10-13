@@ -47,6 +47,16 @@ def image_info(path):
 
     out_has_alpha = False
     out_has_shades = False
+    offset_x = width
+    offset_y = height
+    last_x = 0
+    last_y = 0
+
+    if alphas is None:
+        offset_x = 0
+        offset_y = 0
+        last_x = width
+        last_y = height
 
     for y in range(0, height):
         for x in range(0, width):
@@ -56,12 +66,25 @@ def image_info(path):
                 alpha_value = alphas[x, y]
                 if alpha_value < 255:
                     out_has_alpha = True
-                    if alpha_value == 0:
+                if alpha_value == 0:
+                    if not full_transparent:
                         full_transparent = True
+                else:
+                    if x < offset_x:
+                        offset_x = x
+                    if y < offset_y:
+                        offset_y = y
+                    if x + 1 > last_x:
+                        last_x = x + 1
+                    if y + 1 > last_y:
+                        last_y = y + 1
             if 0 < value < 255 and not full_transparent:
                 out_has_shades = True
 
-    return (width, height, out_has_alpha, out_has_shades)
+    size_width = last_x - offset_x
+    size_height = last_y - offset_y
+
+    return (width, height, offset_x, offset_y, size_width, size_height, out_has_alpha, out_has_shades)
 
 
 def generate_sprite_sheet(directory, output_path):
@@ -76,24 +99,25 @@ def generate_sprite_sheet(directory, output_path):
     data = {}
     file_names = []
     for file in files:
-        width, height, alpha, shades = image_info(
+        orig_width, orig_height, offset_x, offset_y, size_width, size_height, alpha, shades = image_info(
             os.path.join(directory, file)
         )
-        print(f'{str(file)} width {str(width)} height {str(height)} alpha {str(alpha)} shades {str(shades)}')
+        print(f'{str(file)} width {str(orig_width)} height {str(orig_height)} '
+              + f'alpha {str(alpha)} shades {str(shades)}')
         data[file] = {
-            'width': width,
-            'height': height,
-            'orig_w': width,
-            'orig_h': height,
-            'offset_x': 0,
-            'offset_y': 0,
+            'width': size_width,
+            'height': size_height,
+            'orig_w': orig_width,
+            'orig_h': orig_height,
+            'offset_x': offset_x,
+            'offset_y': offset_y,
         }
         file_names.append(file)
         if alpha:
             use_alpha = True
         if shades:
             use_shades = True
-        full_size += width * height
+        full_size += size_width * size_height
 
     edge = math.ceil(math.sqrt(full_size))
     print(f'full size {full_size} edge {edge}')
@@ -102,12 +126,16 @@ def generate_sprite_sheet(directory, output_path):
     output_pixels = output_image.load()
     image_start = 0
     for file in files:
-        width, height, values, alphas = image_data(
+        orig_width, orig_height, values, alphas = image_data(
             os.path.join(directory, file)
         )
-        for y in range(0, height):
-            for x in range(0, width):
-                intput_index = x + y * width
+        offset_x = data[file]['offset_x']
+        offset_y = data[file]['offset_y']
+        size_width = data[file]['width']
+        size_height = data[file]['height']
+        for y in range(offset_y, size_height):
+            for x in range(offset_x, size_width):
+                intput_index = x + y * size_width
                 output_index = image_start + intput_index
                 if use_alpha:
                     alpha_value = alphas[x, y] if alphas is not None else 255
@@ -120,7 +148,7 @@ def generate_sprite_sheet(directory, output_path):
                     output_pixels[output_index % edge,
                                   int(math.floor(output_index / edge))] = values[x, y]
         data[file]['start'] = image_start
-        image_start += width * height
+        image_start += size_width * size_height
     image_name = output_name + '.png'
     output_image.save(os.path.join(output_path, image_name))
     write_sprite_sheet_data(file_names, data, image_name,
