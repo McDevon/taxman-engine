@@ -22,9 +22,9 @@ typedef struct ImageData {
 typedef struct Image {
     BASE_OBJECT;
     ImageData *w_image_data;
-    Rect2DInt rect;
-    Size2DInt original;
-    Vector2DInt offset;
+    Rect2DInt rect;     // Position in image data
+    Size2DInt original; // Size of original image
+    Vector2DInt offset; // Offset where the rect starts in the original image
 } Image;
 
 ImageData *image_data_create(ImageBuffer *buffer, const Size2DInt size, const uint32_t settings);

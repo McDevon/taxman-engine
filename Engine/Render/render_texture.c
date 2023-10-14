@@ -62,13 +62,56 @@ void render_texture_render_go(RenderTexture *self, GameObject *object)
     go_render(object, self->render_context);
 }
 
+void render_texture_trim_image(RenderTexture *self)
+{
+    Image *image = self->image;
+    if (!image_has_alpha(image)) {
+        return;
+    }
+    int32_t width = image->rect.size.width;
+    int32_t height = image->rect.size.height;
+    int32_t left = width;
+    int32_t right = 0;
+    int32_t top = height;
+    int32_t bottom = 0;
+    
+    ImageBuffer *buffer = image->w_image_data->buffer;
+    
+    int32_t alpha_offset = image_alpha_offset(image);
+    int32_t source_channels = image_channel_count(image);
+    
+    for (int32_t y = 0; y < height; ++y) {
+        for (int32_t x = 0; x < width; ++x) {
+            int32_t index = (x + y * width) * source_channels;
+            uint8_t alpha_value = buffer[index + alpha_offset];
+            if (alpha_value > 0) {
+                if (x < left) {
+                    left = x;
+                }
+                if (y < top) {
+                    top = y;
+                }
+                if (x + 1 > right) {
+                    right = x + 1;
+                }
+                if (y + 1 > bottom) {
+                    bottom = y + 1;
+                }
+            }
+        }
+    }
+    
+    image->rect = int_rect_make(left, top, right - left, bottom - top);
+    image->offset = (Vector2DInt){ left, top };
+}
+
 RenderTexture *render_texture_create_with_rotated(Image *original_image, Number angle)
 {
-    Vector2D anchor = vec(original_image->original.width / 2, original_image->original.height / 2);
+    Vector2D anchor = vec(original_image->rect.size.width / 2, original_image->rect.size.height / 2);
     Vector2D left_up = (Vector2D){ 0, 0 };
-    Vector2D right_up = (Vector2D){ nb_from_int(original_image->original.width), 0 };
-    Vector2D left_down = (Vector2D){ 0, nb_from_int(original_image->original.height) };
-    Vector2D right_down = (Vector2D){ nb_from_int(original_image->original.width), nb_from_int(original_image->original.height) };
+    Vector2D right_up = (Vector2D){ nb_from_int(original_image->rect.size.width), 0 };
+    Vector2D left_down = (Vector2D){ 0, nb_from_int(original_image->rect.size.height) };
+    Vector2D right_down = (Vector2D){ nb_from_int(original_image->rect.size.width), nb_from_int(original_image->rect.size.height) };
     
     Vector2D corners[] = { left_up, right_up, left_down, right_down };
     
@@ -102,13 +145,18 @@ RenderTexture *render_texture_create_with_rotated(Image *original_image, Number 
     Size2DInt size = (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) };
     RenderTexture *rt = render_texture_create(size, image_channel_count(original_image));
     
-    context_render_rotate_image(rt->render_context,
+    context_render_rotate_image_b(rt->render_context,
                                 original_image,
                                 (Vector2DInt){ -nb_to_int(nb_ceil(left)), -nb_to_int(nb_ceil(top)) },
                                 angle,
                                 anchor,
-                                render_options_make(false, false, false)
+                                render_options_make(false, false, false),
+                                false
                                 );
+    
+    if (image_has_alpha(original_image)) {
+        render_texture_trim_image(rt);
+    }
     
     return rt;
 }

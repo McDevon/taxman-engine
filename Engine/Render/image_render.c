@@ -505,10 +505,11 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     const bool source_has_alpha = image_has_alpha(image);
     const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
 
-    int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
-    int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
-    int32_t i_left = max(nb_to_int(nb_round(left)), 0);
-    int32_t i_top = max(nb_to_int(nb_round(top)), 0);
+    const int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
+    const int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
+    const int32_t i_left = max(nb_to_int(nb_round(left)), 0);
+    const int32_t i_top = max(nb_to_int(nb_round(top)), 0);
+    
     const int32_t source_origin_x = image->rect.origin.x;
     const int32_t source_origin_y = image->rect.origin.y;
 

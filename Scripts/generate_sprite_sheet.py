@@ -133,10 +133,12 @@ def generate_sprite_sheet(directory, output_path):
         offset_y = data[file]['offset_y']
         size_width = data[file]['width']
         size_height = data[file]['height']
-        for y in range(offset_y, size_height):
-            for x in range(offset_x, size_width):
-                intput_index = x + y * size_width
-                output_index = image_start + intput_index
+        image_index = 0
+        right_edge = offset_x + size_width
+        bottom_edge = offset_y + size_height
+        for y in range(offset_y, bottom_edge):
+            for x in range(offset_x, right_edge):
+                output_index = image_start + image_index
                 if use_alpha:
                     alpha_value = alphas[x, y] if alphas is not None else 255
                     output_pixels[output_index % edge,
@@ -147,6 +149,7 @@ def generate_sprite_sheet(directory, output_path):
                 else:
                     output_pixels[output_index % edge,
                                   int(math.floor(output_index / edge))] = values[x, y]
+                image_index += 1
         data[file]['start'] = image_start
         image_start += size_width * size_height
     image_name = output_name + '.png'
