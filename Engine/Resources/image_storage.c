@@ -126,7 +126,7 @@ Image *image_slice_create_and_store(const char *image_data_name, const char *ima
     ImageData *image_subdata = image_data_create_subdata(image_data, start, size);
     hashtable_put(&image_data_table, image_name, image_subdata);
     
-    Image *image = image_create(image_subdata, int_rect_make(0, 0, size.width, size.height));
+    Image *image = image_create_trimmed(image_subdata, int_rect_make(0, 0, size.width, size.height), original, offset);
     if (!image) {
         return NULL;
     }
@@ -213,7 +213,6 @@ void load_sprite_sheet_image_callback(const char *image_data_name, bool success,
                     read_success = false;
                     break;
                 }
-                offset.y = original.height - (offset.y + size.height);
                 image_slice_create_and_store(sprite_sheet_data_name, sprite_name, sprite_start, size, original, offset);
             }
             

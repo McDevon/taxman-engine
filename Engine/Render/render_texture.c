@@ -113,6 +113,8 @@ RenderTexture *render_texture_create_with_rotated(Image *original_image, Number 
     Vector2D left_down = (Vector2D){ 0, nb_from_int(original_image->rect.size.height) };
     Vector2D right_down = (Vector2D){ nb_from_int(original_image->rect.size.width), nb_from_int(original_image->rect.size.height) };
     
+    Vector2D anchor_original = vec(original_image->original.width / 2, original_image->original.height / 2);
+    
     Vector2D corners[] = { left_up, right_up, left_down, right_down };
     
     Number top = nb_max_value;
@@ -144,14 +146,14 @@ RenderTexture *render_texture_create_with_rotated(Image *original_image, Number 
     }
     Size2DInt size = (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) };
     RenderTexture *rt = render_texture_create(size, image_channel_count(original_image));
-    
-    context_render_rotate_image_b(rt->render_context,
+    Vector2DInt draw_pos = (Vector2DInt){ -nb_to_int(nb_ceil(left + original_image->offset.x)), -nb_to_int(nb_ceil(top + original_image->offset.y)) };
+
+    context_render_rotate_image(rt->render_context,
                                 original_image,
-                                (Vector2DInt){ -nb_to_int(nb_ceil(left)), -nb_to_int(nb_ceil(top)) },
+                                draw_pos,
                                 angle,
-                                anchor,
-                                render_options_make(false, false, false),
-                                false
+                                anchor_original,
+                                render_options_make(false, false, false)
                                 );
     
     if (image_has_alpha(original_image)) {

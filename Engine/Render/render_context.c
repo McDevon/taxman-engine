@@ -321,6 +321,7 @@ RenderContext *render_context_create(ImageData *target_buffer, bool background_e
     ctx->w_target_buffer = target_buffer;
     ctx->render_transform = af_identity();
     ctx->render_camera = render_camera_create(target_buffer->size);
+    ctx->is_screen_context = false;
     
     ctx->background_enabled = background_enabled;
     if (background_enabled) {

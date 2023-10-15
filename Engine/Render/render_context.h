@@ -21,6 +21,7 @@ typedef struct RenderContext {
     ArrayList *merge_rects;
     AffineTransform render_transform;
     bool background_enabled;
+    bool is_screen_context;
 } RenderContext;
 
 void context_rect_rendered(RenderContext *ctx, int left, int right, int top, int bottom);

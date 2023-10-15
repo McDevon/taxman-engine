@@ -228,7 +228,9 @@ void context_render_rect_image(RenderContext *context, const Image *image, const
     }
     
 #ifdef RENDER_DEBUG_BOXES
-    debug_render_square(context, (Vector2DInt){ position.x + draw_offset.x, position.y + draw_offset.y }, (Size2DInt){ source_width, source_height });
+    if (context->is_screen_context) {
+        debug_render_square(context, (Vector2DInt){ position.x + draw_offset.x, position.y + draw_offset.y }, (Size2DInt){ source_width, source_height });
+    }
 #endif
     
     context_rect_rendered(context, start_x + position.x + draw_offset.x, end_x + position.x + draw_offset.x - 1, start_y + position.y + draw_offset.y, end_y + position.y + draw_offset.y - 1);
@@ -417,7 +419,9 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     }
     
 #ifdef RENDER_DEBUG_BOXES
-    debug_render_square(context, (Vector2DInt){ position.x + draw_offset.x, position.y + draw_offset.y }, (Size2DInt){ source_scaled_width, source_scaled_height });
+    if (context->is_screen_context) {
+        debug_render_square(context, (Vector2DInt){ position.x + draw_offset.x, position.y + draw_offset.y }, (Size2DInt){ source_scaled_width, source_scaled_height });
+    }
 #endif
     
     context_rect_rendered(context, start_x + position.x + draw_offset.x, end_x + position.x + draw_offset.x - 1, start_y + position.y + draw_offset.y, end_y + position.y + draw_offset.y - 1);
@@ -469,7 +473,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
         
     for (int i = 0; i < 4; ++i) {
         Vector2D corner = vec_vec_subtract(corners[i], anchor);
-        
+        //Vector2D corner = vec_vec_subtract(anchor, corners[i]);
+
         Vector2D rotated = vec_vec_add(vec(nb_mul(corner.x, angle_cos) - nb_mul(corner.y, angle_sin),
                                            nb_mul(corner.x, angle_sin) + nb_mul(corner.y, angle_cos)), anchor);
         
@@ -519,12 +524,11 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     const Number neg_angle_cos = nb_cos(-angle);
     
     const Vector2D position_nb = (vec(nb_from_int(position.x), nb_from_int(position.y)));
-    const Vector2D draw_area_anchor = vec_vec_subtract(anchor, draw_offset);
     
     const Float position_f_x = nb_to_float(position_nb.x);
     const Float position_f_y = nb_to_float(position_nb.y);
-    const Float anchor_f_x = nb_to_float(draw_area_anchor.x);
-    const Float anchor_f_y = nb_to_float(draw_area_anchor.y);
+    const Float anchor_f_x = nb_to_float(anchor.x);
+    const Float anchor_f_y = nb_to_float(anchor.y);
 
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -538,8 +542,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor.y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -569,8 +573,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor.y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -601,8 +605,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor.y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -629,8 +633,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + draw_area_anchor.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + draw_area_anchor.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor.x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor.y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -655,7 +659,9 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     }
     
 #ifdef RENDER_DEBUG_BOXES
-    debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+    if (context->is_screen_context) {
+        debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+    }
 #endif
 
     context_rect_rendered(context, i_left, i_right - 1, i_top, i_bottom - 1);
@@ -928,7 +934,9 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
     }
 
 #ifdef RENDER_DEBUG_BOXES
-    debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+    if (context->is_screen_context) {
+        debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+    }
 #endif
     
     context_rect_rendered(context, i_left, i_right - 1, i_top, i_bottom - 1);

@@ -16,7 +16,7 @@
 #include "profiler_internal.h"
 
 static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0, NULL /*image_settings_alpha | image_settings_rgb*/ };
-static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false };
+static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false, true };
 
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
 static Number _fixed_dt_counter = 0;
