@@ -107,30 +107,34 @@ void render_texture_trim_image(RenderTexture *self)
 
 RenderTexture *render_texture_create_with_rotated(Image *original_image, Number angle)
 {
-    Vector2D anchor = vec(original_image->rect.size.width / 2, original_image->rect.size.height / 2);
-    Vector2D left_up = (Vector2D){ 0, 0 };
-    Vector2D right_up = (Vector2D){ nb_from_int(original_image->rect.size.width), 0 };
-    Vector2D left_down = (Vector2D){ 0, nb_from_int(original_image->rect.size.height) };
-    Vector2D right_down = (Vector2D){ nb_from_int(original_image->rect.size.width), nb_from_int(original_image->rect.size.height) };
+    const Number offset_x = nb_from_int(original_image->offset.x);
+    const Number offset_y = nb_from_int(original_image->offset.y);
+    const Number draw_width = nb_from_int(original_image->rect.size.width);
+    const Number draw_height = nb_from_int(original_image->rect.size.height);
     
+    Vector2D left_up = (Vector2D){ offset_x, offset_y };
+    Vector2D right_up = (Vector2D){ offset_x + draw_width, offset_y };
+    Vector2D left_down = (Vector2D){ offset_x, offset_y + draw_height };
+    Vector2D right_down = (Vector2D){ offset_x + draw_width, offset_y + draw_height };
+
     Vector2D anchor_original = vec(original_image->original.width / 2, original_image->original.height / 2);
     
     Vector2D corners[] = { left_up, right_up, left_down, right_down };
-    
+
     Number top = nb_max_value;
     Number left = nb_max_value;
     Number bottom = nb_min_value;
     Number right = nb_min_value;
-    
+
     const Number angle_sin = nb_sin(angle);
     const Number angle_cos = nb_cos(angle);
         
     for (int i = 0; i < 4; ++i) {
-        Vector2D corner = vec_vec_subtract(corners[i], anchor);
-        
+        Vector2D corner = vec_vec_subtract(corners[i], anchor_original);
+
         Vector2D rotated = vec_vec_add(vec(nb_mul(corner.x, angle_cos) - nb_mul(corner.y, angle_sin),
-                                           nb_mul(corner.x, angle_sin) + nb_mul(corner.y, angle_cos)), anchor);
-        
+                                           nb_mul(corner.x, angle_sin) + nb_mul(corner.y, angle_cos)), anchor_original);
+
         if (rotated.x < left) {
             left = rotated.x;
         }
@@ -144,9 +148,15 @@ RenderTexture *render_texture_create_with_rotated(Image *original_image, Number 
             bottom = rotated.y;
         }
     }
-    Size2DInt size = (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) };
+    
+    const int32_t i_right = nb_to_int(nb_ceil(right));
+    const int32_t i_bottom = nb_to_int(nb_ceil(bottom));
+    const int32_t i_left = nb_to_int(nb_floor(left));
+    const int32_t i_top = nb_to_int(nb_floor(top));
+
+    Size2DInt size = (Size2DInt){ i_right - i_left, i_bottom - i_top };
     RenderTexture *rt = render_texture_create(size, image_channel_count(original_image));
-    Vector2DInt draw_pos = (Vector2DInt){ -nb_to_int(nb_ceil(left + original_image->offset.x)), -nb_to_int(nb_ceil(top + original_image->offset.y)) };
+    Vector2DInt draw_pos = (Vector2DInt){ -i_left, -i_top };
 
     context_render_rotate_image(rt->render_context,
                                 original_image,
