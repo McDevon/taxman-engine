@@ -117,7 +117,7 @@ RenderTexture *render_texture_create_with_rotated(Image *original_image, Number 
     Vector2D left_down = (Vector2D){ offset_x, offset_y + draw_height };
     Vector2D right_down = (Vector2D){ offset_x + draw_width, offset_y + draw_height };
 
-    Vector2D anchor_original = vec(original_image->original.width / 2, original_image->original.height / 2);
+    Vector2D anchor_original = vec(nb_from_int(original_image->original.width) / 2, nb_from_int(original_image->original.height) / 2);
     
     Vector2D corners[] = { left_up, right_up, left_down, right_down };
 
