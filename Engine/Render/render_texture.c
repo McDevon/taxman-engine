@@ -102,10 +102,10 @@ void render_texture_trim_image(RenderTexture *self)
     }
     
     image->rect = int_rect_make(left, top, right - left, bottom - top);
-    image->offset = (Vector2DInt){ left, top };
+    image->offset = (Vector2DInt){ image->offset.x + left, image->offset.y + top };
 }
 
-RenderTexture *render_texture_create_with_rotated(Image *original_image, Number angle)
+Edges render_texture_get_rotated_edges(Image *original_image, Number angle, Vector2D *in_out_anchor)
 {
     const Number offset_x = nb_from_int(original_image->offset.x);
     const Number offset_y = nb_from_int(original_image->offset.y);
@@ -149,11 +149,32 @@ RenderTexture *render_texture_create_with_rotated(Image *original_image, Number 
         }
     }
     
-    const int32_t i_right = nb_to_int(nb_ceil(right));
-    const int32_t i_bottom = nb_to_int(nb_ceil(bottom));
-    const int32_t i_left = nb_to_int(nb_floor(left));
-    const int32_t i_top = nb_to_int(nb_floor(top));
+    if (in_out_anchor) {
+        Vector2D anchor_position = *in_out_anchor;
+        Vector2D rotation_position = vec_vec_subtract(anchor_position, anchor_original);
+        Vector2D rotated_anchor = vec_vec_add(vec(nb_mul(rotation_position.x, angle_cos) - nb_mul(rotation_position.y, angle_sin),
+                                                  nb_mul(rotation_position.x, angle_sin) + nb_mul(rotation_position.y, angle_cos)), anchor_original);
+        in_out_anchor->x = rotated_anchor.x - left;
+        in_out_anchor->y = rotated_anchor.y - top;
+    }
+    
+    return (Edges){ left, right, top, bottom };
+}
 
+RenderTexture *render_texture_create_with_rotated(Image *original_image, Number angle) {
+    return render_texture_create_with_rotated_anchored(original_image, angle, NULL);
+}
+
+RenderTexture *render_texture_create_with_rotated_anchored(Image *original_image, Number angle, Vector2D *in_out_anchor)
+{
+    Edges rotated_edges = render_texture_get_rotated_edges(original_image, angle, in_out_anchor);
+    
+    const int32_t i_right = nb_to_int(nb_ceil(rotated_edges.right));
+    const int32_t i_bottom = nb_to_int(nb_ceil(rotated_edges.bottom));
+    const int32_t i_left = nb_to_int(nb_floor(rotated_edges.left));
+    const int32_t i_top = nb_to_int(nb_floor(rotated_edges.top));
+
+    Vector2D anchor_original = vec(nb_from_int(original_image->original.width) / 2, nb_from_int(original_image->original.height) / 2);
     Size2DInt size = (Size2DInt){ i_right - i_left, i_bottom - i_top };
     RenderTexture *rt = render_texture_create(size, image_channel_count(original_image));
     Vector2DInt draw_pos = (Vector2DInt){ -i_left, -i_top };

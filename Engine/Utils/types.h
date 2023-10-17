@@ -35,6 +35,13 @@ typedef struct Rect2D {
     Size2D size;
 } Rect2D;
 
+typedef struct Edges {
+    Number left;
+    Number right;
+    Number top;
+    Number bottom;
+} Edges;
+
 typedef struct Vector2DInt {
     int32_t x;
     int32_t y;

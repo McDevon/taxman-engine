@@ -32,5 +32,6 @@
 #include "weak_container.h"
 #include "data_container.h"
 #include "scene.h"
+#include "cache_sprite.h"
 
 #endif /* engine_h */
