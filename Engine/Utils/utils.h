@@ -1,7 +1,7 @@
 #ifndef utils_h
 #define utils_h
 
-#include <string.h>
+int mod(int a, int b);
 
 #define max(a,b) \
 ({ __typeof__ (a) __a = (a); \

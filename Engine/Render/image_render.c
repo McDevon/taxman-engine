@@ -252,8 +252,8 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const int32_t source_height = image->rect.size.height;
     const int32_t target_width = context->w_target_buffer->size.width;
     const int32_t target_height = context->w_target_buffer->size.height;
-    const int32_t source_scaled_width = (int32_t)nb_floor(nb_mul(nb_from_int(image->rect.size.width), scale.x));
-    const int32_t source_scaled_height = (int32_t)nb_floor(nb_mul(nb_from_int(image->rect.size.height), scale.y));
+    const int32_t source_scaled_width = nb_to_int(nb_floor(nb_mul(nb_from_int(image->rect.size.width), scale.x)));
+    const int32_t source_scaled_height = nb_to_int(nb_floor(nb_mul(nb_from_int(image->rect.size.height), scale.y)));
 
     const bool flip_x = render_options.flip_x;
     const bool flip_y = render_options.flip_y;
@@ -288,8 +288,8 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const int32_t start_y = max(0, -position.y - draw_offset.y);
     const int32_t end_y = min(source_scaled_height, target_height - position.y - draw_offset.y);
     
-    const int32_t draw_start_x = (int32_t)(start_x / scale.x);
-    const int32_t draw_start_y = (int32_t)(start_y / scale.y);
+    const int32_t draw_start_x = nb_to_int(nb_div(nb_from_int(start_x), scale.x));
+    const int32_t draw_start_y = nb_to_int(nb_div(nb_from_int(start_y), scale.y));
 
     const Float move_x = (Float)source_width / (Float)source_scaled_width;
     const Float move_y = (Float)source_height / (Float)source_scaled_height;
@@ -519,8 +519,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
 
     const bool invert = render_options.invert;
     
-    const Number neg_angle_sin = nb_sin(-angle);
-    const Number neg_angle_cos = nb_cos(-angle);
+    const Float neg_angle_sin = nb_to_float(nb_sin(-angle));
+    const Float neg_angle_cos = nb_to_float(nb_cos(-angle));
     
     const Vector2D position_nb = (vec(nb_from_int(position.x), nb_from_int(position.y)));
     
@@ -541,8 +541,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_in_image_coordinates.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_in_image_coordinates.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_f_x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_f_y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -572,8 +572,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_in_image_coordinates.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_in_image_coordinates.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_f_x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_f_y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -604,8 +604,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_in_image_coordinates.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_in_image_coordinates.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_f_x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_f_y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;
@@ -632,8 +632,8 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
             for (int32_t j = i_top; j < i_bottom; j++) {
                 const int32_t y_t_index = j * target_width;
                 const Float source_y_pos = (Float)j - anchor_f_y - position_f_y;
-                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_in_image_coordinates.x;
-                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_in_image_coordinates.y;
+                const Float sin_y_and_anchor_x = source_y_pos * -neg_angle_sin + anchor_f_x;
+                const Float cos_y_and_anchor_y = source_y_pos * neg_angle_cos + anchor_f_y;
 
                 for (int32_t i = i_left; i < i_right; i++) {
                     const Float source_x_pos = (Float)i - anchor_f_x - position_f_x;

@@ -3,9 +3,9 @@
 
 void image_object_render(Image *image, GameObject *obj, RenderOptions render_options, DrawMode draw_mode, RenderContext *ctx)
 {
-    Size2D size = (Size2D){nb_from_int(image->original.width), nb_from_int(image->original.height)};
-    Number anchor_x = nb_mul(obj->anchor.x, size.width);
-    Number anchor_y = nb_mul(obj->anchor.y, size.height);
+    Size2D size_nb = (Size2D){nb_from_int(image->original.width), nb_from_int(image->original.height)};
+    Number anchor_x = nb_mul(obj->anchor.x, size_nb.width);
+    Number anchor_y = nb_mul(obj->anchor.y, size_nb.height);
 
     AffineTransform pos = af_identity();
     

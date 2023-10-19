@@ -75,9 +75,9 @@ void cache_sprite_set_rotated(CacheSprite *self, Number angle)
         self->render_texture = NULL;
     }
     
-    Vector2D local_anchor = vec(nb_mul(self->original_anchor.x, self->w_original_image->original.width), nb_mul(self->original_anchor.y, self->w_original_image->original.height));
+    Vector2D local_anchor = vec(nb_mul(self->original_anchor.x, nb_from_int(self->w_original_image->original.width)), nb_mul(self->original_anchor.y, nb_from_int(self->w_original_image->original.height)));
     
     self->render_texture = render_texture_create_with_rotated_anchored(self->w_original_image, angle, &local_anchor);
     
-    self->anchor = vec(nb_div(local_anchor.x, self->render_texture->image->original.width), nb_div(local_anchor.y, self->render_texture->image->original.height));
+    self->anchor = vec(nb_div(local_anchor.x, nb_from_int(self->render_texture->image->original.width)), nb_div(local_anchor.y, nb_from_int(self->render_texture->image->original.height)));
 }
