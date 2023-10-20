@@ -5,6 +5,7 @@
 #include "platform_adapter.h"
 #include "engine_log.h"
 #include <stdio.h>
+#include <math.h>
 
 struct ns_private {
     Image *image_top_left;
@@ -28,11 +29,11 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
 {
     NineSprite *self = (NineSprite *)obj;
     
-    Number anchor_x = nb_mul(obj->anchor.x, obj->size.width);
-    Number anchor_y = nb_mul(obj->anchor.y, obj->size.height);
+    Float anchor_x = obj->anchor.x * obj->size.width;
+    Float anchor_y = obj->anchor.y * obj->size.height;
 
-    Number anchor_x_translate = -nb_mul(anchor_x, obj->scale.x);
-    Number anchor_y_translate = -nb_mul(anchor_y, obj->scale.y);
+    Float anchor_x_translate = -anchor_x * obj->scale.x;
+    Float anchor_y_translate = -anchor_y * obj->scale.y;
 
     AffineTransform pos = af_identity();
     
@@ -42,17 +43,17 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
     pos = af_translate(pos, obj->position);
     pos = af_af_multiply(ctx->render_transform, pos);
     
-    int32_t left = nb_to_int(nb_floor(pos.i13));
-    int32_t top = nb_to_int(nb_floor(pos.i23));
+    int32_t left = (int32_t)floorf(pos.i13);
+    int32_t top = (int32_t)floorf(pos.i23);
     int32_t left_split = left + self->ns_private->left_split;
-    int32_t right_split = left + nb_to_int(self->size.width - nb_from_int(self->ns_private->width - self->ns_private->right_split));
+    int32_t right_split = left + (int32_t)(self->size.width - (self->ns_private->width - self->ns_private->right_split));
     int32_t high_split = top + self->ns_private->high_split;
-    int32_t low_split = top + nb_to_int(self->size.height - nb_from_int(self->ns_private->height - self->ns_private->low_split));
+    int32_t low_split = top + (int32_t)(self->size.height - (self->ns_private->height - self->ns_private->low_split));
     
     int32_t middle_width = self->ns_private->right_split - self->ns_private->left_split;
     int32_t middle_height = self->ns_private->low_split - self->ns_private->high_split;
-    Number scale_x = nb_div(self->size.width - nb_from_int(self->ns_private->width - middle_width), nb_from_int(middle_width));
-    Number scale_y = nb_div(self->size.height - nb_from_int(self->ns_private->height - middle_height), nb_from_int(middle_height));
+    Float scale_x = (self->size.width - (self->ns_private->width - middle_width)) / middle_width;
+    Float scale_y = (self->size.height - (self->ns_private->height - middle_height)) / middle_height;
 
     // Top row
     context_render_rect_image(ctx,
@@ -66,7 +67,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
     context_render_scale_image(ctx,
                                self->ns_private->image_top_middle,
                                (Vector2DInt){ left_split, top },
-                               vec(scale_x, nb_one),
+                               vec(scale_x, 1.f),
                                render_options_make(false,
                                                    false,
                                                    self->invert)
@@ -84,7 +85,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
     context_render_scale_image(ctx,
                                self->ns_private->image_middle_left,
                                (Vector2DInt){ left, high_split },
-                               vec(nb_one, scale_y),
+                               vec(1.f, scale_y),
                                render_options_make(false,
                                                    false,
                                                    self->invert)
@@ -102,7 +103,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
     context_render_scale_image(ctx,
                                self->ns_private->image_middle_right,
                                (Vector2DInt){ right_split, high_split },
-                               vec(nb_one, scale_y),
+                               vec(1.f, scale_y),
                                render_options_make(false,
                                                    false,
                                                    self->invert)
@@ -120,7 +121,7 @@ void nine_sprite_render(GameObject *obj, RenderContext *ctx)
     context_render_scale_image(ctx,
                                self->ns_private->image_bottom_middle,
                                (Vector2DInt){ left_split, low_split },
-                               vec(scale_x, nb_one),
+                               vec(scale_x, 1.f),
                                render_options_make(false,
                                                    false,
                                                    self->invert)
@@ -190,8 +191,8 @@ GameObjectType NineSpriteType = {
 void nine_sprite_set_image(NineSprite *self, Image *image, int32_t x_left_split, int32_t x_right_split, int32_t y_high_split, int32_t y_low_split)
 {
     self->w_image = image;
-    self->size.width = nb_from_int(image->original.width);
-    self->size.height = nb_from_int(image->original.height);
+    self->size.width = image->original.width;
+    self->size.height = image->original.height;
     
     if (x_left_split < 0 || x_left_split >= self->size.width) {
         LOG_ERROR("NineSprite: Left split out of bounds");

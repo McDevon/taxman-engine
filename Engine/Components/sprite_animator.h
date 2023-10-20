@@ -8,7 +8,7 @@
 typedef struct AnimationFrame {
     BASE_OBJECT;
     Image *w_image;
-    Number frame_time_ms;
+    Float frame_time;
 } AnimationFrame;
 
 typedef struct Animator {
@@ -19,7 +19,7 @@ typedef struct Animator {
     void *callback_context;
     int32_t current_frame;
     int32_t repeat_counter;
-    Number frame_timer;
+    Float frame_timer;
 } Animator;
 
 extern GameObjectComponentType SpriteAnimationComponentType;
@@ -30,6 +30,6 @@ void animator_set_animation(Animator *comp, const char *animation_name);
 void animator_set_animation_count(Animator *self, const char *animation_name, int32_t repeat_count, void (*completion_callback)(Animator *obj, void *context), void *context);
 void animator_add_animation(Animator *comp, const char *animation_name, ArrayList *frame_list);
 
-AnimationFrame *anim_frame_create(const char *image_name, Number frame_time);
+AnimationFrame *anim_frame_create(const char *image_name, Float frame_time);
 
 #endif /* sprite_animator_h */

@@ -41,12 +41,12 @@ GameObjectType CacheSpriteType =
                      &cache_sprite_render
                      );
 
-CacheSprite *cache_sprite_create_rotated(const char *image_name, Number angle, Vector2D anchor)
+CacheSprite *cache_sprite_create_rotated(const char *image_name, Float angle, Vector2D anchor)
 {
     return cache_sprite_sprite_create_with_image_rotated(get_image(image_name), angle, anchor);
 }
 
-CacheSprite *cache_sprite_sprite_create_with_image_rotated(Image *image, Number angle, Vector2D anchor)
+CacheSprite *cache_sprite_sprite_create_with_image_rotated(Image *image, Float angle, Vector2D anchor)
 {
     GameObject *go = go_alloc(sizeof(CacheSprite));
     go->w_type = &CacheSpriteType;
@@ -54,8 +54,8 @@ CacheSprite *cache_sprite_sprite_create_with_image_rotated(Image *image, Number 
     CacheSprite *sprite = (CacheSprite *)go;
     
     sprite->w_original_image = image;
-    sprite->size.width = nb_from_int(image->original.width);
-    sprite->size.height = nb_from_int(image->original.height);
+    sprite->size.width = image->original.width;
+    sprite->size.height = image->original.height;
 
     sprite->flip_x = false;
     sprite->flip_y = false;
@@ -68,16 +68,16 @@ CacheSprite *cache_sprite_sprite_create_with_image_rotated(Image *image, Number 
     return sprite;
 }
 
-void cache_sprite_set_rotated(CacheSprite *self, Number angle)
+void cache_sprite_set_rotated(CacheSprite *self, Float angle)
 {
     if (self->render_texture) {
         destroy(self->render_texture);
         self->render_texture = NULL;
     }
     
-    Vector2D local_anchor = vec(nb_mul(self->original_anchor.x, nb_from_int(self->w_original_image->original.width)), nb_mul(self->original_anchor.y, nb_from_int(self->w_original_image->original.height)));
+    Vector2D local_anchor = vec(self->original_anchor.x * self->w_original_image->original.width, self->original_anchor.y * self->w_original_image->original.height);
     
     self->render_texture = render_texture_create_with_rotated_anchored(self->w_original_image, angle, &local_anchor);
     
-    self->anchor = vec(nb_div(local_anchor.x, nb_from_int(self->render_texture->image->original.width)), nb_div(local_anchor.y, nb_from_int(self->render_texture->image->original.height)));
+    self->anchor = vec(local_anchor.x / self->render_texture->image->original.width, local_anchor.y / self->render_texture->image->original.height);
 }

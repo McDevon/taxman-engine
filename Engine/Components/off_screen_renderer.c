@@ -21,11 +21,11 @@ void off_screen_renderer_start(GameObjectComponent *comp)
     go_start(self->root_object);
 }
 
-void off_screen_renderer_update(GameObjectComponent *comp, Number dt_ms)
+void off_screen_renderer_update(GameObjectComponent *comp, Float dt)
 {
     OffScreenRenderer *self = (OffScreenRenderer *)comp;
     
-    go_update(self->root_object, dt_ms);
+    go_update(self->root_object, dt);
     
     size_t count = list_count(self->internal_scene_manager->go_destroy_queue);
     
@@ -54,11 +54,11 @@ void off_screen_renderer_update(GameObjectComponent *comp, Number dt_ms)
     render_texture_render_go(self->render_texture, self->root_object);
 }
 
-void off_screen_renderer_fixed_update(GameObjectComponent *comp, Number dt_ms)
+void off_screen_renderer_fixed_update(GameObjectComponent *comp, Float dt, FixNumber dt_ms)
 {
     OffScreenRenderer *self = (OffScreenRenderer *)comp;
     
-    go_fixed_update(self->root_object, dt_ms);
+    go_fixed_update(self->root_object, dt, dt_ms);
 }
 
 

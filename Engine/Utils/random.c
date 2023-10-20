@@ -3,6 +3,7 @@
 #include "base_object.h"
 #include "string_builder.h"
 #include "platform_adapter.h"
+#include <limits.h>
 
 struct Random {
     BASE_OBJECT;
@@ -58,26 +59,9 @@ bool random_next_bool(Random *state)
     return random_next_uint64(state) & (1LLU << 20) ? true : false;
 }
 
-Number random_next_number(Random *state)
+Float random_next_float_limit(Random *state, Float limit)
 {
-#ifdef NUMBER_TYPE_FIXED_POINT
-    return (Number)(random_next_uint64(state) / (UINT64_MAX / (uint64_t)(nb_one)));
-#elif defined NUMBER_TYPE_FLOATING_POINT
-    return (Number)random_next_uint64(state) / (Number)UINT64_MAX;
-#else
-    return 0;
-#endif
-}
-
-Number random_next_number_limit(Random *state, Number limit)
-{
-#ifdef NUMBER_TYPE_FIXED_POINT
-    return (Number)(random_next_uint64(state) / (UINT64_MAX / (uint64_t)limit));
-#elif defined NUMBER_TYPE_FLOATING_POINT
-    return (Number)random_next_uint64(state) / (Number)UINT64_MAX * limit;
-#else
-    return 0;
-#endif
+    return (Float)random_next_uint64(state) / (Float)UINT64_MAX * limit;
 }
 
 Float random_next_float(Random *state)

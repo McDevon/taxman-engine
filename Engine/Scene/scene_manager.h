@@ -32,14 +32,14 @@ typedef struct SceneManager {
     Image *w_transition_dither;
     void *data;
     Controls controls;
-    Number transition_length;
-    Number transition_step;
+    Float transition_length;
+    Float transition_step;
     SceneTransition transition;
     bool controls_enabled;
     bool running;
 } SceneManager;
 
-void scene_change(SceneManager *scene_manager, Scene *next_scene, SceneTransition transition, Number time);
+void scene_change(SceneManager *scene_manager, Scene *next_scene, SceneTransition transition, Float time);
 
 SceneManager *scene_manager_create(void);
 

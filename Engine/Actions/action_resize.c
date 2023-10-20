@@ -47,8 +47,8 @@ Float action_resize_update(ActionObject *action, GameObject *go, Float dt_s)
     Float position = self->position + (dt_s / self->length);
     self->position = min(position, 1.f);
     go->size = (Size2D) {
-        (Number)(self->start_size.width * (1.f - self->position) + self->end_size.width * self->position),
-        (Number)(self->start_size.height * (1.f - self->position) + self->end_size.height * self->position)
+        self->start_size.width * (1.f - self->position) + self->end_size.width * self->position,
+        self->start_size.height * (1.f - self->position) + self->end_size.height * self->position
     };
     
     return position > 1.f ? (position - 1.f) * self->length : 0.f;

@@ -11,7 +11,7 @@ char *render_camera_describe(void *value)
 {
     RenderCamera *self = (RenderCamera *)value;
 
-    return sb_string_with_format("Position (%.2f, %.2f) Scale (%.2f, %.2f) Rotation %.2f", nb_to_float(self->position.x), nb_to_float(self->position.y), nb_to_float(self->scale.x), nb_to_float(self->scale.y), nb_to_float(self->rotation));
+    return sb_string_with_format("Position (%.2f, %.2f) Scale (%.2f, %.2f) Rotation %.2f", self->position.x, self->position.y, self->scale.x, self->scale.y, self->rotation);
 }
 
 BaseType RenderCameraType = { "RenderCamera", &render_camera_destroy, &render_camera_describe };
@@ -20,7 +20,7 @@ RenderCamera *render_camera_create(Size2DInt viewport_size)
 {
     RenderCamera *rt = platform_calloc(1, sizeof(RenderCamera));
     rt->w_type = &RenderCameraType;
-    rt->viewport_size = (Size2D){ nb_from_int(viewport_size.width), nb_from_int(viewport_size.height) };
+    rt->viewport_size = (Size2D){ viewport_size.width, viewport_size.height };
     
     render_camera_reset(rt);
     
@@ -30,8 +30,8 @@ RenderCamera *render_camera_create(Size2DInt viewport_size)
 void render_camera_reset(RenderCamera *self)
 {
     self->position = vec_zero();
-    self->scale = vec(nb_one, nb_one);
-    self->rotation = nb_zero;
+    self->scale = vec(1.f, 1.f);
+    self->rotation = 0.f;
 }
 
 AffineTransform render_camera_get_transform(RenderCamera *self)

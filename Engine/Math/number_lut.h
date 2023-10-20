@@ -3,7 +3,7 @@
 
 #include "number.h"
 
-extern Number nb_lut_sin[];
-extern Number nb_lut_tan[];
+extern FixNumber fn_lut_sin[];
+extern FixNumber fn_lut_tan[];
 
 #endif /* number_lut_h */

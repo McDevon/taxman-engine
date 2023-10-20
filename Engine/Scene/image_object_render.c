@@ -1,11 +1,12 @@
 #include "image_object_render.h"
 #include "transforms.h"
+#include <math.h>
 
 void image_object_render(Image *image, GameObject *obj, RenderOptions render_options, DrawMode draw_mode, RenderContext *ctx)
 {
-    Size2D size_nb = (Size2D){nb_from_int(image->original.width), nb_from_int(image->original.height)};
-    Number anchor_x = nb_mul(obj->anchor.x, size_nb.width);
-    Number anchor_y = nb_mul(obj->anchor.y, size_nb.height);
+    Size2D size_nb = (Size2D){ image->original.width, image->original.height };
+    Float anchor_x = obj->anchor.x * size_nb.width;
+    Float anchor_y = obj->anchor.y * size_nb.height;
 
     AffineTransform pos = af_identity();
     
@@ -17,7 +18,7 @@ void image_object_render(Image *image, GameObject *obj, RenderOptions render_opt
         
         context_render_rect_image(ctx,
                                   image,
-                                  (Vector2DInt){ nb_to_int(nb_floor(pos.i13 - anchor_x)), nb_to_int(nb_floor(pos.i23 - anchor_y)) },
+                                  (Vector2DInt){ (int32_t)floorf(pos.i13 - anchor_x), (int32_t)floorf(pos.i23 - anchor_y) },
                                   render_options
                                   );
     } else if (draw_mode == drawmode_scale) {
@@ -25,9 +26,9 @@ void image_object_render(Image *image, GameObject *obj, RenderOptions render_opt
         pos = af_rotate(pos, obj->rotation);
         pos = af_translate(pos, obj->position);
         pos = af_af_multiply(ctx->render_transform, pos);
-                
-        Vector2D scale_measure_x = vec(nb_one, nb_zero);
-        Vector2D scale_measure_y = vec(nb_zero, nb_one);
+        
+        Vector2D scale_measure_x = vec(1.f, 0.f);
+        Vector2D scale_measure_y = vec(0.f, 1.f);
         Vector2D scale_origin = vec_zero();
         Vector2D scale_vector_x = af_vec_multiply(pos, scale_measure_x);
         Vector2D scale_vector_y = af_vec_multiply(pos, scale_measure_y);
@@ -35,12 +36,12 @@ void image_object_render(Image *image, GameObject *obj, RenderOptions render_opt
         
         Vector2D scale = vec(vec_length(vec_vec_subtract(scale_vector_x, origin_vector)), vec_length(vec_vec_subtract(scale_vector_y, origin_vector)));
         
-        Number anchor_x_translate = -nb_mul(anchor_x, scale.x);
-        Number anchor_y_translate = -nb_mul(anchor_y, scale.y);
+        Float anchor_x_translate = -(anchor_x * scale.x);
+        Float anchor_y_translate = -(anchor_y * scale.y);
 
         context_render_scale_image(ctx,
                                    image,
-                                   (Vector2DInt){ nb_to_int(nb_floor(pos.i13 + anchor_x_translate)), nb_to_int(nb_floor(pos.i23 + anchor_y_translate)) },
+                                   (Vector2DInt){ (int32_t)floorf(pos.i13 + anchor_x_translate), (int32_t)floorf(pos.i23 + anchor_y_translate) },
                                    scale,
                                    render_options
                                    );
@@ -52,7 +53,7 @@ void image_object_render(Image *image, GameObject *obj, RenderOptions render_opt
                 
         context_render_rotate_image(ctx,
                                     image,
-                                    (Vector2DInt){ nb_to_int(nb_floor(pos.i13) - anchor_x), nb_to_int(nb_floor(pos.i23) - anchor_y) },
+                                    (Vector2DInt){ (int32_t)floorf(pos.i13) - anchor_x, (int32_t)floorf(pos.i23) - anchor_y },
                                     go_rotation_from_root(obj),
                                     vec(anchor_x, anchor_y),
                                     render_options

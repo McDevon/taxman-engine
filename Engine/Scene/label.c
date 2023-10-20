@@ -126,16 +126,16 @@ void label_set_text(Label *label, const char *text)
                 ++col;
             }
         }
-        label->size.width = nb_from_int(label->w_font_atlas->item_size.width * max(col, longest));
-        label->size.height = nb_from_int(label->w_font_atlas->item_size.height * rows);
+        label->size.width = label->w_font_atlas->item_size.width * max(col, longest);
+        label->size.height = label->w_font_atlas->item_size.height * rows;
         label->text = platform_strdup(text);
         label->text_length = len;
         label->visible_chars = len;
         
         if (label->render_cache == NULL) {
-            label->render_cache = render_texture_create((Size2DInt){nb_to_int(label->size.width), nb_to_int(label->size.height)}, image_data_channel_count(label->w_font_atlas->w_atlas));
+            label->render_cache = render_texture_create((Size2DInt){ (int32_t)label->size.width, (int32_t)label->size.height }, image_data_channel_count(label->w_font_atlas->w_atlas));
         } else {
-            render_texture_resize(label->render_cache, (Size2DInt){nb_to_int(label->size.width), nb_to_int(label->size.height)});
+            render_texture_resize(label->render_cache, (Size2DInt){ (int32_t)label->size.width, (int32_t)label->size.height });
         }
         context_clear_transparent_white(label->render_cache->render_context);
         label_render_cached_image(label, 0);

@@ -5,12 +5,12 @@
 
 typedef struct LifeTimer {
     GAME_OBJECT_COMPONENT;
-    Number timer;
+    FixNumber timer;
     bool paused;
 } LifeTimer;
 
 extern GameObjectComponentType LifeTimerComponentType;
 
-LifeTimer *life_timer_create(Number time, bool paused);
+LifeTimer *life_timer_create(FixNumber time, bool paused);
 
 #endif /* life_timer_h */

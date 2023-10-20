@@ -19,7 +19,7 @@ static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }
 static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false, true };
 
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
-static Number _fixed_dt_counter = 0;
+static Float _fixed_dt_counter = 0;
 
 static ScreenRenderOptions _screen_options = { NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0 }, false };
 
@@ -85,9 +85,9 @@ void transition_finish(void)
 
 bool transition_middle_point = false;
 
-void transition_step(Number delta_time_millis)
+void transition_step(Float delta_time_seconds)
 {
-    _scene_manager.transition_step += delta_time_millis;
+    _scene_manager.transition_step += delta_time_seconds;
     
     if (transition_middle_point) {
         switch_scene();
@@ -146,7 +146,7 @@ void scene_cleanup(void)
     }
 }
 
-void game_step(Number delta_time_millis, Controls controls)
+void game_step(Float delta_time_seconds, Controls controls)
 {
     if (!_scene_manager.running) {
         return;
@@ -193,7 +193,7 @@ void game_step(Number delta_time_millis, Controls controls)
             switch_scene();
             transition_finish();
         } else {
-            transition_step(delta_time_millis);
+            transition_step(delta_time_seconds);
             update_buffer(_screen.buffer, &_screen_options);
         }
 #ifdef ENABLE_PROFILER
@@ -214,9 +214,10 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Fixed update");
 #endif
-    const Number fixed_dt = nb_from_double(33.333333333333);
+    const Float fixed_dt = 0.333333333f;
+    const FixNumber fixed_dt_fn_ms = fn_from_double(33.333333333333);
         
-    _fixed_dt_counter += delta_time_millis;
+    _fixed_dt_counter += delta_time_seconds;
     
     if (_fixed_dt_counter < fixed_dt) {
         _fixed_dt_counter = fixed_dt;
@@ -225,7 +226,7 @@ void game_step(Number delta_time_millis, Controls controls)
     int i;
     const int max_loops = 3;
     for (i = 0; _fixed_dt_counter >= fixed_dt && i < 3; i++) {
-        go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt);
+        go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt, fixed_dt_fn_ms);
         _fixed_dt_counter -= fixed_dt;
     }
     
@@ -240,7 +241,7 @@ void game_step(Number delta_time_millis, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Update");
 #endif
-    go_update((GameObject *)_scene_manager.current_scene, delta_time_millis);
+    go_update((GameObject *)_scene_manager.current_scene, delta_time_seconds);
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
 #endif

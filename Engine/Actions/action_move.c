@@ -67,7 +67,7 @@ Float action_move_update(ActionObject *action, GameObject *go, Float dt_s)
 {
     struct ActionMove *self = (struct ActionMove*)action;
     self->position = self->position + (dt_s / self->length);
-    go->position = vec_vec_add(self->start_position, vec((Number)(self->translation.x * self->position), (Number)(self->translation.y * self->position)));
+    go->position = vec_vec_add(self->start_position, vec(self->translation.x * self->position, self->translation.y * self->position));
 
     return self->position > 1.f ? (self->position - 1.f) * self->length : 0.f;
 }

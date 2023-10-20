@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include "number.h"
 
 typedef float Float;
 
@@ -11,23 +10,23 @@ typedef void (*resource_callback_t)(const char *, bool, void *);
 typedef void (context_callback_t)(void *);
 
 typedef struct Vector2D {
-    Number x;
-    Number y;
+    Float x;
+    Float y;
 } Vector2D;
 
 typedef struct Size2D {
-    Number width;
-    Number height;
+    Float width;
+    Float height;
 } Size2D;
 
 typedef struct AffineTransform {
-    Number i11;
-    Number i12;
-    Number i13;
+    Float i11;
+    Float i12;
+    Float i13;
     
-    Number i21;
-    Number i22;
-    Number i23;
+    Float i21;
+    Float i22;
+    Float i23;
 } AffineTransform;
 
 typedef struct Rect2D {
@@ -36,10 +35,10 @@ typedef struct Rect2D {
 } Rect2D;
 
 typedef struct Edges {
-    Number left;
-    Number right;
-    Number top;
-    Number bottom;
+    Float left;
+    Float right;
+    Float top;
+    Float bottom;
 } Edges;
 
 typedef struct Vector2DInt {
@@ -57,23 +56,8 @@ typedef struct Rect2DInt {
     Size2DInt size;
 } Rect2DInt;
 
-typedef struct Vector2DFloat {
-    Float x;
-    Float y;
-} Vector2DFloat;
-
-typedef struct AffineTransformFloat {
-    Float i11;
-    Float i12;
-    Float i13;
-    
-    Float i21;
-    Float i22;
-    Float i23;
-} AffineTransformFloat;
-
 typedef struct Controls {
-    Number crank;
+    Float crank;
     uint8_t button_left : 1;
     uint8_t button_right : 1;
     uint8_t button_up : 1;

@@ -44,8 +44,8 @@ GameObjectType SpriteType =
 void sprite_set_image(Sprite *self, Image *image)
 {
     self->w_image = image;
-    self->size.width = nb_from_int(image->original.width);
-    self->size.height = nb_from_int(image->original.height);
+    self->size.width = image->original.width;
+    self->size.height = image->original.height;
 }
 
 Sprite *sprite_create(const char *image_name)

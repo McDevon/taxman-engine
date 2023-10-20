@@ -54,7 +54,7 @@ Line *line_create(Vector2DInt start, Vector2DInt end)
 
 void debugdraw_line(DebugDraw *self, Vector2D start, Vector2D end)
 {
-    list_add(self->lines, line_create((Vector2DInt){ nb_to_int(start.x), nb_to_int(start.y)}, (Vector2DInt){ nb_to_int(end.x), nb_to_int(end.y) }));
+    list_add(self->lines, line_create((Vector2DInt){ (int32_t)start.x, (int32_t)start.y }, (Vector2DInt){ (int32_t)end.x, (int32_t)end.y }));
 }
 
 void debugdraw_clear(DebugDraw *self)

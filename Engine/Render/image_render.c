@@ -7,6 +7,10 @@
 #include "constants.h"
 #include "profiler.h"
 #include <math.h>
+#include <float.h>
+
+#define RENDER_DEBUG_BOXES
+#undef RENDER_DEBUG_BOXES
 
 void debug_render_square(RenderContext *context, const Vector2DInt position, const Size2DInt size) {
     ImageBuffer *target = context->w_target_buffer->buffer;
@@ -252,15 +256,15 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const int32_t source_height = image->rect.size.height;
     const int32_t target_width = context->w_target_buffer->size.width;
     const int32_t target_height = context->w_target_buffer->size.height;
-    const int32_t source_scaled_width = nb_to_int(nb_floor(nb_mul(nb_from_int(image->rect.size.width), scale.x)));
-    const int32_t source_scaled_height = nb_to_int(nb_floor(nb_mul(nb_from_int(image->rect.size.height), scale.y)));
+    const int32_t source_scaled_width = (int32_t)floorf(image->rect.size.width * scale.x);
+    const int32_t source_scaled_height = (int32_t)floorf(image->rect.size.height * scale.y);
 
     const bool flip_x = render_options.flip_x;
     const bool flip_y = render_options.flip_y;
     
     const Vector2DInt draw_offset = (Vector2DInt){
-        nb_to_int(nb_mul(nb_from_int(flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x), scale.x)),
-        nb_to_int(nb_mul(nb_from_int(flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y), scale.y))
+        (int32_t)((flip_x ? image->original.width - (image->offset.x + source_width) : image->offset.x) * scale.x),
+        (int32_t)((flip_y ? image->original.height - (image->offset.y + source_height) : image->offset.y) * scale.y)
     };
     
     
@@ -288,8 +292,8 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
     const int32_t start_y = max(0, -position.y - draw_offset.y);
     const int32_t end_y = min(source_scaled_height, target_height - position.y - draw_offset.y);
     
-    const int32_t draw_start_x = nb_to_int(nb_div(nb_from_int(start_x), scale.x));
-    const int32_t draw_start_y = nb_to_int(nb_div(nb_from_int(start_y), scale.y));
+    const int32_t draw_start_x = (int32_t)(start_x / scale.x);
+    const int32_t draw_start_y = (int32_t)(start_y / scale.y);
 
     const Float move_x = (Float)source_width / (Float)source_scaled_width;
     const Float move_y = (Float)source_height / (Float)source_scaled_height;
@@ -431,7 +435,7 @@ void context_render_scale_image(RenderContext *context, const Image *image, cons
 #endif
 }
 
-void context_render_rotate_image(RenderContext *context, const Image *image, const Vector2DInt position, const Number angle, const Vector2D anchor_in_image_coordinates, const RenderOptions render_options)
+void context_render_rotate_image(RenderContext *context, const Image *image, const Vector2DInt position, const Float angle, const Vector2D anchor_in_image_coordinates, const RenderOptions render_options)
 {
     if (!context || !image) { return; }
     
@@ -452,32 +456,32 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
         flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y
     };
     const Vector2D draw_offset = (Vector2D){
-        nb_from_int(draw_offset_int.x),
-        nb_from_int(draw_offset_int.y)
+        draw_offset_int.x,
+        draw_offset_int.y
     };
 
     Vector2D left_up = (Vector2D){ draw_offset.x, draw_offset.y };
-    Vector2D right_up = (Vector2D){ draw_offset.x + nb_from_int(source_width), draw_offset.y };
-    Vector2D left_down = (Vector2D){ draw_offset.x, draw_offset.y + nb_from_int(source_height) };
-    Vector2D right_down = (Vector2D){ draw_offset.x + nb_from_int(source_width), draw_offset.y + nb_from_int(source_height) };
+    Vector2D right_up = (Vector2D){ draw_offset.x + source_width, draw_offset.y };
+    Vector2D left_down = (Vector2D){ draw_offset.x, draw_offset.y + source_height };
+    Vector2D right_down = (Vector2D){ draw_offset.x + source_width, draw_offset.y + source_height };
     
     Vector2D corners[] = { left_up, right_up, left_down, right_down };
     
-    Number top = nb_max_value;
-    Number left = nb_max_value;
-    Number bottom = nb_min_value;
-    Number right = nb_min_value;
+    Float top = FLT_MAX;
+    Float left = FLT_MAX;
+    Float bottom = FLT_MIN;
+    Float right = FLT_MIN;
     
-    const Number angle_sin = nb_sin(angle);
-    const Number angle_cos = nb_cos(angle);
+    const Float angle_sin = sinf(angle);
+    const Float angle_cos = cosf(angle);
         
     for (int i = 0; i < 4; ++i) {
         Vector2D corner = vec_vec_subtract(corners[i], anchor_in_image_coordinates);
 
-        Vector2D rotated = vec_vec_add(vec(nb_mul(corner.x, angle_cos) - nb_mul(corner.y, angle_sin),
-                                           nb_mul(corner.x, angle_sin) + nb_mul(corner.y, angle_cos)), anchor_in_image_coordinates);
+        Vector2D rotated = vec_vec_add(vec(corner.x * angle_cos - corner.y * angle_sin,
+                                           corner.x * angle_sin + corner.y * angle_cos), anchor_in_image_coordinates);
         
-        Vector2D positioned = vec_vec_add(rotated, vec(nb_from_int(position.x), nb_from_int(position.y)));
+        Vector2D positioned = vec_vec_add(rotated, vec(position.x, position.y));
         
         if (positioned.x < left) {
             left = positioned.x;
@@ -493,7 +497,7 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
         }
     }
     
-    if (right < nb_zero || left > nb_from_int(SCREEN_WIDTH) || bottom < nb_zero || top > nb_from_int(SCREEN_HEIGHT)) {
+    if (right < 0.f || left > SCREEN_WIDTH || bottom < 0.f || top > SCREEN_HEIGHT) {
 #ifdef ENABLE_PROFILER
         profiler_end_segment();
 #endif
@@ -509,25 +513,25 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     const bool source_has_alpha = image_has_alpha(image);
     const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
 
-    const int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
-    const int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
-    const int32_t i_left = max(nb_to_int(nb_round(left)), 0);
-    const int32_t i_top = max(nb_to_int(nb_round(top)), 0);
+    const int32_t i_right = min((int32_t)ceilf(right), target_width);
+    const int32_t i_bottom = min((int32_t)ceilf(bottom), target_height);
+    const int32_t i_left = max((int32_t)roundf(left), 0);
+    const int32_t i_top = max((int32_t)roundf(top), 0);
     
     const int32_t source_origin_x = image->rect.origin.x;
     const int32_t source_origin_y = image->rect.origin.y;
 
     const bool invert = render_options.invert;
     
-    const Float neg_angle_sin = nb_to_float(nb_sin(-angle));
-    const Float neg_angle_cos = nb_to_float(nb_cos(-angle));
+    const Float neg_angle_sin = sinf(-angle);
+    const Float neg_angle_cos = cosf(-angle);
     
-    const Vector2D position_nb = (vec(nb_from_int(position.x), nb_from_int(position.y)));
+    const Vector2D position_nb = vec(position.x, position.y);
     
-    const Float position_f_x = nb_to_float(position_nb.x);
-    const Float position_f_y = nb_to_float(position_nb.y);
-    const Float anchor_f_x = nb_to_float(anchor_in_image_coordinates.x);
-    const Float anchor_f_y = nb_to_float(anchor_in_image_coordinates.y);
+    const Float position_f_x = position_nb.x;
+    const Float position_f_y = position_nb.y;
+    const Float anchor_f_x = anchor_in_image_coordinates.x;
+    const Float anchor_f_y = anchor_in_image_coordinates.y;
 
 #ifdef ENABLE_PROFILER
     profiler_end_segment();
@@ -659,7 +663,7 @@ void context_render_rotate_image(RenderContext *context, const Image *image, con
     
 #ifdef RENDER_DEBUG_BOXES
     if (context->is_screen_context) {
-        debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+        debug_render_square(context, (Vector2DInt){ (int32_t)left, (int32_t)top }, (Size2DInt){ (int32_t)(right - left), (int32_t)(bottom - top) });
     }
 #endif
 
@@ -765,21 +769,21 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
         flip_y ? image->original.height - (image->offset.y + image->rect.size.height) : image->offset.y
     };
     const Vector2D draw_offset = (Vector2D){
-        nb_from_int(draw_offset_int.x),
-        nb_from_int(draw_offset_int.y)
+        (int32_t)draw_offset_int.x,
+        (int32_t)draw_offset_int.y
     };
 
     Vector2D left_up = (Vector2D){ draw_offset.x, draw_offset.y };
-    Vector2D right_up = (Vector2D){ draw_offset.x + nb_from_int(source_width), draw_offset.y };
-    Vector2D left_down = (Vector2D){ draw_offset.x, draw_offset.y + nb_from_int(source_height) };
-    Vector2D right_down = (Vector2D){ draw_offset.x + nb_from_int(source_width), draw_offset.y + nb_from_int(source_height) };
+    Vector2D right_up = (Vector2D){ draw_offset.x + source_width, draw_offset.y };
+    Vector2D left_down = (Vector2D){ draw_offset.x, draw_offset.y + source_height };
+    Vector2D right_down = (Vector2D){ draw_offset.x + source_width, draw_offset.y + source_height };
     
     Vector2D corners[] = { left_up, right_up, left_down, right_down };
     
-    Number top = nb_max_value;
-    Number left = nb_max_value;
-    Number bottom = nb_min_value;
-    Number right = nb_min_value;
+    Float top = FLT_MAX;
+    Float left = FLT_MAX;
+    Float bottom = FLT_MIN;
+    Float right = FLT_MIN;
     
     for (int i = 0; i < 4; ++i) {
         Vector2D corner = corners[i];
@@ -802,7 +806,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
         }
     }
     
-    if (right < nb_zero || left > nb_from_int(SCREEN_WIDTH) || bottom < nb_zero || top > nb_from_int(SCREEN_HEIGHT)) {
+    if (right < 0.f || left > SCREEN_WIDTH || bottom < 0.f || top > SCREEN_HEIGHT) {
 #ifdef ENABLE_PROFILER
         profiler_end_segment();
 #endif
@@ -818,12 +822,12 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
     const bool source_has_alpha = image_has_alpha(image);
     const bool target_has_alpha = image_data_has_alpha(context->w_target_buffer);
 
-    AffineTransformFloat inverse_camera = faf_inverse(af_to_faf(context->render_transform));
+    AffineTransform inverse_camera = af_inverse(context->render_transform);
         
-    int32_t i_right = min(nb_to_int(nb_ceil(right)), target_width);
-    int32_t i_bottom = min(nb_to_int(nb_ceil(bottom)), target_height);
-    int32_t i_left = max(nb_to_int(nb_round(left)), 0);
-    int32_t i_top = max(nb_to_int(nb_round(top)), 0);
+    int32_t i_right = min((int32_t)ceilf(right), target_width);
+    int32_t i_bottom = min((int32_t)ceilf(bottom), target_height);
+    int32_t i_left = max((int32_t)roundf(left), 0);
+    int32_t i_top = max((int32_t)roundf(top), 0);
     const int32_t source_origin_x = image->rect.origin.x;
     const int32_t source_origin_y = image->rect.origin.y;
 
@@ -842,7 +846,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                 const int32_t y_t_index = j * target_width;
 
                 for (int32_t i = i_left; i < i_right; i++) {
-                    AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
+                    AffineTransform t = af_af_multiply(inverse_camera, af_translate(af_identity(), vec((Float)i, (Float)j)));
                     
                     const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x - 1: (int)t.i13 - draw_offset_int.x;
                     const int32_t y = flip_y ? source_height - (int)t.i23 + draw_offset_int.y - 1 : (int)t.i23 - draw_offset_int.y;
@@ -867,7 +871,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                 const int32_t y_t_index = j * target_width;
 
                 for (int32_t i = i_left; i < i_right; i++) {
-                    AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
+                    AffineTransform t = af_af_multiply(inverse_camera, af_translate(af_identity(), vec((Float)i, (Float)j)));
                     
                     const int32_t x = flip_x ? source_width - (int)t.i13 + draw_offset_int.x - 1: (int)t.i13 - draw_offset_int.x;
                     const int32_t y = flip_y ? source_height - (int)t.i23 + draw_offset_int.y - 1 : (int)t.i23 - draw_offset_int.y;
@@ -893,7 +897,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                 const int32_t y_t_index = j * target_width;
 
                 for (int32_t i = i_left; i < i_right; i++) {
-                    AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
+                    AffineTransform t = af_af_multiply(inverse_camera, af_translate(af_identity(), vec( (Float)i, (Float)j )));
                     
                     const int32_t x = flip_x ? source_width - (int)t.i13 - 1 : (int)t.i13;
                     const int32_t y = flip_y ? source_height - (int)t.i23 - 1 : (int)t.i23;
@@ -914,7 +918,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
                 const int32_t y_t_index = j * target_width;
 
                 for (int32_t i = i_left; i < i_right; i++) {
-                    AffineTransformFloat t = faf_faf_multiply(inverse_camera, faf_translate(faf_identity(), (Vector2DFloat){ (Float)i, (Float)j }));
+                    AffineTransform t = af_af_multiply(inverse_camera, af_translate(af_identity(), vec( (Float)i, (Float)j )));
                     
                     const int32_t x = flip_x ? source_width - (int)t.i13 - 1 : (int)t.i13;
                     const int32_t y = flip_y ? source_height - (int)t.i23 - 1 : (int)t.i23;
@@ -934,7 +938,7 @@ void context_render(RenderContext *context, const Image *image, const RenderOpti
 
 #ifdef RENDER_DEBUG_BOXES
     if (context->is_screen_context) {
-        debug_render_square(context, (Vector2DInt){ nb_to_int(left), nb_to_int(top) }, (Size2DInt){ nb_to_int(right - left), nb_to_int(bottom - top) });
+        debug_render_square(context, (Vector2DInt){ (int32_t)left, (int32_t)top }, (Size2DInt){ (int32_t)(right - left), (int32_t)(bottom - top) });
     }
 #endif
     

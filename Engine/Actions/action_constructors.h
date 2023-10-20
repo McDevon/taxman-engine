@@ -11,8 +11,8 @@ ActionObject *action_move_to_create(Vector2D position, Float length);
 ActionObject *action_scale_by_create(Vector2D scale, Float length);
 ActionObject *action_scale_to_create(Vector2D scale, Float length);
 
-ActionObject *action_rotate_by_create(Number offset, Float length);
-ActionObject *action_rotate_to_create(Number target, Float length);
+ActionObject *action_rotate_by_create(Float offset, Float length);
+ActionObject *action_rotate_to_create(Float target, Float length);
 
 ActionObject *action_resize_to_create(Size2D size, Float length);
 

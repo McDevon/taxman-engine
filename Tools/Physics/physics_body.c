@@ -14,9 +14,9 @@ char *pbd_describe(void *comp)
 void pbd_set_body_rect_to_parent(PhysicsBody *self)
 {
     GameObject *parent = comp_get_parent(self);
-    if (self->size.width == nb_zero || self->size.height == nb_zero) {
-        self->object_offset = vec(nb_mul(parent->anchor.x, parent->size.width),
-                                  nb_mul(parent->anchor.y, parent->size.height));
+    if (self->size.width == fn_zero || self->size.height == fn_zero) {
+        self->object_offset = vec(fn_mul(parent->anchor.x, parent->size.width),
+                                  fn_mul(parent->anchor.y, parent->size.height));
         self->size = (Size2D) { parent->size.width, parent->size.height };
     }
 }
@@ -59,7 +59,7 @@ void pbd_start(GameObjectComponent *comp)
 {
     PhysicsBody *self = (PhysicsBody *)comp;
     
-    if (self->size.width == nb_zero || self->size.height == nb_zero) {
+    if (self->size.width == fn_zero || self->size.height == fn_zero) {
         pbd_set_body_rect_to_parent(self);
     }
     
@@ -67,7 +67,7 @@ void pbd_start(GameObjectComponent *comp)
     pbd_add_to_world(self);
 }
 
-void pbd_update(GameObjectComponent *comp, Number dt_ms)
+void pbd_update(GameObjectComponent *comp, FixNumber dt_ms)
 {
     PhysicsBody *self = (PhysicsBody *)comp;
     GameObject *parent = comp_get_parent(self);
@@ -92,7 +92,7 @@ PhysicsBody *pbd_create()
     pho->crush_override_callback = NULL;
     pho->w_callback_context = NULL;
     pho->position = vec_zero();
-    pho->size = (Size2D){ nb_zero, nb_zero };
+    pho->size = (Size2D){ fn_zero, fn_zero };
     pho->object_offset = vec_zero();
     pho->remainder_movement = vec_zero();
     pho->collision_layer = 0;
@@ -133,24 +133,24 @@ void pbd_pushed(PhysicsBody *physics_body, PhysicsBody *pushing_body, Direction 
     }
 }
 
-inline Number pbd_left(PhysicsBody *physics_body)
+inline FixNumber pbd_left(PhysicsBody *physics_body)
 {
     return physics_body->position.x;
 }
 
-inline Number pbd_right(PhysicsBody *physics_body)
+inline FixNumber pbd_right(PhysicsBody *physics_body)
 {
-    return physics_body->position.x + physics_body->size.width - nb_one;
+    return physics_body->position.x + physics_body->size.width - fn_one;
 }
 
-inline Number pbd_top(PhysicsBody *physics_body)
+inline FixNumber pbd_top(PhysicsBody *physics_body)
 {
     return physics_body->position.y;
 }
 
-inline Number pbd_bottom(PhysicsBody *physics_body)
+inline FixNumber pbd_bottom(PhysicsBody *physics_body)
 {
-    return physics_body->position.y + physics_body->size.height - nb_one;
+    return physics_body->position.y + physics_body->size.height - fn_one;
 }
 
 inline bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)
@@ -163,8 +163,8 @@ inline bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)
 
 bool pbd_overlap_in_position(PhysicsBody *pbd_a, PhysicsBody *pbd_b, Vector2D pbd_a_position)
 {
-    return !(pbd_a_position.x + pbd_a->size.width - nb_one < pbd_left(pbd_b)
-             || pbd_a_position.y + pbd_a->size.height - nb_one < pbd_top(pbd_b)
+    return !(pbd_a_position.x + pbd_a->size.width - fn_one < pbd_left(pbd_b)
+             || pbd_a_position.y + pbd_a->size.height - fn_one < pbd_top(pbd_b)
              || pbd_a_position.x > pbd_right(pbd_b)
              || pbd_a_position.y > pbd_bottom(pbd_b));
 }

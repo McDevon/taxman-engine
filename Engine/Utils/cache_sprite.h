@@ -18,9 +18,9 @@ typedef struct CacheSprite {
 
 extern GameObjectType CacheSpriteType;
 
-CacheSprite *cache_sprite_create_rotated(const char *image_name, Number angle, Vector2D anchor);
-CacheSprite *cache_sprite_sprite_create_with_image_rotated(Image *image, Number angle, Vector2D anchor);
+CacheSprite *cache_sprite_create_rotated(const char *image_name, Float angle, Vector2D anchor);
+CacheSprite *cache_sprite_sprite_create_with_image_rotated(Image *image, Float angle, Vector2D anchor);
 
-void cache_sprite_set_rotated(CacheSprite *sprite, Number angle);
+void cache_sprite_set_rotated(CacheSprite *sprite, Float angle);
 
 #endif /* cache_sprite_h */

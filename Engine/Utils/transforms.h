@@ -2,22 +2,20 @@
 #define transforms_h
 
 #include "types.h"
-#include "number.h"
 
-Vector2D vec(Number x, Number y);
-Vector2D vec_angle(Number angle);
+Vector2D vec(Float x, Float y);
+Vector2D vec_angle(Float angle);
 
 Vector2D vec_zero(void);
-Number vec_length(Vector2D v);
-Number vec_length_sq(Vector2D v);
+Float vec_length(Vector2D v);
+Float vec_length_sq(Vector2D v);
 
 Vector2D vec_vec_add(Vector2D, Vector2D);
 Vector2D vec_vec_subtract(Vector2D, Vector2D);
-Vector2D vec_scale(Vector2D v, Number n);
-Vector2D vec_scale_to_length(Vector2D v, Number length);
+Vector2D vec_scale(Vector2D v, Float n);
+Vector2D vec_scale_to_length(Vector2D v, Float length);
 Vector2D vec_normalize(Vector2D v);
-Vector2D vec_f_scale(Vector2D, Float);
-Vector2D vec_f_lerp(Vector2D, Vector2D, Float);
+Vector2D vec_lerp(Vector2D, Vector2D, Float);
 Vector2D vec_inverse(Vector2D);
 
 Vector2D vec_round(Vector2D);
@@ -29,21 +27,9 @@ AffineTransform af_af_multiply(AffineTransform, AffineTransform);
 
 AffineTransform af_translate(AffineTransform a, Vector2D v);
 AffineTransform af_scale(AffineTransform a, Vector2D v);
-AffineTransform af_rotate(AffineTransform a, Number rad);
+AffineTransform af_rotate(AffineTransform a, Float rad);
 
 AffineTransform af_inverse(AffineTransform a);
-
-AffineTransformFloat faf_faf_multiply(AffineTransformFloat, AffineTransformFloat);
-
-AffineTransformFloat faf_translate(AffineTransformFloat a, Vector2DFloat v);
-AffineTransformFloat faf_scale(AffineTransformFloat a, Vector2DFloat v);
-AffineTransformFloat faf_rotate(AffineTransformFloat a, Float rad);
-
-AffineTransformFloat faf_inverse(AffineTransformFloat a);
-
-AffineTransformFloat faf_identity(void);
-
-AffineTransformFloat af_to_faf(AffineTransform);
 
 AffineTransform af_identity(void);
 

@@ -4,66 +4,54 @@
 #include <stdio.h>
 #include <limits.h>
 
-// To use fixed point numbers in project, comment the undef line
-#define NUMBER_TYPE_FIXED_POINT
-#undef NUMBER_TYPE_FIXED_POINT
+typedef int32_t FixNumber;
 
-#ifndef NUMBER_TYPE_FIXED_POINT
-#define NUMBER_TYPE_FLOATING_POINT
-#endif
+extern const FixNumber fn_max_value;
+extern const FixNumber fn_min_value;
+extern const FixNumber fn_zero;
+extern const FixNumber fn_one;
+extern const FixNumber fn_two;
+extern const FixNumber fn_half;
+extern const FixNumber fn_precision;
 
-#ifdef NUMBER_TYPE_FIXED_POINT
-typedef int32_t Number;
-#elif defined NUMBER_TYPE_FLOATING_POINT
-typedef float Number;
-#endif
+extern const FixNumber fn_pi;
+extern const FixNumber fn_pi_times_two;
+extern const FixNumber fn_pi_over_two;
+extern const FixNumber fn_pi_inv;
+extern const FixNumber fn_pi_over_two_inv;
 
-extern const Number nb_max_value;
-extern const Number nb_min_value;
-extern const Number nb_zero;
-extern const Number nb_one;
-extern const Number nb_two;
-extern const Number nb_half;
-extern const Number nb_precision;
+int32_t fn_sign(FixNumber value);
+FixNumber fn_to_radians(FixNumber value);
+FixNumber fn_to_degrees(FixNumber value);
+FixNumber fn_abs(FixNumber value);
+FixNumber fn_floor(FixNumber value);
+FixNumber fn_ceil(FixNumber value);
+FixNumber fn_round(FixNumber value);
 
-extern const Number nb_pi;
-extern const Number nb_pi_times_two;
-extern const Number nb_pi_over_two;
-extern const Number nb_pi_inv;
-extern const Number nb_pi_over_two_inv;
+FixNumber fn_add(FixNumber v1, FixNumber v2);
+FixNumber fn_sub(FixNumber v1, FixNumber v2);
+FixNumber fn_mul(FixNumber v1, FixNumber v2);
+FixNumber fn_div(FixNumber v1, FixNumber v2);
+FixNumber fn_mod(FixNumber v1, FixNumber v2);
+FixNumber fn_negate(FixNumber value);
 
-int32_t nb_sign(Number value);
-Number nb_to_radians(Number value);
-Number nb_to_degrees(Number value);
-Number nb_abs(Number value);
-Number nb_floor(Number value);
-Number nb_ceil(Number value);
-Number nb_round(Number value);
+FixNumber fn_sqrt(FixNumber value);
+FixNumber fn_sin(FixNumber value);
+FixNumber fn_cos(FixNumber value);
+FixNumber fn_tan(FixNumber value);
+FixNumber fn_atan2(FixNumber y, FixNumber x);
 
-Number nb_add(Number v1, Number v2);
-Number nb_sub(Number v1, Number v2);
-Number nb_mul(Number v1, Number v2);
-Number nb_div(Number v1, Number v2);
-Number nb_mod(Number v1, Number v2);
-Number nb_negate(Number value);
+FixNumber fn_from_int(int32_t value);
+FixNumber fn_from_long(int64_t value);
+FixNumber fn_from_float(float value);
+FixNumber fn_from_double(double value);
+FixNumber fn_from_string(const char *value);
 
-Number nb_sqrt(Number value);
-Number nb_sin(Number value);
-Number nb_cos(Number value);
-Number nb_tan(Number value);
-Number nb_atan2(Number y, Number x);
+float fn_to_float(FixNumber value);
+double fn_to_double(FixNumber value);
+int fn_to_int(FixNumber value);
+char *fn_to_str(FixNumber value, int precision);
 
-Number nb_from_int(int32_t value);
-Number nb_from_long(int64_t value);
-Number nb_from_float(float value);
-Number nb_from_double(double value);
-Number nb_from_string(const char *value);
-
-float nb_to_float(Number value);
-double nb_to_double(Number value);
-int nb_to_int(Number value);
-char *nb_to_str(Number value, int precision);
-
-void nb_calculate_constants(void);
+void fn_calculate_constants(void);
 
 #endif /* Number_h */

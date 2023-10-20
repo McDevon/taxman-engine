@@ -46,9 +46,9 @@ int context_rect_compare_top_edge(const void *a, const void *b)
     
     int diff = rect_a->top - rect_b->top;
     
-    if (diff < nb_zero) {
+    if (diff < 0.f) {
         return list_sorted_ascending;
-    } else if (diff > nb_zero) {
+    } else if (diff > 0.f) {
         return list_sorted_descending;
     } else {
         return list_sorted_same;

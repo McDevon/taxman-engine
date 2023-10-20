@@ -147,15 +147,15 @@ int sb_append_float(StringBuilder *sb, Float value, int precision)
     return sb_append_string(sb, string);
 }
 
-int sb_append_number_precision(StringBuilder *sb, Number value, int precision)
+int sb_append_number_precision(StringBuilder *sb, FixNumber value, int precision)
 {
-    char *string = nb_to_str(value, precision);
+    char *string = fn_to_str(value, precision);
     int ret = sb_append_string(sb, string);
     platform_free(string);
     return ret;
 }
 
-int sb_append_number(StringBuilder *sb, Number value)
+int sb_append_number(StringBuilder *sb, FixNumber value)
 {
     return sb_append_number_precision(sb, value, 2);
 }

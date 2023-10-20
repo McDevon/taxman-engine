@@ -140,8 +140,8 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
 {
     TileMap *self = (TileMap *)obj;
 
-    Number anchor_x_translate = -nb_mul(nb_mul(obj->anchor.x, obj->size.width), obj->scale.x);
-    Number anchor_y_translate = -nb_mul(nb_mul(obj->anchor.y, obj->size.height), obj->scale.y);
+    FixNumber anchor_x_translate = -fn_mul(fn_mul(obj->anchor.x, obj->size.width), obj->scale.x);
+    FixNumber anchor_y_translate = -fn_mul(fn_mul(obj->anchor.y, obj->size.height), obj->scale.y);
 
     AffineTransform pos = af_identity();
     
@@ -186,12 +186,12 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
         pos = af_af_multiply(ctx->render_transform, pos);
 
         const Size2D tile_size = self->tile_size;
-        const Size2DInt tile_size_int = (Size2DInt){nb_to_int(tile_size.width), nb_to_int(tile_size.height)};
+        const Size2DInt tile_size_int = (Size2DInt){fn_to_int(tile_size.width), fn_to_int(tile_size.height)};
         
-        const Number dither_mask_start_x = self->dither_mask_position.x;
-        const Number dither_mask_end_x = self->w_dither_mask ? dither_mask_start_x + self->w_dither_mask->size.width : nb_zero;
-        const Number dither_mask_start_y = self->dither_mask_position.y;
-        const Number dither_mask_end_y = self->w_dither_mask ? dither_mask_start_y + self->w_dither_mask->size.height : nb_zero;
+        const FixNumber dither_mask_start_x = self->dither_mask_position.x;
+        const FixNumber dither_mask_end_x = self->w_dither_mask ? dither_mask_start_x + self->w_dither_mask->size.width : fn_zero;
+        const FixNumber dither_mask_start_y = self->dither_mask_position.y;
+        const FixNumber dither_mask_end_y = self->w_dither_mask ? dither_mask_start_y + self->w_dither_mask->size.height : fn_zero;
 
         Image *dither_slice = NULL;
         if (self->w_dither_mask) {
@@ -210,10 +210,10 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                                                                          );
                 
                 if (tile->options & tile_draw_option_dither) {
-                    Number start_x = nb_floor(nb_mul(nb_from_int(x), tile_size.width));
-                    Number end_x = start_x + tile_size.width;
-                    Number start_y = nb_floor(nb_mul(nb_from_int(y), tile_size.height));
-                    Number end_y = start_y + tile_size.height;
+                    FixNumber start_x = fn_floor(fn_mul(fn_from_int(x), tile_size.width));
+                    FixNumber end_x = start_x + tile_size.width;
+                    FixNumber start_y = fn_floor(fn_mul(fn_from_int(y), tile_size.height));
+                    FixNumber end_y = start_y + tile_size.height;
                     const uint8_t flip_flags_dither = (tile->options & tile_draw_option_flip_x ? 0x01 : 0) | (tile->options & tile_draw_option_flip_y ? 0x02 : 0);
 
                     if (!self->w_dither_mask
@@ -222,13 +222,13 @@ void tilemap_render(GameObject *obj, RenderContext *ctx)
                         || start_y < dither_mask_start_y
                         || end_y > dither_mask_end_y) {
                         
-                        context_render_rect_dither_threshold(ctx, self->dither_mask_threshold_color, tile->w_image, (Vector2DInt){ nb_to_int(nb_floor(pos.i13 + anchor_x_translate + x * tile_size.width)), nb_to_int(nb_floor(pos.i23 + anchor_y_translate + y * tile_size.height)) }, flip_flags_dither);
+                        context_render_rect_dither_threshold(ctx, self->dither_mask_threshold_color, tile->w_image, (Vector2DInt){ fn_to_int(fn_floor(pos.i13 + anchor_x_translate + x * tile_size.width)), fn_to_int(fn_floor(pos.i23 + anchor_y_translate + y * tile_size.height)) }, flip_flags_dither);
                     } else {
-                        dither_slice->rect = (Rect2DInt){{nb_to_int(start_x - dither_mask_start_x), nb_to_int(start_y - dither_mask_start_y)}, tile_size_int};
-                        context_render_rect_dither(ctx, dither_slice, tile->w_image, (Vector2DInt){ nb_to_int(nb_floor(pos.i13 + anchor_x_translate + x * tile_size.width)), nb_to_int(nb_floor(pos.i23 + anchor_y_translate + y * tile_size.height)) }, (Vector2DInt){0, 0}, 0, flip_flags_dither);
+                        dither_slice->rect = (Rect2DInt){{fn_to_int(start_x - dither_mask_start_x), fn_to_int(start_y - dither_mask_start_y)}, tile_size_int};
+                        context_render_rect_dither(ctx, dither_slice, tile->w_image, (Vector2DInt){ fn_to_int(fn_floor(pos.i13 + anchor_x_translate + x * tile_size.width)), fn_to_int(fn_floor(pos.i23 + anchor_y_translate + y * tile_size.height)) }, (Vector2DInt){0, 0}, 0, flip_flags_dither);
                     }
                 } else {
-                    context_render_rect_image(ctx, tile->w_image, (Vector2DInt){ nb_to_int(nb_floor(pos.i13 + anchor_x_translate + x * tile_size.width)), nb_to_int(nb_floor(pos.i23 + anchor_y_translate + y * tile_size.height)) }, render_options);
+                    context_render_rect_image(ctx, tile->w_image, (Vector2DInt){ fn_to_int(fn_floor(pos.i13 + anchor_x_translate + x * tile_size.width)), fn_to_int(fn_floor(pos.i23 + anchor_y_translate + y * tile_size.height)) }, render_options);
                 }
                 
             }
@@ -437,11 +437,11 @@ void read_tilemap_line(const char *line, int32_t row_number, bool last_row, void
                     
                     if (tilemap->tile_size.width == 0 || tilemap->tile_size.height == 0) {
                         tilemap->tile_size = (Size2D){
-                            nb_from_int(tile->w_image->rect.size.width),
-                            nb_from_int(tile->w_image->rect.size.height)
+                            fn_from_int(tile->w_image->rect.size.width),
+                            fn_from_int(tile->w_image->rect.size.height)
                         };
-                    } else if (tile->w_image->rect.size.width != nb_to_int(tilemap->tile_size.width) ||
-                               tile->w_image->rect.size.height != nb_to_int(tilemap->tile_size.height)) {
+                    } else if (tile->w_image->rect.size.width != fn_to_int(tilemap->tile_size.width) ||
+                               tile->w_image->rect.size.height != fn_to_int(tilemap->tile_size.height)) {
                         LOG_ERROR("Tilemap tile images are of different size: %s is %d x %d, expected to be %d x %d", base->image_base_name, tile->w_image->rect.size.width, tile->w_image->rect.size.height, tilemap->tile_size.width, tilemap->tile_size.height);
                         ctx->valid = false;
                     }

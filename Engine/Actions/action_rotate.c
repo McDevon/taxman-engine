@@ -7,9 +7,9 @@
 
 struct ActionRotate {
     ACTION_OBJECT;
-    Number start_rotation;
-    Number end_rotation;
-    Number offset;
+    Float start_rotation;
+    Float end_rotation;
+    Float offset;
 };
 
 void action_rotate_destroy(void *obj)
@@ -68,7 +68,7 @@ Float action_rotate_update(ActionObject *action, GameObject *go, Float dt_s)
     struct ActionRotate *self = (struct ActionRotate*)action;
     Float position = self->position + (dt_s / self->length);
     self->position = min(position, 1.f);
-    go->rotation = self->start_rotation + (Number)(self->offset * position);
+    go->rotation = self->start_rotation + self->offset * position;
     
     return position > 1.f ? (position - 1.f) * self->length : 0.f;
 }
@@ -93,7 +93,7 @@ static ActionObjectType ActionRotateToType = {
     &action_rotate_finish
 };
 
-ActionObject *action_rotate_by_create(Number offset, Float length)
+ActionObject *action_rotate_by_create(Float offset, Float length)
 {
     struct ActionRotate *object = platform_calloc(1, sizeof(struct ActionRotate));
     object->length = length;
@@ -103,7 +103,7 @@ ActionObject *action_rotate_by_create(Number offset, Float length)
     return (ActionObject *)object;
 }
 
-ActionObject *action_rotate_to_create(Number target, Float length)
+ActionObject *action_rotate_to_create(Float target, Float length)
 {
     struct ActionRotate *object = platform_calloc(1, sizeof(struct ActionRotate));
     object->length = length;

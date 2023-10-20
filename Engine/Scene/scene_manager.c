@@ -15,7 +15,7 @@ char *scenemanager_describe(void *table);
 
 BaseType SceneManagerType = { "SceneManager", &scenemanager_destroy, &scenemanager_describe };
 
-void scene_change(SceneManager *scene_manager, Scene *next_scene, SceneTransition transition, Number time)
+void scene_change(SceneManager *scene_manager, Scene *next_scene, SceneTransition transition, Float time)
 {
     if (scene_manager->next_scene) {
         return;

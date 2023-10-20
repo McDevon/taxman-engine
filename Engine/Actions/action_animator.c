@@ -39,7 +39,7 @@ void act_start(GameObjectComponent *comp)
     }
 }
 
-void act_update(GameObjectComponent *comp, Number dt_ms)
+void act_update(GameObjectComponent *comp, Float dt)
 {
     Act *self = (Act *)comp;
     ActionObject *action = self->action_object;
@@ -48,13 +48,11 @@ void act_update(GameObjectComponent *comp, Number dt_ms)
         comp_schedule_destroy(self);
         return;
     }
-    
-    Float dt_s = nb_to_float(dt_ms) / 1000.f;
-    
+        
     GameObject *object = comp_get_parent(self);
     
     ActionObjectType *a_type = (ActionObjectType *)action->w_type;
-    a_type->update(action, object, dt_s);
+    a_type->update(action, object, dt);
     
     if (action->position >= 1.f) {
         action->position = 1.f;
@@ -91,10 +89,10 @@ void action_call_start(ActionObject *action, GameObject *go)
     }
 }
 
-Float action_call_update(ActionObject *action, GameObject *go, Float dt_s)
+Float action_call_update(ActionObject *action, GameObject *go, Float dt)
 {
     ActionObjectType *a_type = (ActionObjectType *)action->w_type;
-    return a_type->update(action, go, dt_s);
+    return a_type->update(action, go, dt);
 }
 
 void action_call_finish(ActionObject *action, GameObject *go)

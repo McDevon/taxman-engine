@@ -9,7 +9,7 @@ typedef struct RenderCamera {
     Size2D viewport_size;
     Vector2D position;
     Vector2D scale;
-    Number rotation;
+    Float rotation;
 } RenderCamera;
 
 RenderCamera *render_camera_create(Size2DInt viewport_size);

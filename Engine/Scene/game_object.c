@@ -32,7 +32,7 @@ GameObject *go_alloc(size_t type_size)
     object->go_private->start_called = false;
     object->active = true;
     object->ignore_camera = false;
-    object->scale = (Vector2D){ nb_one, nb_one };
+    object->scale = (Vector2D){ 1.f, 1.f };
     
     return object;
 }
@@ -94,7 +94,7 @@ void go_start(GameObject *object)
     object->go_private->start_called = true;
 }
 
-void go_update(GameObject *object, Number dt_ms)
+void go_update(GameObject *object, Float dt_ms)
 {
     if (!object->active) {
         return;
@@ -123,7 +123,7 @@ void go_update(GameObject *object, Number dt_ms)
     }
 }
 
-void go_fixed_update(GameObject *object, Number dt_ms)
+void go_fixed_update(GameObject *object, Float dt, FixNumber dt_ms)
 {
     if (!object->active) {
         return;
@@ -131,7 +131,7 @@ void go_fixed_update(GameObject *object, Number dt_ms)
 
     GameObjectType *type = go_type(object);
     if (type->fixed_update) {
-        type->fixed_update(object, dt_ms);
+        type->fixed_update(object, dt, dt_ms);
     }
     
     ArrayList *components = object->go_private->components;
@@ -141,14 +141,14 @@ void go_fixed_update(GameObject *object, Number dt_ms)
         GameObjectComponentType *c_type = comp_type(comp);
         
         if (comp->active && c_type->fixed_update) {
-            c_type->fixed_update(comp, dt_ms);
+            c_type->fixed_update(comp, dt, dt_ms);
         }
     }
     
     ArrayList *list = object->go_private->children;
     size_t count = list_count(list);
     for (size_t i = 0; i < count; ++i) {
-        go_fixed_update((GameObject *)list_get(list, i), dt_ms);
+        go_fixed_update((GameObject *)list_get(list, i), dt, dt_ms);
     }
 }
 
@@ -191,11 +191,11 @@ void go_render(GameObject *object, RenderContext *ctx)
     position = af_af_multiply(transform, position);
     AffineTransform child_render_transform;
     if (object->layout_children_from_top_left) {
-        Number anchor_x = nb_mul(object->anchor.x, object->size.width);
-        Number anchor_y = nb_mul(object->anchor.y, object->size.height);
+        Float anchor_x = object->anchor.x * object->size.width;
+        Float anchor_y = object->anchor.y * object->size.height;
 
-        Number anchor_x_translate = -nb_mul(anchor_x, object->scale.x);
-        Number anchor_y_translate = -nb_mul(anchor_y, object->scale.y);
+        Float anchor_x_translate = -anchor_x * object->scale.x;
+        Float anchor_y_translate = -anchor_y * object->scale.y;
         
         child_render_transform = af_translate(position, (Vector2D){ anchor_x_translate, anchor_y_translate });
 
@@ -418,10 +418,10 @@ AffineTransform go_recursive_position_search(GameObject *current, GameObject *an
     return pos;
 }
 
-Number go_recursive_rotation_search(GameObject *current, GameObject *ancestor)
+Float go_recursive_rotation_search(GameObject *current, GameObject *ancestor)
 {
     if (current == ancestor || current == NULL) {
-        return nb_zero;
+        return 0.f;
     }
         
     return go_recursive_rotation_search(current->go_private->w_parent, ancestor) + current->rotation;
@@ -453,18 +453,18 @@ Vector2D go_position_from_root(void *obj)
     return vec(pos.i13, pos.i23);
 }
 
-Number go_rotation_in_ancestor(void *obj, void *ancestor)
+Float go_rotation_in_ancestor(void *obj, void *ancestor)
 {
     GameObject *current = (GameObject *)obj;
     
     if (!current->go_private->w_parent) {
-        return nb_zero;
+        return 0.f;
     }
         
     return go_recursive_rotation_search(current, ancestor);
 }
 
-Number go_rotation_from_root(void *obj)
+Float go_rotation_from_root(void *obj)
 {
     GameObject *current = (GameObject *)obj;
     

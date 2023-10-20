@@ -38,7 +38,7 @@ void action_scale_by_start(ActionObject *action, GameObject *go)
 {
     struct ActionScale *self = (struct ActionScale*)action;
     self->start_scale = go->scale;
-    self->end_scale = vec(nb_mul(go->scale.x, self->change.x), nb_mul(go->scale.y, self->change.y));
+    self->end_scale = vec(go->scale.x * self->change.x, go->scale.y * self->change.y);
 }
 
 void action_scale_to_start(ActionObject *action, GameObject *go)
@@ -52,7 +52,7 @@ Float action_scale_update(ActionObject *action, GameObject *go, Float dt_s)
     struct ActionScale *self = (struct ActionScale*)action;
     Float position = self->position + (dt_s / self->length);
     self->position = min(position, 1.f);
-    go->scale = vec_f_lerp(self->start_scale, self->end_scale, position);
+    go->scale = vec_lerp(self->start_scale, self->end_scale, position);
     
     return position > 1.f ? (position - 1.f) * self->length : 0.f;
 }
