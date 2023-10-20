@@ -52,11 +52,11 @@ int coll_compare_left_edge(const void *a, const void *b)
     GameObject *parent_a = comp_get_parent(bd_a);
     GameObject *parent_b = comp_get_parent(bd_b);
     
-    FixNumber diff = parent_a->position.x + bd_a->body_rect.origin.x - parent_b->position.x + bd_b->body_rect.origin.x;
+    Float diff = parent_a->position.x + bd_a->body_rect.origin.x - parent_b->position.x + bd_b->body_rect.origin.x;
     
-    if (diff < fn_zero) {
+    if (diff < 0.f) {
         return list_sorted_ascending;
-    } else if (diff > fn_zero) {
+    } else if (diff > 0.f) {
         return list_sorted_descending;
     } else {
         return list_sorted_same;
@@ -72,7 +72,7 @@ void c_world_test_object_collisions(CollisionWorld *self)
         CollisionBody *body = list_get(self->sweep_list_x, i);
         GameObject *parent = comp_get_parent(body);
         
-        FixNumber right_edge = parent->position.x + body->body_rect.origin.x + body->body_rect.size.width;
+        Float right_edge = parent->position.x + body->body_rect.origin.x + body->body_rect.size.width;
 
         for (size_t k = i + 1; k < count; ++k) {
             CollisionBody *other_body = list_get(self->sweep_list_x, k);
@@ -83,10 +83,10 @@ void c_world_test_object_collisions(CollisionWorld *self)
             }
             
             if (self->collision_masks[body->collision_layer] & (1 << other_body->collision_layer)) {
-                FixNumber top = parent->position.y + body->body_rect.origin.y;
-                FixNumber bottom = parent->position.y + body->body_rect.origin.y + body->body_rect.size.height;
-                FixNumber other_top = other_parent->position.y + other_body->body_rect.origin.y;
-                FixNumber other_bottom = other_parent->position.y + other_body->body_rect.origin.y + other_body->body_rect.size.height;
+                Float top = parent->position.y + body->body_rect.origin.y;
+                Float bottom = parent->position.y + body->body_rect.origin.y + body->body_rect.size.height;
+                Float other_top = other_parent->position.y + other_body->body_rect.origin.y;
+                Float other_bottom = other_parent->position.y + other_body->body_rect.origin.y + other_body->body_rect.size.height;
                 if (other_bottom > top && other_top < bottom) {
                     self->collision_callback(body, other_body, self->w_callback_context);
                 }
@@ -95,7 +95,7 @@ void c_world_test_object_collisions(CollisionWorld *self)
     }
 }
 
-void c_world_fixed_update(GameObjectComponent *comp, FixNumber dt_ms)
+void c_world_fixed_update(GameObjectComponent *comp, Float dt, FixNumber dt_ms)
 {
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Collision world");
@@ -120,10 +120,10 @@ void c_world_fixed_update(GameObjectComponent *comp, FixNumber dt_ms)
         CollisionBody *body = (CollisionBody *)list_get(self->collision_components, i);
         GameObject *object = comp_get_parent(body);
         
-        Vector2D control_movement = vec(fn_mul(body->control_movement.x, dt_ms) / 1000,
-                                        fn_mul(body->control_movement.y, dt_ms) / 1000);
-        Vector2D velocity_movement = vec(fn_mul(body->velocity.x, dt_ms) / 1000,
-                                         fn_mul(body->velocity.y, dt_ms) / 1000);
+        Vector2D control_movement = vec(body->control_movement.x * dt,
+                                        body->control_movement.y * dt);
+        Vector2D velocity_movement = vec(body->velocity.x * dt,
+                                         body->velocity.y * dt);
         Vector2D target_movement = vec_vec_add(velocity_movement, control_movement);
         
         object->position = vec_vec_add(target_movement, object->position);

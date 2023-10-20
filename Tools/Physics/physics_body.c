@@ -14,9 +14,9 @@ char *pbd_describe(void *comp)
 void pbd_set_body_rect_to_parent(PhysicsBody *self)
 {
     GameObject *parent = comp_get_parent(self);
-    if (self->size.width == fn_zero || self->size.height == fn_zero) {
-        self->object_offset = vec(fn_mul(parent->anchor.x, parent->size.width),
-                                  fn_mul(parent->anchor.y, parent->size.height));
+    if (self->size.width == 0.f || self->size.height == 0.f) {
+        self->object_offset = vec(parent->anchor.x * parent->size.width,
+                                  parent->anchor.y * parent->size.height);
         self->size = (Size2D) { parent->size.width, parent->size.height };
     }
 }
@@ -67,7 +67,7 @@ void pbd_start(GameObjectComponent *comp)
     pbd_add_to_world(self);
 }
 
-void pbd_update(GameObjectComponent *comp, FixNumber dt_ms)
+void pbd_update(GameObjectComponent *comp, Float dt)
 {
     PhysicsBody *self = (PhysicsBody *)comp;
     GameObject *parent = comp_get_parent(self);
@@ -133,24 +133,24 @@ void pbd_pushed(PhysicsBody *physics_body, PhysicsBody *pushing_body, Direction 
     }
 }
 
-inline FixNumber pbd_left(PhysicsBody *physics_body)
+inline Float pbd_left(PhysicsBody *physics_body)
 {
     return physics_body->position.x;
 }
 
-inline FixNumber pbd_right(PhysicsBody *physics_body)
+inline Float pbd_right(PhysicsBody *physics_body)
 {
-    return physics_body->position.x + physics_body->size.width - fn_one;
+    return physics_body->position.x + physics_body->size.width - 1.f;
 }
 
-inline FixNumber pbd_top(PhysicsBody *physics_body)
+inline Float pbd_top(PhysicsBody *physics_body)
 {
     return physics_body->position.y;
 }
 
-inline FixNumber pbd_bottom(PhysicsBody *physics_body)
+inline Float pbd_bottom(PhysicsBody *physics_body)
 {
-    return physics_body->position.y + physics_body->size.height - fn_one;
+    return physics_body->position.y + physics_body->size.height - 1.f;
 }
 
 inline bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b)

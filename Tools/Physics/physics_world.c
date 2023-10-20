@@ -1,5 +1,7 @@
 #include "physics_world.h"
 #include "physics_body.h"
+#include "utils.h"
+#include <math.h>
 
 struct PhysicsWorld {
     GAME_OBJECT_COMPONENT;
@@ -150,17 +152,17 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
     
     TileMap *tilemap = world->w_tilemap;
     
-    FixNumber tile_width = tilemap->tile_size.width;
-    FixNumber tile_height = tilemap->tile_size.height;
+    Float tile_width = tilemap->tile_size.width;
+    Float tile_height = tilemap->tile_size.height;
     
     int32_t x_start = -1, x_end = -1, y_start = -1, y_end = -1;
     
     if (moving_direction == dir_up) {
-        FixNumber current = pbd_top(physics_body);
-        FixNumber next = new_position.y;
+        Float current = pbd_top(physics_body);
+        Float next = new_position.y;
         
-        y_start = fn_to_int(fn_floor(fn_div(next, tile_height)));
-        y_end = fn_to_int(fn_floor(fn_div(current, tile_height)));
+        y_start = (int32_t)floorf(next / tile_height);
+        y_end = (int32_t)floorf(current / tile_height);
         
         if (y_start == y_end) {
             return false;
@@ -168,14 +170,14 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
         
         --y_end;
         
-        x_start = fn_to_int(fn_floor(fn_div(pbd_left(physics_body), tile_width)));
-        x_end = fn_to_int(fn_floor(fn_div(pbd_right(physics_body), tile_width)));
+        x_start = (int32_t)floorf(pbd_left(physics_body) / tile_width);
+        x_end = (int32_t)floorf(pbd_right(physics_body) / tile_width);
     } else if (moving_direction == dir_down) {
-        FixNumber current = pbd_bottom(physics_body);
-        FixNumber next = new_position.y + physics_body->size.height - fn_one;
+        Float current = pbd_bottom(physics_body);
+        Float next = new_position.y + physics_body->size.height - 1.f;
         
-        y_start = fn_to_int(fn_floor(fn_div(current, tile_height)));
-        y_end = fn_to_int(fn_floor(fn_div(next, tile_height)));
+        y_start = (int32_t)floorf(current / tile_height);
+        y_end = (int32_t)floorf(next / tile_height);
         
         if (y_start == y_end) {
             return false;
@@ -183,14 +185,14 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
         
         ++y_start;
         
-        x_start = fn_to_int(fn_floor(fn_div(pbd_left(physics_body), tile_width)));
-        x_end = fn_to_int(fn_floor(fn_div(pbd_right(physics_body), tile_width)));
+        x_start = (int32_t)floorf(pbd_left(physics_body) / tile_width);
+        x_end = (int32_t)floorf(pbd_right(physics_body) / tile_width);
     } else if (moving_direction == dir_left) {
-        FixNumber current = pbd_left(physics_body);
-        FixNumber next = new_position.x;
+        Float current = pbd_left(physics_body);
+        Float next = new_position.x;
         
-        x_start = fn_to_int(fn_floor(fn_div(next, tile_width)));
-        x_end = fn_to_int(fn_floor(fn_div(current, tile_width)));
+        x_start = (int32_t)floorf(next / tile_width);
+        x_end = (int32_t)floorf(current / tile_width);
         
         if (x_start == x_end) {
             return false;
@@ -198,14 +200,14 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
         
         --x_end;
         
-        y_start = fn_to_int(fn_floor(fn_div(pbd_top(physics_body), tile_height)));
-        y_end = fn_to_int(fn_floor(fn_div(pbd_bottom(physics_body), tile_height)));
+        y_start = (int32_t)floorf(pbd_top(physics_body) / tile_height);
+        y_end = (int32_t)floorf(pbd_bottom(physics_body) / tile_height);
     } else if (moving_direction == dir_right) {
-        FixNumber current = pbd_right(physics_body);
-        FixNumber next = new_position.x + physics_body->size.width - fn_one;
+        Float current = pbd_right(physics_body);
+        Float next = new_position.x + physics_body->size.width - 1.f;
         
-        x_start = fn_to_int(fn_floor(fn_div(current, tile_width)));
-        x_end = fn_to_int(fn_floor(fn_div(next, tile_width)));
+        x_start = (int32_t)floorf(current / tile_width);
+        x_end = (int32_t)floorf(next / tile_width);
         
         if (x_start == x_end) {
             return false;
@@ -213,8 +215,8 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
         
         ++x_start;
         
-        y_start = fn_to_int(fn_floor(fn_div(pbd_top(physics_body), tile_height)));
-        y_end = fn_to_int(fn_floor(fn_div(pbd_bottom(physics_body), tile_height)));
+        y_start = (int32_t)floorf(pbd_top(physics_body) / tile_height);
+        y_end = (int32_t)floorf(pbd_bottom(physics_body) / tile_height);
     }
     
     for (int32_t y = y_start; y <= y_end; ++y) {
@@ -232,7 +234,7 @@ bool world_pbd_collides_tile_if_moves_to(PhysicsWorld *world, PhysicsBody *physi
     return false;
 }
 
-void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, FixNumber movement, pbd_collision_callback_t *callback, void *collision_context)
+void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Float movement, pbd_collision_callback_t *callback, void *collision_context)
 {
     if (!physics_body->active) {
         return;
@@ -243,12 +245,12 @@ void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Fi
     }
     
     physics_body->remainder_movement.x += movement;
-    FixNumber move = fn_round(physics_body->remainder_movement.x);
-    if (move != fn_zero) {
+    Float move = roundf(physics_body->remainder_movement.x);
+    if (move != 0.f) {
         physics_body->remainder_movement.x -= move;
-        FixNumber sign = fn_sign(move);
-         while (move != fn_zero) {
-            Direction moving_direction = sign > fn_zero ? dir_right : dir_left;
+        Float sign = float_sign(move);
+         while (move != 0.f) {
+            Direction moving_direction = sign > 0.f ? dir_right : dir_left;
             Vector2D next_position = vec(physics_body->position.x + sign, physics_body->position.y);
             if (world_pbd_collides_tile_if_moves_to(world, physics_body, next_position, moving_direction)) {
                 if (callback) {
@@ -273,7 +275,7 @@ void world_pbd_move_dynamic_x(PhysicsWorld *world, PhysicsBody *physics_body, Fi
     }
 }
 
-void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, FixNumber movement, pbd_collision_callback_t *callback, void *collision_context)
+void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Float movement, pbd_collision_callback_t *callback, void *collision_context)
 {
     if (!physics_body->active) {
         return;
@@ -284,16 +286,16 @@ void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Fi
     }
     
     physics_body->remainder_movement.y += movement;
-    FixNumber move = fn_round(physics_body->remainder_movement.y);
-    if (move != fn_zero) {
+    Float move = roundf(physics_body->remainder_movement.y);
+    if (move != 0.f) {
         physics_body->remainder_movement.y -= move;
-        FixNumber sign = fn_sign(move);
-        while (move != fn_zero) {
-            Direction moving_direction = sign > fn_zero ? dir_down : dir_up;
+        Float sign = float_sign(move);
+        while (move != 0.f) {
+            Direction moving_direction = sign > 0.f ? dir_down : dir_up;
             Vector2D next_position = vec(physics_body->position.x, physics_body->position.y + sign);
             if (world_pbd_collides_tile_if_moves_to(world, physics_body, next_position, moving_direction)) {
                 if (callback) {
-                    callback(physics_body, NULL, sign > fn_zero ? dir_down : dir_up, collision_context);
+                    callback(physics_body, NULL, sign > 0.f ? dir_down : dir_up, collision_context);
                 }
                 break;
             }
@@ -316,10 +318,10 @@ void world_pbd_move_dynamic_y(PhysicsWorld *world, PhysicsBody *physics_body, Fi
 
 void world_pbd_move_dynamic(PhysicsWorld *world, PhysicsBody *physics_body, Vector2D movement, pbd_collision_callback_t *callback, void *collision_context)
 {
-    if (movement.x != fn_zero) {
+    if (movement.x != 0.f) {
         world_pbd_move_dynamic_x(world, physics_body, movement.x, callback, collision_context);
     }
-    if (movement.y != fn_zero) {
+    if (movement.y != 0.f) {
         world_pbd_move_dynamic_y(world, physics_body, movement.y, callback, collision_context);
     }
 }
@@ -352,14 +354,14 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
     
     static_body->remainder_movement = vec_vec_add(static_body->remainder_movement, movement);
     
-    FixNumber move_x = fn_round(static_body->remainder_movement.x);
-    FixNumber move_y = fn_round(static_body->remainder_movement.y);
+    Float move_x = roundf(static_body->remainder_movement.x);
+    Float move_y = roundf(static_body->remainder_movement.y);
     
     DirectionTable collisions = static_body->collision_directions;
     static_body->collision_directions = directions_none;
     
-    if (move_x != fn_zero) {
-        FixNumber previous_x = static_body->position.x;
+    if (move_x != 0.f) {
+        Float previous_x = static_body->position.x;
         static_body->remainder_movement.x -= move_x;
         static_body->position.x += move_x;
         for_each_begin(PhysicsBody *, dynamic_body, world->physics_components) {
@@ -368,11 +370,11 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
             }
 
             bool overlap = pbd_overlap(static_body, dynamic_body) && !pbd_overlap_in_position(static_body, dynamic_body, vec(previous_x, static_body->position.y));
-            if (overlap && move_x > fn_zero && collisions.right && dynamic_body->collision_directions.left) {
-                world_pbd_move_dynamic_x(world, dynamic_body, pbd_right(static_body) - pbd_left(dynamic_body) + fn_one, &pbd_crush, NULL);
+            if (overlap && move_x > 0.f && collisions.right && dynamic_body->collision_directions.left) {
+                world_pbd_move_dynamic_x(world, dynamic_body, pbd_right(static_body) - pbd_left(dynamic_body) + 1.f, &pbd_crush, NULL);
                 pbd_pushed(dynamic_body, static_body, dir_right);
-            } else if (overlap && move_x < fn_zero && collisions.left && dynamic_body->collision_directions.right){
-                world_pbd_move_dynamic_x(world, dynamic_body, pbd_left(static_body) - pbd_right(dynamic_body) - fn_one, &pbd_crush, NULL);
+            } else if (overlap && move_x < 0.f && collisions.left && dynamic_body->collision_directions.right){
+                world_pbd_move_dynamic_x(world, dynamic_body, pbd_left(static_body) - pbd_right(dynamic_body) - 1.f, &pbd_crush, NULL);
                 pbd_pushed(dynamic_body, static_body, dir_left);
             } else if (dynamic_body->w_mount == static_body) {
                 world_pbd_move_dynamic_x(world, dynamic_body, move_x, NULL, NULL);
@@ -380,8 +382,8 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
         }
         for_each_end;
     }
-    if (move_y != fn_zero) {
-        FixNumber previous_y = static_body->position.y;
+    if (move_y != 0.f) {
+        Float previous_y = static_body->position.y;
         static_body->remainder_movement.y -= move_y;
         static_body->position.y += move_y;
         for_each_begin(PhysicsBody *, dynamic_body, world->physics_components) {
@@ -390,11 +392,11 @@ void world_pbd_move_static(PhysicsWorld *world, PhysicsBody *static_body, Vector
             }
             
             bool overlap = pbd_overlap(static_body, dynamic_body) && !pbd_overlap_in_position(static_body, dynamic_body, vec(static_body->position.x, previous_y));
-            if (overlap && move_y > fn_zero && collisions.down && dynamic_body->collision_directions.up) {
-                world_pbd_move_dynamic_y(world, dynamic_body, pbd_bottom(static_body) - pbd_top(dynamic_body) + fn_one, &pbd_crush, NULL);
+            if (overlap && move_y > 0.f && collisions.down && dynamic_body->collision_directions.up) {
+                world_pbd_move_dynamic_y(world, dynamic_body, pbd_bottom(static_body) - pbd_top(dynamic_body) + 1.f, &pbd_crush, NULL);
                 pbd_pushed(dynamic_body, static_body, dir_down);
-            } else if (overlap && move_y < fn_zero && collisions.up && dynamic_body->collision_directions.down) {
-                world_pbd_move_dynamic_y(world, dynamic_body, pbd_top(static_body) - pbd_bottom(dynamic_body) - fn_one, &pbd_crush, NULL);
+            } else if (overlap && move_y < 0.f && collisions.up && dynamic_body->collision_directions.down) {
+                world_pbd_move_dynamic_y(world, dynamic_body, pbd_top(static_body) - pbd_bottom(dynamic_body) - 1.f, &pbd_crush, NULL);
                 pbd_pushed(dynamic_body, static_body, dir_up);
             } else if (dynamic_body->w_mount == static_body) {
                 world_pbd_move_dynamic_y(world, dynamic_body, move_y, NULL, NULL);

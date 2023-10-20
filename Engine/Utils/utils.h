@@ -3,6 +3,11 @@
 
 int mod(int a, int b);
 
+int32_t float_sign(float value);
+float float_to_radians(float value);
+float float_to_degrees(float value);
+char *float_to_str(float value, int precision);
+
 #define max(a,b) \
 ({ __typeof__ (a) __a = (a); \
     __typeof__ (b) __b = (b); \

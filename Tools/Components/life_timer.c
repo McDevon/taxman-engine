@@ -10,7 +10,7 @@ char *life_timer_describe(void *comp)
     return comp_describe(comp);
 }
 
-void life_timer_fixed_update(GameObjectComponent *comp, FixNumber dt_ms)
+void life_timer_fixed_update(GameObjectComponent *comp, Float dt, FixNumber dt_ms)
 {
     LifeTimer *self = (LifeTimer *)comp;
     
@@ -18,7 +18,7 @@ void life_timer_fixed_update(GameObjectComponent *comp, FixNumber dt_ms)
         return;
     }
     
-    self->timer -= dt_ms;
+    self->timer -= dt;
     if (self->timer < fn_zero) {
         go_schedule_destroy(comp_get_parent(self));
     }
@@ -33,7 +33,7 @@ GameObjectComponentType LifeTimerComponentType = {
     &life_timer_fixed_update
 };
 
-LifeTimer *life_timer_create(FixNumber time, bool paused)
+LifeTimer *life_timer_create(Float time, bool paused)
 {
     LifeTimer *timer = (LifeTimer *)comp_alloc(sizeof(LifeTimer));
     

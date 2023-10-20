@@ -36,10 +36,10 @@ void pbd_move_static(PhysicsBody *physics_body, Vector2D movement);
 void pbd_crush(PhysicsBody *physics_body, PhysicsBody *crushing_body, Direction direction, void *collision_context);
 void pbd_pushed(PhysicsBody *physics_body, PhysicsBody *pushing_body, Direction moving_direction);
 
-FixNumber pbd_left(PhysicsBody *physics_body);
-FixNumber pbd_right(PhysicsBody *physics_body);
-FixNumber pbd_top(PhysicsBody *physics_body);
-FixNumber pbd_bottom(PhysicsBody *physics_body);
+Float pbd_left(PhysicsBody *physics_body);
+Float pbd_right(PhysicsBody *physics_body);
+Float pbd_top(PhysicsBody *physics_body);
+Float pbd_bottom(PhysicsBody *physics_body);
 
 bool pbd_overlap(PhysicsBody *pbd_a, PhysicsBody *pbd_b);
 bool pbd_overlap_in_position(PhysicsBody *pbd_a, PhysicsBody *pbd_b, Vector2D pbd_a_position);

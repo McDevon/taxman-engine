@@ -7,15 +7,15 @@ int mod(int a, int b)
     return r < 0 ? r + b : r;
 }
 
-inline int32_t float_sign(float value) {
+int32_t float_sign(float value) {
     return value < 0 ? -1 : value > 0 ? 1 : 0;
 }
 
-inline float float_to_radians(float value) {
+float float_to_radians(float value) {
     return value / 180.f * (float)M_PI;
 }
 
-inline float float_to_degrees(float value) {
+float float_to_degrees(float value) {
     return value * 180.f / (float)M_PI;
 }
 

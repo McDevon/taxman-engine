@@ -14,8 +14,8 @@ char *coll_describe(void *comp)
 void coll_set_body_rect_to_parent(CollisionBody *self)
 {
     GameObject *parent = comp_get_parent(self);
-    if (self->body_rect.size.width == fn_zero || self->body_rect.size.height == fn_zero) {
-        self->body_rect = rect_make(-fn_mul(parent->anchor.x, parent->size.width), -fn_mul(parent->anchor.y, parent->size.height), parent->size.width, parent->size.height);
+    if (self->body_rect.size.width == 0.f || self->body_rect.size.height == 0.f) {
+        self->body_rect = rect_make(-(parent->anchor.x * parent->size.width), -(parent->anchor.y * parent->size.height), parent->size.width, parent->size.height);
     }
 }
 
@@ -51,7 +51,7 @@ void coll_start(GameObjectComponent *comp)
 {
     CollisionBody *self = (CollisionBody *)comp;
     
-    if (self->body_rect.size.width == fn_zero || self->body_rect.size.height == fn_zero) {
+    if (self->body_rect.size.width == 0.f || self->body_rect.size.height == 0.f) {
         coll_set_body_rect_to_parent(self);
     }
     
@@ -72,7 +72,7 @@ CollisionBody *coll_create()
     CollisionBody *coll = (CollisionBody *)comp_alloc(sizeof(CollisionBody));
     
     coll->w_type = &CollisionBodyComponentType;
-    coll->body_rect = rect_make(fn_zero, fn_zero, fn_zero, fn_zero);
+    coll->body_rect = rect_make(0.f, 0.f, 0.f, 0.f);
     coll->velocity = vec_zero();
     coll->control_movement = vec_zero();
     coll->collision_layer = 0;
