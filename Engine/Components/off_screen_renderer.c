@@ -54,11 +54,11 @@ void off_screen_renderer_update(GameObjectComponent *comp, Float dt)
     render_texture_render_go(self->render_texture, self->root_object);
 }
 
-void off_screen_renderer_fixed_update(GameObjectComponent *comp, Float dt, FixNumber dt_ms)
+void off_screen_renderer_fixed_update(GameObjectComponent *comp, Float dt)
 {
     OffScreenRenderer *self = (OffScreenRenderer *)comp;
     
-    go_fixed_update(self->root_object, dt, dt_ms);
+    go_fixed_update(self->root_object, dt);
 }
 
 

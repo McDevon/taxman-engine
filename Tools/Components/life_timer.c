@@ -10,7 +10,7 @@ char *life_timer_describe(void *comp)
     return comp_describe(comp);
 }
 
-void life_timer_fixed_update(GameObjectComponent *comp, Float dt, FixNumber dt_ms)
+void life_timer_fixed_update(GameObjectComponent *comp, Float dt)
 {
     LifeTimer *self = (LifeTimer *)comp;
     

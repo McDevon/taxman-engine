@@ -5,7 +5,6 @@
 #include "base_object.h"
 #include "array_list.h"
 #include "render_context.h"
-#include "number.h"
 
 struct GameObject;
 struct SceneManager;
@@ -19,7 +18,7 @@ struct GameObjectComponentType;
     void (*will_be_removed_from_parent)(struct GameObject *); \
     void (*start)(struct GameObject *); \
     void (*update)(struct GameObject *, Float); \
-    void (*fixed_update)(struct GameObject *, Float, Number); \
+    void (*fixed_update)(struct GameObject *, Float); \
     void (*render)(struct GameObject *, RenderContext *)
 
 typedef struct GameObjectType {
@@ -28,7 +27,7 @@ typedef struct GameObjectType {
     void (*will_be_removed_from_parent)(struct GameObject *);
     void (*start)(struct GameObject *);
     void (*update)(struct GameObject *, Float);
-    void (*fixed_update)(struct GameObject *, Float, FixNumber);
+    void (*fixed_update)(struct GameObject *, Float);
     void (*render)(struct GameObject *, RenderContext *);
 } GameObjectType;
 
@@ -68,7 +67,7 @@ GameObject *go_create_empty(void);
 void go_initialize(GameObject *object, struct SceneManager *mngr);
 void go_start(GameObject *object);
 void go_update(GameObject *object, Float dt);
-void go_fixed_update(GameObject *object, Float dt, FixNumber dt_ms);
+void go_fixed_update(GameObject *object, Float dt);
 void go_render(GameObject *object, RenderContext *ctx);
 
 void go_add_child(void *obj, void *child);

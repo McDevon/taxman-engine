@@ -123,7 +123,7 @@ void go_update(GameObject *object, Float dt_ms)
     }
 }
 
-void go_fixed_update(GameObject *object, Float dt, FixNumber dt_ms)
+void go_fixed_update(GameObject *object, Float dt)
 {
     if (!object->active) {
         return;
@@ -131,7 +131,7 @@ void go_fixed_update(GameObject *object, Float dt, FixNumber dt_ms)
 
     GameObjectType *type = go_type(object);
     if (type->fixed_update) {
-        type->fixed_update(object, dt, dt_ms);
+        type->fixed_update(object, dt);
     }
     
     ArrayList *components = object->go_private->components;
@@ -141,14 +141,14 @@ void go_fixed_update(GameObject *object, Float dt, FixNumber dt_ms)
         GameObjectComponentType *c_type = comp_type(comp);
         
         if (comp->active && c_type->fixed_update) {
-            c_type->fixed_update(comp, dt, dt_ms);
+            c_type->fixed_update(comp, dt);
         }
     }
     
     ArrayList *list = object->go_private->children;
     size_t count = list_count(list);
     for (size_t i = 0; i < count; ++i) {
-        go_fixed_update((GameObject *)list_get(list, i), dt, dt_ms);
+        go_fixed_update((GameObject *)list_get(list, i), dt);
     }
 }
 

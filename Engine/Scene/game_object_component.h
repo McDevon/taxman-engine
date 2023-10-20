@@ -14,7 +14,7 @@ typedef struct GameObjectComponentType {
     void (*object_will_be_removed_from_parent)(struct GameObjectComponent *);
     void (*start)(struct GameObjectComponent *);
     void (*update)(struct GameObjectComponent *, Float);
-    void (*fixed_update)(struct GameObjectComponent *, Float, FixNumber);
+    void (*fixed_update)(struct GameObjectComponent *, Float);
 } GameObjectComponentType;
 
 #define GO_COMPONENT_CONTENTS \

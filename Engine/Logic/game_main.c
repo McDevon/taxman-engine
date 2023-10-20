@@ -214,9 +214,7 @@ void game_step(Float delta_time_seconds, Controls controls)
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Fixed update");
 #endif
-    const Float fixed_dt = 0.333333333f;
-    const FixNumber fixed_dt_fn_ms = fn_from_double(33.333333333333);
-        
+    const Float fixed_dt = 0.0333333333f;        
     _fixed_dt_counter += delta_time_seconds;
     
     if (_fixed_dt_counter < fixed_dt) {
@@ -226,7 +224,7 @@ void game_step(Float delta_time_seconds, Controls controls)
     int i;
     const int max_loops = 3;
     for (i = 0; _fixed_dt_counter >= fixed_dt && i < 3; i++) {
-        go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt, fixed_dt_fn_ms);
+        go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt);
         _fixed_dt_counter -= fixed_dt;
     }
     

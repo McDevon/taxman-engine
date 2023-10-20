@@ -95,7 +95,7 @@ void c_world_test_object_collisions(CollisionWorld *self)
     }
 }
 
-void c_world_fixed_update(GameObjectComponent *comp, Float dt, FixNumber dt_ms)
+void c_world_fixed_update(GameObjectComponent *comp, Float dt)
 {
 #ifdef ENABLE_PROFILER
     profiler_start_segment("Collision world");
