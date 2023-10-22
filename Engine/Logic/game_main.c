@@ -179,6 +179,10 @@ void game_step(Float delta_time_seconds, Controls controls)
     
     profiler_start_segment("Game loop");
 #endif
+    
+    Controls previous_controls = _scene_manager.controls;
+    _scene_manager.previous_controls = _scene_manager.controls;
+    
     if (_scene_manager.controls_enabled) {
         _scene_manager.controls = controls;
     } else {
@@ -226,7 +230,9 @@ void game_step(Float delta_time_seconds, Controls controls)
     for (i = 0; _fixed_dt_counter >= fixed_dt && i < 3; i++) {
         go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt);
         _fixed_dt_counter -= fixed_dt;
+        _scene_manager.previous_controls = _scene_manager.controls;
     }
+    _scene_manager.previous_controls = previous_controls;
     
     if (i >= max_loops) {
         _fixed_dt_counter = 0;

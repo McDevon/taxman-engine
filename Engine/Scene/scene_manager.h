@@ -32,6 +32,7 @@ typedef struct SceneManager {
     Image *w_transition_dither;
     void *data;
     Controls controls;
+    Controls previous_controls;
     Float transition_length;
     Float transition_step;
     SceneTransition transition;
@@ -45,6 +46,6 @@ SceneManager *scene_manager_create(void);
 
 void scene_manager_load_scene_assets(SceneManager *self, Scene *next_scene, context_callback_t callback, void *context);
 
-#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, empty_controls, 0, 0, st_none, true, false }
+#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, empty_controls, empty_controls, 0, 0, st_none, true, false }
 
 #endif /* game_scene_h */
