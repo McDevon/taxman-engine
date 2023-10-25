@@ -9,6 +9,10 @@ void sprite_render(GameObject *obj, RenderContext *ctx)
 {
     Sprite *self = (Sprite *)obj;
     
+    if (!self->w_image) {
+        return;
+    }
+    
     image_object_render(self->w_image,
                         obj,
                         render_options_make(self->flip_x,
@@ -44,23 +48,10 @@ GameObjectType SpriteType =
 void sprite_set_image(Sprite *self, Image *image)
 {
     self->w_image = image;
-    self->size.width = image->original.width;
-    self->size.height = image->original.height;
-}
-
-Sprite *sprite_create(const char *image_name)
-{
-    GameObject *go = go_alloc(sizeof(Sprite));
-    Sprite *sprite = (Sprite *)go;
-    go->w_type = &SpriteType;
-    sprite_set_image(sprite, get_image(image_name));
-
-    sprite->draw_mode = drawmode_default;
-    sprite->flip_x = false;
-    sprite->flip_y = false;
-    sprite->invert = false;
-
-    return sprite;
+    if (image) {
+        self->size.width = image->original.width;
+        self->size.height = image->original.height;
+    }
 }
 
 Sprite *sprite_create_with_image(Image *image)
@@ -78,3 +69,7 @@ Sprite *sprite_create_with_image(Image *image)
     return sprite;
 }
 
+Sprite *sprite_create(const char *image_name)
+{
+    return sprite_create_with_image(get_image(image_name));
+}
