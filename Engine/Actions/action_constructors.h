@@ -21,6 +21,8 @@ ActionObject *action_sequence_create(ArrayList *actions);
 
 ActionObject *action_delay_create(Float length);
 
+ActionObject *action_destroy_create(void);
+
 ActionObject *action_ease_in_create(ActionObject *action);
 ActionObject *action_ease_out_create(ActionObject *action);
 ActionObject *action_ease_in_out_create(ActionObject *action);

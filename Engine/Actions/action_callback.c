@@ -136,3 +136,12 @@ ActionObject *action_callback_create(void (*callback)(void *obj, void *context),
     return (ActionObject *)object;
 }
 
+void action_destroy_object_callback(void *obj, void *context)
+{
+    go_schedule_destroy(obj);
+}
+
+ActionObject *action_destroy_create()
+{
+    return (ActionObject *)action_callback_create(&action_destroy_object_callback, NULL);
+}
