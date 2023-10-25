@@ -14,9 +14,8 @@ char *anim_frame_describe(void *value)
 
 BaseType AnimationFrameType = { "AnimationFrame", &anim_frame_destroy, &anim_frame_describe };
 
-AnimationFrame *anim_frame_create(const char *image_name, Float frame_time)
+AnimationFrame *anim_frame_create_with_image(Image *image, Float frame_time)
 {
-    Image *image = get_image(image_name);
     if (!image) {
         return NULL;
     }
@@ -27,6 +26,11 @@ AnimationFrame *anim_frame_create(const char *image_name, Float frame_time)
     frame->frame_time = frame_time;
     
     return frame;
+}
+
+AnimationFrame *anim_frame_create(const char *image_name, Float frame_time)
+{
+    return anim_frame_create_with_image(get_image(image_name), frame_time);
 }
 
 void animator_destroy(void *comp)

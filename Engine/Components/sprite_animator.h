@@ -31,5 +31,6 @@ void animator_set_animation_count(Animator *self, const char *animation_name, in
 void animator_add_animation(Animator *comp, const char *animation_name, ArrayList *frame_list);
 
 AnimationFrame *anim_frame_create(const char *image_name, Float frame_time);
+AnimationFrame *anim_frame_create_with_image(Image *image, Float frame_time);
 
 #endif /* sprite_animator_h */
