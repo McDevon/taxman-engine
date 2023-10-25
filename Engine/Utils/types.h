@@ -15,6 +15,11 @@ typedef struct Vector2D {
     Float y;
 } Vector2D;
 
+typedef struct Pose2D {
+    Vector2D position;
+    Float rotation;
+} Pose2D;
+
 typedef struct Size2D {
     Float width;
     Float height;
