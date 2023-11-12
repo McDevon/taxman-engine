@@ -291,7 +291,7 @@ typedef enum {
 struct tm_c_context {
     TileMap *tilemap;
     void *context;
-    tilemap_callback_t tilemap_callback;
+    tilemap_callback_t *tilemap_callback;
     char *file_name;
     TileMapPart current_part;
     bool valid;

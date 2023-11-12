@@ -4,13 +4,13 @@
 #define BO_CONTENTS const void *w_type
 
 #define BT_CONTENTS char *type_name; \
-    object_destroy_fnc destroy; \
-    object_description_fnc description
+    object_destroy_fnc *destroy; \
+    object_description_fnc *description
 
 struct baseobj;
 
-typedef void (*object_destroy_fnc)(void *obj);
-typedef char *(*object_description_fnc)(void *obj);
+typedef void (object_destroy_fnc)(void *obj);
+typedef char *(object_description_fnc)(void *obj);
 
 typedef struct BaseType {
     BT_CONTENTS;

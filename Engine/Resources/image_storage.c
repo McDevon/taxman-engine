@@ -9,19 +9,19 @@
 #include "string_builder.h"
 
 typedef struct ImageDataPackage {
-    resource_callback_t resource_callback;
+    resource_callback_t *resource_callback;
     void *context;
     bool make_image;
 } ImageDataPackage;
 
 typedef struct GridAtlasDataPackage {
-    resource_callback_t resource_callback;
+    resource_callback_t *resource_callback;
     void *context;
     Size2DInt item_size;
 } GridAtlasDataPackage;
 
 typedef struct SpriteSheetDataPackage {
-    resource_callback_t resource_callback;
+    resource_callback_t *resource_callback;
     void *context;
     char *sprite_sheet_name;
     char *sprite_sheet_data;

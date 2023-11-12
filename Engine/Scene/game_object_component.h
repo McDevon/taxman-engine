@@ -10,7 +10,7 @@ struct GameObjectComponent;
 
 typedef struct GameObjectComponentType {
     BASE_TYPE;
-    void (*added_to_object)(struct GameObjectComponent *);
+    void (*added_to_object)(struct GameObjectComponent *); // Component is added to parent, but is not guaranteed to be part of a scene
     void (*object_will_be_removed_from_parent)(struct GameObjectComponent *);
     void (*start)(struct GameObjectComponent *);
     void (*update)(struct GameObjectComponent *, Float);

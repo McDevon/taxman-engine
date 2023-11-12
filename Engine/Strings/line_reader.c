@@ -6,8 +6,8 @@
 
 struct token_reader_context {
     void *context;
-    tokens_callback_t tokens_callback;
-    line_callback_t line_callback;
+    tokens_callback_t *tokens_callback;
+    line_callback_t *line_callback;
     char *file_name;
     char *delimeters;
     size_t delimeter_count;
@@ -15,7 +15,7 @@ struct token_reader_context {
 
 struct line_reader_context {
     void *context;
-    line_callback_t line_callback;
+    line_callback_t *line_callback;
 };
 
 ArrayList * string_tokenize(const char *string, const char delimeters[], const size_t delimeter_count)

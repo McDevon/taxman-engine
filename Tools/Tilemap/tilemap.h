@@ -40,7 +40,7 @@ typedef struct TileMapObject {
 
 extern GameObjectType TileMapType;
 
-typedef void (*tilemap_callback_t)(const char *, TileMap *, void *);
+typedef void (tilemap_callback_t)(const char *, TileMap *, void *);
 
 Tile *tile_create(const char *image_name, uint8_t collision_layer, DirectionTable collision_directions, uint8_t options);
 void tilemap_create(const char *tilemap_file_name, tilemap_callback_t tilemap_callback, void *context);
