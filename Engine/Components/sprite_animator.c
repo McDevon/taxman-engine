@@ -66,9 +66,6 @@ void animator_set_current_frame(Animator *self)
 void animator_start(GameObjectComponent *comp)
 {
     Animator *self = (Animator *)comp;
-    if (self->w_current_animation == NULL) {
-        self->w_current_animation = hashtable_any(self->animations);
-    }
     self->current_frame = 0;
     self->frame_timer = 0.f;
     
