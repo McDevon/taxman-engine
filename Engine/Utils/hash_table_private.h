@@ -4,6 +4,7 @@
 struct HashTable {
     BASE_OBJECT;
     HashTableEntry **entries;
+    void (*destructor)(void *);
 };
 
 struct HashTableEntry {

@@ -28,13 +28,13 @@ typedef struct SpriteSheetDataPackage {
 } SpriteSheetDataPackage;
 
 static HashTableEntry *image_data_table_entry[HASHSIZE];
-static HashTable image_data_table = { { { &HashTableType } }, image_data_table_entry };
+static HashTable image_data_table = { { { &HashTableType } }, image_data_table_entry, &destroy };
 
 static HashTableEntry *image_slice_table_entry[HASHSIZE];
-static HashTable image_slice_table = { { { &HashTableType } }, image_slice_table_entry };
+static HashTable image_slice_table = { { { &HashTableType } }, image_slice_table_entry, &destroy };
 
 static HashTableEntry *grid_atlas_table_entry[HASHSIZE];
-static HashTable grid_atlas_table = { { { &HashTableType } }, grid_atlas_table_entry };
+static HashTable grid_atlas_table = { { { &HashTableType } }, grid_atlas_table_entry, &destroy };
 
 void load_image_data_callback(const char *image_data_name, const uint32_t width, const uint32_t height, const bool source_has_alpha, const ImageBuffer *buffer, void *context) {
     ImageDataPackage *data = (ImageDataPackage *)context;

@@ -44,8 +44,8 @@ int hashtable_put(HashTable *table, const char *key, void *value)
         np->next = hashtab[hashval];
         hashtab[hashval] = np;
     } else {
-        if (np->value) {
-            destroy(np->value);
+        if (np->value && table->destructor) {
+            table->destructor(np->value);
         }
     }
     if ((np->value = value) == NULL) {
@@ -87,8 +87,8 @@ int hashtable_remove(HashTable *table, const char *key)
         } else {
             hashtab[hash_string(key)] = np->next;
         }
-        if (np->value) {
-            destroy(np->value);
+        if (np->value && table->destructor) {
+            table->destructor(np->value);
         }
         platform_free(np->key);
         platform_free(np);
@@ -110,14 +110,14 @@ size_t hashtable_count(HashTable *table)
     return count;
 }
 
-void hashtable_entry_destroy(HashTableEntry *entry)
+void hashtable_entry_destroy(HashTable *table, HashTableEntry *entry)
 {
     if (entry->next) {
-        hashtable_entry_destroy(entry->next);
+        hashtable_entry_destroy(table, entry->next);
         entry->next = NULL;
     }
-    if (entry->value) {
-        destroy(entry->value);        
+    if (entry->value && table->destructor) {
+        table->destructor(entry->value);
     }
     platform_free(entry->key);
     platform_free(entry);
@@ -130,7 +130,7 @@ void hashtable_destroy(void *object)
         if (table->entries[i] == NULL) {
             continue;
         }
-        hashtable_entry_destroy(table->entries[i]);
+        hashtable_entry_destroy(table, table->entries[i]);
     }
     platform_free(table->entries);
 }
@@ -177,13 +177,24 @@ char *hashtable_describe(void *object)
     return description;
 }
 
-HashTable *hashtable_create(void)
+HashTable *hashtable_create_with_destructor(void (*destructor)(void *))
 {
     HashTable *table = platform_calloc(1, sizeof(HashTable));
     table->w_type = &HashTableType;
     
     void *entries = platform_calloc(HASHSIZE, sizeof(HashTableEntry *));
     table->entries = entries;
+    table->destructor = destructor;
     
     return table;
+}
+
+HashTable *hashtable_create_with_weak_references()
+{
+    return hashtable_create_with_destructor(NULL);
+}
+
+HashTable *hashtable_create()
+{
+    return hashtable_create_with_destructor(&destroy);
 }
