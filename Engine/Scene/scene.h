@@ -35,6 +35,7 @@ Scene *scene_alloc(size_t type_size);
 
 void scene_set_required_image_asset_names(void *scene, ArrayList *sprite_sheet_names);
 void scene_set_required_grid_atlas_infos(void *scene, ArrayList *grid_atlas_infos);
+void scene_set_required_audio_effects(void *scene, ArrayList *audio_effects);
 
 void scene_destroy(void *);
 

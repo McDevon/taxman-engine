@@ -58,6 +58,7 @@ void game_init(void *first_scene)
     _scene_manager.loaded_image_file_names = list_create_with_destructor(&platform_free);
     _scene_manager.loaded_sprite_sheet_names = list_create_with_destructor(&platform_free);
     _scene_manager.loaded_grid_atlas_names = list_create_with_destructor(&grid_atlas_info_destroy);
+    _scene_manager.loaded_audio_effect_names = list_create_with_destructor(&platform_free);
     _scene_manager.assets_in_waiting = hashtable_create();
     
     _scene_manager.current_scene = first_scene;

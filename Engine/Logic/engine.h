@@ -33,5 +33,6 @@
 #include "data_container.h"
 #include "scene.h"
 #include "cache_sprite.h"
+#include "audio_player.h"
 
 #endif /* engine_h */

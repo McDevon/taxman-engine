@@ -10,6 +10,11 @@ typedef float Float;
 typedef void (resource_callback_t)(const char *, bool, void *);
 typedef void (context_callback_t)(void *);
 
+typedef struct ResourceCallbackContainer {
+    resource_callback_t *resource_callback;
+    void *context;
+} ResourceCallbackContainer;
+
 typedef struct Vector2D {
     Float x;
     Float y;
@@ -100,6 +105,6 @@ typedef enum {
 #define int_rect_make(x, y, w, h) (Rect2DInt){ (Vector2DInt){ x, y }, (Size2DInt){ w, h } }
 #define rect_make(x, y, w, h) (Rect2D){ (Vector2D){ x, y }, (Size2D){ w, h } }
 
-#define empty_controls (Controls){ (uint32_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0 }
+#define empty_controls (Controls){ (Float)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0 }
 
 #endif /* types_h */

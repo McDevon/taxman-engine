@@ -26,6 +26,7 @@ typedef struct SceneManager {
     ArrayList *loaded_image_file_names;
     ArrayList *loaded_sprite_sheet_names;
     ArrayList *loaded_grid_atlas_names;
+    ArrayList *loaded_audio_effect_names;
     HashTable *assets_in_waiting;
     context_callback_t *loading_callback;
     void *loading_callback_context;
@@ -46,6 +47,6 @@ SceneManager *scene_manager_create(void);
 
 void scene_manager_load_scene_assets(SceneManager *self, Scene *next_scene, context_callback_t callback, void *context);
 
-#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, empty_controls, empty_controls, 0, 0, st_none, true, false }
+#define CREATE_SCENE_MANAGER() { { { &SceneManagerType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, empty_controls, empty_controls, 0, 0, st_none, true, false }
 
 #endif /* game_scene_h */

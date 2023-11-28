@@ -25,6 +25,16 @@ void platform_free(void *ptr);
 platform_time_t platform_current_time(void);
 float platform_time_to_seconds(platform_time_t);
 
+typedef void (audio_object_callback_t)(const char *, void *, void *);
+
+/**
+ Returns a pointer to an audio object that can be used to play the loaded audio file.
+ Use for short audio effect, not for music.
+ */
+void platform_load_audio_file(const char *file_name, audio_object_callback_t *callback, void *context);
+void platform_play_audio_object(void *audio_object);
+void platform_free_audio_object(void *audio_object);
+
 void platform_print(const char *text);
 
 #endif /* platform_adapter_h */

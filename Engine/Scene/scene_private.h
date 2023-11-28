@@ -7,6 +7,7 @@
 struct scene_private {
     ArrayList *sprite_sheet_names;
     ArrayList *grid_atlas_infos;
+    ArrayList *audio_effects;
 };
 
 #endif /* scene_private_h */

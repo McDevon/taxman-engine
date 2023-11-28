@@ -8,6 +8,7 @@
 #include "scene_private.h"
 #include "string_builder.h"
 #include "engine_log.h"
+#include "audio_player.h"
 #include <string.h>
 
 void scenemanager_destroy(void *table);
@@ -51,10 +52,10 @@ void scene_manager_load_scene_assets(SceneManager *self, Scene *next_scene, cont
     ArrayList *images = list_create_with_weak_references();
     ArrayList *sprite_sheets = list_create_with_weak_references();
     ArrayList *grid_atlas_infos = list_create_with_weak_references();
+    ArrayList *audio_effects = list_create_with_weak_references();
     ArrayList *w_grid_atlas_infos = next_scene->scene_private->grid_atlas_infos;
     
     for_each_begin(char *, image_file, next_scene->scene_private->sprite_sheet_names) {
-        LOG("Sprite sheet %s", image_file);
         if (str_ends_with(image_file, ".png")) {
             if (list_contains_string(self->loaded_image_file_names, image_file)) {
                 continue;
@@ -88,6 +89,15 @@ void scene_manager_load_scene_assets(SceneManager *self, Scene *next_scene, cont
         list_add(self->loaded_grid_atlas_names, platform_strdup(info->file_name));
     }
     for_each_end;
+    for_each_begin(char *, audio_file, next_scene->scene_private->audio_effects) {
+        if (list_contains_string(self->loaded_audio_effect_names, audio_file)) {
+            continue;
+        }
+        list_add(audio_effects, audio_file);
+        hashtable_put(self->assets_in_waiting, audio_file, NULL);
+        list_add(self->loaded_audio_effect_names, platform_strdup(audio_file));
+    }
+    for_each_end
 
     describe_debug_to_log(self->assets_in_waiting);
     
@@ -103,7 +113,11 @@ void scene_manager_load_scene_assets(SceneManager *self, Scene *next_scene, cont
         load_grid_atlas(info->file_name, info->tile_size, &scene_manager_asset_loaded_callback, self);
     }
     for_each_end;
-    
+    for_each_begin(char *, audio_file, audio_effects) {
+        audio_load_file(audio_file, &scene_manager_asset_loaded_callback, self);
+    }
+    for_each_end;
+
     destroy(images);
     destroy(sprite_sheets);
     destroy(grid_atlas_infos);
@@ -152,6 +166,7 @@ SceneManager *scene_manager_create()
     manager->loaded_image_file_names = list_create_with_destructor(&platform_free);
     manager->loaded_sprite_sheet_names = list_create_with_destructor(&platform_free);
     manager->loaded_grid_atlas_names = list_create_with_destructor(&grid_atlas_info_destroy);
+    manager->loaded_audio_effect_names = list_create_with_destructor(&platform_free);
     manager->assets_in_waiting = hashtable_create();
 
     manager->data = NULL;
