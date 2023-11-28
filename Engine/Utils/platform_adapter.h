@@ -33,6 +33,7 @@ typedef void (audio_object_callback_t)(const char *, void *, void *);
  */
 void platform_load_audio_file(const char *file_name, audio_object_callback_t *callback, void *context);
 void platform_play_audio_object(void *audio_object);
+void platform_stop_audio_object(void *audio_object);
 void platform_free_audio_object(void *audio_object);
 
 void platform_print(const char *text);

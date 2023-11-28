@@ -38,6 +38,16 @@ void audio_play_file(const char *file_name)
     platform_play_audio_object(audio_object);
 }
 
+void audio_stop_file(const char *file_name)
+{
+    void *audio_object = hashtable_get(&audio_object_table, file_name);
+    if (!audio_object) {
+        LOG_ERROR("Cannot stop audio file, file not loaded: %s", file_name);
+        return;
+    }
+    platform_stop_audio_object(audio_object);
+}
+
 void audio_free_file(const char *file_name)
 {
     void *audio_object = hashtable_get(&audio_object_table, file_name);
