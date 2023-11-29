@@ -31,8 +31,4 @@ typedef struct Act Act;
 
 Act *act_create(ActionObject *);
 
-void action_call_start(ActionObject *, GameObject *);
-Float action_call_update(ActionObject *, GameObject *, Float);
-void action_call_finish(ActionObject *, GameObject *);
-
 #endif /* action_animator_h */

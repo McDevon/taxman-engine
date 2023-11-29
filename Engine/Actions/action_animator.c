@@ -1,4 +1,5 @@
 #include "action_animator.h"
+#include "action_animator_private.h"
 #include "platform_adapter.h"
 #include "game_object_component.h"
 

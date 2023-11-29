@@ -145,3 +145,20 @@ ActionObject *action_destroy_create()
 {
     return (ActionObject *)action_callback_create(&action_destroy_object_callback, NULL);
 }
+
+void action_delayed_callback(void *obj, void *context)
+{
+    context_callback_t *callback = (context_callback_t *)context;
+    callback(obj);
+}
+
+void go_delayed_callback(void *obj, context_callback_t *callback, Float length)
+{
+    GameObject *go = (GameObject *)obj;
+    go_add_component(go, act_create(action_sequence_create(({
+        ArrayList *list = list_create();
+        list_add(list, action_delay_create(length));
+        list_add(list, action_callback_create(&action_delayed_callback, callback));
+        list;
+    }))));
+}

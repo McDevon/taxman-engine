@@ -34,4 +34,6 @@ ActionObject *action_callback_create(void (*callback)(void *obj, void *context),
 ActionObject *action_function_create(void (*callback)(void *obj, void *context, Float position), void *context, Float length);
 ActionObject *action_function_lerp_create(void (*callback)(void *obj, void *context, Float position), void *context, Float length, Float start, Float end);
 
+void go_delayed_callback(void *obj, context_callback_t *callback, Float length);
+
 #endif /* action_constructors_h */
