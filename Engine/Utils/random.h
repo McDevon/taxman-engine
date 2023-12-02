@@ -13,4 +13,7 @@ Float random_next_float(Random *);
 int random_next_int(Random *);
 int random_next_int_limit(Random *, int limit);
 
+void random_shake(Random *, uint64_t value);
+void random_shake_using_current_time(Random *);
+
 #endif /* random_h */

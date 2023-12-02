@@ -4,6 +4,7 @@
 #include "string_builder.h"
 #include "platform_adapter.h"
 #include <limits.h>
+#include <string.h>
 
 struct Random {
     BASE_OBJECT;
@@ -77,4 +78,19 @@ int random_next_int(Random *state)
 int random_next_int_limit(Random *state, int limit)
 {
     return (int)((random_next_uint64(state) & INT_MAX) % limit);
+}
+
+void random_shake(Random *state, uint64_t value)
+{
+    uint64_t a = state->a;
+    state->a = state->b ^ value;
+    state->b = a ^ value;
+}
+
+void random_shake_using_current_time(Random *state)
+{
+    float time = platform_time_to_seconds(platform_current_time());
+    uint64_t value = 0;
+    memcpy(&value, &time, sizeof time);
+    random_shake(state, value);
 }
