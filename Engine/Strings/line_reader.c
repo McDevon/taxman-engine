@@ -96,7 +96,7 @@ void file_read_lines_tokenize(const char *file_name, const char delimeters[], co
     file_read_lines(file_name, &read_token_line, token_ctx);
 }
 
-void read_full_file_callback(const char *file_name, const char *file_data, void *context)
+void read_full_file_callback(const char *file_name, const char *file_data, const size_t length, void *context)
 {
     struct line_reader_context *line_ctx = (struct line_reader_context *)context;
     int row = 0;
@@ -132,5 +132,5 @@ void file_read_lines(const char *file_name, line_callback_t line_callback, void 
     struct line_reader_context *line_ctx = platform_calloc(sizeof(struct line_reader_context), 1);
     line_ctx->context = context;
     line_ctx->line_callback = line_callback;
-    platform_read_text_file(file_name, &read_full_file_callback, line_ctx);
+    platform_read_text_file(file_name, false, &read_full_file_callback, line_ctx);
 }

@@ -233,7 +233,7 @@ void load_sprite_sheet_image_callback(const char *image_data_name, bool success,
     platform_free(data);
 }
 
-void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, void *context)
+void load_sprite_sheet_callback(const char *file_name, const char *sheet_data, const size_t length, void *context)
 {
     SpriteSheetDataPackage *data = (SpriteSheetDataPackage*)context;
     
@@ -284,6 +284,6 @@ void load_sprite_sheet(const char *sprite_sheet_name, resource_callback_t resour
     data->context = context;
     data->sprite_sheet_name = platform_strdup(sprite_sheet_name);
 
-    platform_read_text_file(file_name, &load_sprite_sheet_callback, data);
+    platform_read_text_file(file_name, false, &load_sprite_sheet_callback, data);
     platform_free(file_name);
 }
