@@ -7,8 +7,9 @@
 
 typedef float Float;
 
-typedef void (resource_callback_t)(const char *, bool, void *);
-typedef void (context_callback_t)(void *);
+typedef void (resource_callback_t)(const char *, bool, void *context);
+typedef void (context_callback_t)(void *context);
+typedef void (object_callback_t)(void *, void *context);
 
 typedef struct ResourceCallbackContainer {
     resource_callback_t *resource_callback;
