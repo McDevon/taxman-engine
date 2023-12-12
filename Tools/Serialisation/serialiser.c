@@ -360,7 +360,7 @@ char * deser_read_str(Deserialiser *self)
         LOG("Deserialise error, out of bounds");
         return 0;
     }
-    char *value = platform_calloc(length, sizeof(char));
+    char *value = platform_calloc(length + 1, sizeof(char));
     for (size_t i = 0; i < length; ++i) {
         value[i] = (char)*(self->w_buffer + self->position + i);
     }
