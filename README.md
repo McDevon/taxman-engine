@@ -34,19 +34,19 @@ In order to test the engine on an actual device, a [Teensy 4.0](https://www.pjrc
 Current Features include
 
 - Custom object type with runtime type information to allow easier memory management (destructor-like behavior)
-- Scenes and transforms between scenes
+- Scenes and transitions between scenes
 - Scene Graph, Game Objects, reusable Components
 - Dynamic ArrayLists, HashMaps, and String Builders, which support the memory management scheme
 - Dithering to draw grayscale images
 - Advanced dithering features for animation and effects
 - Bitmap fonts (currently monospace only)
-- Sprite atlases (currently only using LibGDX format)
+- Sprite atlases and atlas creation tool
 - Render textures and off-screen rendering
 - Frame animations
 - Transform animations
 - Easings for transform animations, including cubic bezier curves
 - Precomputed bezier curves to make them run faster in embedded environments
-- Tilemaps with automatic tile selection
+- Tilemaps with automatic edge tile selection
 - Platformer physics with one-directional platforms and walls
 - Moving platforms and pushable objects
 - Collision detection using sweep-and-prune algorithm
