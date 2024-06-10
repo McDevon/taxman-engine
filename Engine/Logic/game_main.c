@@ -21,7 +21,7 @@ static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL
 static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
 static Float _fixed_dt_counter = 0;
 
-static ScreenRenderOptions _screen_options = { NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0 }, false };
+static ScreenRenderOptions _screen_options = { NULL, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0 }, false };
 
 static ImageBuffer *_active_screen_buffer;
 
@@ -309,4 +309,9 @@ void set_screen_source_buffer(ImageData *screen_buffer)
 void set_screen_source_offset(Vector2DInt source_offset)
 {
     _screen_options.source_offset = source_offset;
+}
+
+void set_custom_screen_update(update_buffer_t *custom_update_function)
+{
+    _screen_options.custom_screen_update = custom_update_function;
 }
