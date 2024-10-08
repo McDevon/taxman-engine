@@ -17,7 +17,7 @@ typedef struct ScreenRenderOptions {
 } ScreenRenderOptions;
 
 void game_init(void *first_scene);
-void game_step(Float delta_time_seconds, Controls controls);
+void game_step(Float delta_time_seconds, Float crank, ButtonControls buttons);
 
 void reset_screen_options(void);
 void set_screen_dither(ImageData * screen_dither);

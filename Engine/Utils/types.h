@@ -9,6 +9,7 @@ typedef float Float;
 
 typedef void (resource_callback_t)(const char *, bool, void *context);
 typedef void (context_callback_t)(void *context);
+typedef void (str_callback_t)(const char *, void *context);
 typedef void (object_callback_t)(void *, void *context);
 
 typedef struct ResourceCallbackContainer {
@@ -68,8 +69,7 @@ typedef struct Rect2DInt {
     Size2DInt size;
 } Rect2DInt;
 
-typedef struct Controls {
-    Float crank;
+typedef struct ButtonControls {
     uint8_t button_left : 1;
     uint8_t button_right : 1;
     uint8_t button_up : 1;
@@ -77,6 +77,14 @@ typedef struct Controls {
     uint8_t button_a : 1;
     uint8_t button_b : 1;
     uint8_t button_menu : 1;
+} ButtonControls;
+
+typedef struct Controls {
+    Float crank;
+    Float crank_change;
+    ButtonControls pressed;
+    ButtonControls released;
+    ButtonControls buttons;
 } Controls;
 
 typedef enum {
@@ -106,6 +114,7 @@ typedef enum {
 #define int_rect_make(x, y, w, h) (Rect2DInt){ (Vector2DInt){ x, y }, (Size2DInt){ w, h } }
 #define rect_make(x, y, w, h) (Rect2D){ (Vector2D){ x, y }, (Size2D){ w, h } }
 
-#define empty_controls (Controls){ (Float)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0 }
+#define empty_button_controls (ButtonControls){ (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0 }
+#define empty_controls (Controls){ (Float)0, (Float)0, empty_button_controls, empty_button_controls, empty_button_controls }
 
 #endif /* types_h */

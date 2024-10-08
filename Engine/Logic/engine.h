@@ -34,5 +34,6 @@
 #include "scene.h"
 #include "cache_sprite.h"
 #include "audio_player.h"
+#include "crank_utils.h"
 
 #endif /* engine_h */

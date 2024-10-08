@@ -11,6 +11,7 @@
 #include "types.h"
 #include "constants.h"
 #include "game_object_component.h"
+#include "crank_utils.h"
 
 #include "profiler.h"
 #include "profiler_internal.h"
@@ -25,7 +26,7 @@ static ScreenRenderOptions _screen_options = { NULL, NULL, { SCREEN_WIDTH, SCREE
 
 static ImageBuffer *_active_screen_buffer;
 
-RenderContext *get_main_render_context()
+RenderContext *get_main_render_context(void)
 {
     return &_ctx;
 }
@@ -147,7 +148,30 @@ void scene_cleanup(void)
     }
 }
 
-void game_step(Float delta_time_seconds, Controls controls)
+void game_set_control_changes(Controls previous_controls)
+{
+    FloatPair crank = to_same_half_circle_degrees(_scene_manager.controls.crank, previous_controls.crank);
+    _scene_manager.controls.crank_change = crank.a - crank.b;
+    
+    _scene_manager.controls.pressed.button_a = _scene_manager.controls.buttons.button_a && !previous_controls.buttons.button_a;
+    _scene_manager.controls.pressed.button_b = _scene_manager.controls.buttons.button_b && !previous_controls.buttons.button_b;
+    _scene_manager.controls.pressed.button_up = _scene_manager.controls.buttons.button_up && !previous_controls.buttons.button_up;
+    _scene_manager.controls.pressed.button_down = _scene_manager.controls.buttons.button_down && !previous_controls.buttons.button_down;
+    _scene_manager.controls.pressed.button_left = _scene_manager.controls.buttons.button_left && !previous_controls.buttons.button_left;
+    _scene_manager.controls.pressed.button_right = _scene_manager.controls.buttons.button_right && !previous_controls.buttons.button_right;
+    _scene_manager.controls.pressed.button_menu = _scene_manager.controls.buttons.button_menu && !previous_controls.buttons.button_menu;
+    
+    _scene_manager.controls.released.button_a = !_scene_manager.controls.buttons.button_a && previous_controls.buttons.button_a;
+    _scene_manager.controls.released.button_b = !_scene_manager.controls.buttons.button_b && previous_controls.buttons.button_b;
+    _scene_manager.controls.released.button_up = !_scene_manager.controls.buttons.button_up && previous_controls.buttons.button_up;
+    _scene_manager.controls.released.button_down = !_scene_manager.controls.buttons.button_down && previous_controls.buttons.button_down;
+    _scene_manager.controls.released.button_left = !_scene_manager.controls.buttons.button_left && previous_controls.buttons.button_left;
+    _scene_manager.controls.released.button_right = !_scene_manager.controls.buttons.button_right && previous_controls.buttons.button_right;
+    _scene_manager.controls.released.button_menu = !_scene_manager.controls.buttons.button_menu && previous_controls.buttons.button_menu;
+    
+}
+
+void game_step(Float delta_time_seconds, Float crank, ButtonControls buttons)
 {
     if (!_scene_manager.running) {
         return;
@@ -182,13 +206,14 @@ void game_step(Float delta_time_seconds, Controls controls)
 #endif
     
     Controls previous_controls = _scene_manager.controls;
-    _scene_manager.previous_controls = _scene_manager.controls;
     
     if (_scene_manager.controls_enabled) {
-        _scene_manager.controls = controls;
+        _scene_manager.controls.buttons = buttons;
+        _scene_manager.controls.crank = crank;
     } else {
         _scene_manager.controls = empty_controls;
     }
+    game_set_control_changes(previous_controls);
     
     if (_scene_manager.transition != st_none) {
 #ifdef ENABLE_PROFILER
@@ -231,9 +256,11 @@ void game_step(Float delta_time_seconds, Controls controls)
     for (i = 0; _fixed_dt_counter >= fixed_dt && i < 3; i++) {
         go_fixed_update((GameObject *)_scene_manager.current_scene, fixed_dt);
         _fixed_dt_counter -= fixed_dt;
-        _scene_manager.previous_controls = _scene_manager.controls;
+        _scene_manager.controls.crank_change = 0.f;
+        _scene_manager.controls.pressed = empty_button_controls;
+        _scene_manager.controls.released = empty_button_controls;
     }
-    _scene_manager.previous_controls = previous_controls;
+    game_set_control_changes(previous_controls);
     
     if (i >= max_loops) {
         _fixed_dt_counter = 0;
