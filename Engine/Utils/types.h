@@ -10,6 +10,7 @@ typedef float Float;
 typedef void (resource_callback_t)(const char *, bool, void *context);
 typedef void (context_callback_t)(void *context);
 typedef void (str_callback_t)(const char *, void *context);
+typedef void (bool_callback_t)(bool, void *context);
 typedef void (object_callback_t)(void *, void *context);
 
 typedef struct ResourceCallbackContainer {
