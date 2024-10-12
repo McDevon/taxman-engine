@@ -16,15 +16,17 @@
 #include "profiler.h"
 #include "profiler_internal.h"
 
-static ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0, NULL /*image_settings_alpha | image_settings_rgb*/ };
-static RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false, true };
+#define file_private static
 
-static SceneManager _scene_manager = CREATE_SCENE_MANAGER();
-static Float _fixed_dt_counter = 0;
+file_private ImageData _screen = { { { NULL } }, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, 0, NULL /*image_settings_alpha | image_settings_rgb*/ };
+file_private RenderContext _ctx = { { { &RenderContextType } }, NULL, NULL, NULL, NULL, NULL, NULL, NULL, { 0, 0, 0, 0, 0, 0 }, false, true };
 
-static ScreenRenderOptions _screen_options = { NULL, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0 }, false };
+file_private SceneManager _scene_manager = empty_scene_manager;
+file_private Float _fixed_dt_counter = 0;
 
-static ImageBuffer *_active_screen_buffer;
+file_private ScreenRenderOptions _screen_options = { NULL, NULL, { SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0 }, false };
+
+file_private ImageBuffer *_active_screen_buffer;
 
 RenderContext *get_main_render_context(void)
 {
