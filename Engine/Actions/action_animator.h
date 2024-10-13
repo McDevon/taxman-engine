@@ -13,6 +13,8 @@ typedef struct ActionObjectType {
     void (*finish)(struct ActionObject *, GameObject *);
 } ActionObjectType;
 
+extern GameObjectComponentType ActType;
+
 #define ACTION_OBJECT_CONTENTS \
     BASE_OBJECT; \
 	Float length; \
