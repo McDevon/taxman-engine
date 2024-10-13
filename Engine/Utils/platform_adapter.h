@@ -43,4 +43,6 @@ void platform_free_audio_object(void *audio_object);
 
 void platform_print(const char *text);
 
+void platform_show_fps(bool show);
+
 #endif /* platform_adapter_h */
