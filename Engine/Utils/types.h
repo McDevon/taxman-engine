@@ -114,6 +114,7 @@ typedef enum {
 
 #define int_rect_make(x, y, w, h) (Rect2DInt){ (Vector2DInt){ x, y }, (Size2DInt){ w, h } }
 #define rect_make(x, y, w, h) (Rect2D){ (Vector2D){ x, y }, (Size2D){ w, h } }
+#define size_make(w, h) (Size2D){ w, h }
 
 #define empty_button_controls (ButtonControls){ (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0, (uint8_t)0 }
 #define empty_controls (Controls){ (Float)0, (Float)0, empty_button_controls, empty_button_controls, empty_button_controls }
