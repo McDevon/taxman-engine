@@ -121,7 +121,8 @@ void scene_manager_load_scene_assets(SceneManager *self, Scene *next_scene, cont
     destroy(images);
     destroy(sprite_sheets);
     destroy(grid_atlas_infos);
-    
+    destroy(audio_effects);
+
     if (hashtable_count(self->assets_in_waiting) == 0 && self->loading_callback != NULL) {
         self->loading_callback(self->loading_callback_context);
         self->loading_callback_context = NULL;
