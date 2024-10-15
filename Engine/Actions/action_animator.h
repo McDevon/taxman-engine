@@ -9,7 +9,7 @@ struct ActionObject;
 typedef struct ActionObjectType {
     BASE_TYPE;
     void (*start)(struct ActionObject *, GameObject *);
-    Float (*update)(struct ActionObject *, GameObject *, Float);
+    Float (*update)(struct ActionObject *, GameObject *, Float); // Returns how much time was left unused
     void (*finish)(struct ActionObject *, GameObject *);
 } ActionObjectType;
 

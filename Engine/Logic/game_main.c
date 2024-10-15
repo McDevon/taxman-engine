@@ -87,18 +87,14 @@ void transition_finish(void)
     _scene_manager.w_transition_dither = NULL;
 }
 
-bool transition_middle_point = false;
-
 void transition_step(Float delta_time_seconds)
 {
     _scene_manager.transition_step += delta_time_seconds;
     
-    if (transition_middle_point) {
-        switch_scene();
-        transition_middle_point = false;
-    }
+    bool transition_middle_point = false;
     
     if (_scene_manager.transition_step > _scene_manager.transition_length / 2 && _scene_manager.next_scene) {
+        switch_scene();
         transition_middle_point = true;
     }
     
